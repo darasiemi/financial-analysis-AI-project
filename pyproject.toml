@@ -8,5 +8,6 @@ dependencies = [
     "dlt[postgres]>=1.29.1",
     "playwright>=1.62.0",
     "pymupdf>=1.28.0",
+    "python-dotenv>=1.2.2",
     "requests>=2.34.2",
 ]
