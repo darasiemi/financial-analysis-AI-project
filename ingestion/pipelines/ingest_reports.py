@@ -201,7 +201,7 @@ def main() -> None:
     Load report metadata and page text into PostgreSQL.
     """
 
-    load_dotenv(PROJECT_ROOT / "ingestion" / ".env")
+    load_dotenv(PROJECT_ROOT / ".env")
 
     # import os
 

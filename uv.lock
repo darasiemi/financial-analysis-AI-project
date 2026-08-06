@@ -161,6 +161,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "dlt", extra = ["postgres"] },
     { name = "playwright" },
+    { name = "psycopg2-binary" },
     { name = "pymupdf" },
     { name = "python-dotenv" },
     { name = "requests" },
@@ -170,6 +171,7 @@ dependencies = [
 requires-dist = [
     { name = "dlt", extras = ["postgres"], specifier = ">=1.29.1" },
     { name = "playwright", specifier = ">=1.62.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "pymupdf", specifier = ">=1.28.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "requests", specifier = ">=2.34.2" },
