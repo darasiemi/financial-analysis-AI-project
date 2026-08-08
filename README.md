@@ -19,6 +19,8 @@ The PDF processing pipeline transforms raw annual reports into high-quality, ret
 
 The reconstructed pages are then processed into overlapping chunks of approximately 400 words with configurable overlap to preserve contextual continuity across chunk boundaries. Each chunk is enriched with metadata including the report identifier, company ticker, reporting year, source page range, section title, word count, estimated token count, and a SHA-256 content hash for deduplication and traceability. The processing logic is organised into modular components with dedicated responsibilities for PDF parsing (`pdf_reader.py`), page reconstruction (`page_builder.py`), chunk generation (`chunking.py`), orchestration (`service.py`), and data loading. Finally, **dlt** ingests the processed chunks into **PostgreSQL**, where they form a structured knowledge base that is optimized for downstream embedding generation, semantic retrieval using **pgvector**, and Retrieval-Augmented Generation (RAG). This pipeline solves the key challenges of converting heterogeneous, visually rich financial reports into coherent, searchable, and metadata-rich text suitable for large language model applications.
 
+One pipeline extracts narrative text, while another extracts structured tables, because each requires different processing to preserve the information needed for downstream tasks. Initially stored as relational table, but it wasn't extracted well, so swicthed to json instaed
+
 To Do: give me SQL to check if the tables are detected, then fix the noise
 
 

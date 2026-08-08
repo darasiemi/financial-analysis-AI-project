@@ -73,6 +73,15 @@ FROM financial_analysis.report_chunks
 ORDER BY RANDOM()
 LIMIT 20;
 ```
+
+To extract the tables for structured financial data extraction
+```bash
+uv run python -m ingestion.pipelines.load_report_tables
+```
+To add dependencies to view table
+```bash
+uv add psycopg tabulate
+```
 Check that 
 Next ingestion step
 report_pages
