@@ -80,3 +80,15 @@ CALLOUT_MAX_WORDS = 15
 
 DEBUG_PROCESSING = False
 DEBUG_DIR = PROJECT_ROOT / "debug_processing"
+
+# ============================================================
+# Retrieval / RAG
+# ============================================================
+
+RETRIEVAL_DOCUMENTS_TABLE = "retrieval_documents"
+
+EMBEDDING_MODEL = (
+    "sentence-transformers/all-MiniLM-L6-v2"
+)
+
+EMBEDDING_DIMENSION = 384

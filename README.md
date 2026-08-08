@@ -19,9 +19,23 @@ The PDF processing pipeline transforms raw annual reports into high-quality, ret
 
 The reconstructed pages are then processed into overlapping chunks of approximately 400 words with configurable overlap to preserve contextual continuity across chunk boundaries. Each chunk is enriched with metadata including the report identifier, company ticker, reporting year, source page range, section title, word count, estimated token count, and a SHA-256 content hash for deduplication and traceability. The processing logic is organised into modular components with dedicated responsibilities for PDF parsing (`pdf_reader.py`), page reconstruction (`page_builder.py`), chunk generation (`chunking.py`), orchestration (`service.py`), and data loading. Finally, **dlt** ingests the processed chunks into **PostgreSQL**, where they form a structured knowledge base that is optimized for downstream embedding generation, semantic retrieval using **pgvector**, and Retrieval-Augmented Generation (RAG). This pipeline solves the key challenges of converting heterogeneous, visually rich financial reports into coherent, searchable, and metadata-rich text suitable for large language model applications.
 
-One pipeline extracts narrative text, while another extracts structured tables, because each requires different processing to preserve the information needed for downstream tasks. Initially stored as relational table, but it wasn't extracted well, so swicthed to json instaed. Switched to remove the tables in narrative chunks, to reduce redundancy. Two-column is not table and still captured by the narrative chunk
+One pipeline extracts narrative text, while another extracts structured tables, because each requires different processing to preserve the information needed for downstream tasks. Initially stored as relational table, but it wasn't extracted well, so swicthed to json instaed. Switched to remove the tables in narrative chunks, to reduce redundancy. Two-column is not table and still captured by the narrative chunk.
 
-To Do: give me SQL to check if the tables are detected, then fix the noise
+Updated the postgres to include the pgvector extension
+
+## Retrieval Index
+
+The retrieval pipeline builds a unified search index from both the narrative content and structured tables extracted during ingestion. Narrative chunks from `report_chunks` and the text representation (`rag_text`) of extracted tables from `report_tables` are combined into a single `retrieval_documents` table. Each retrieval document stores its source metadata (e.g., report, company, year, pages, and content type), a PostgreSQL full-text search vector for keyword retrieval, and a dense embedding generated using a SentenceTransformer model for semantic retrieval. The original structured table JSON remains stored separately in `report_tables` and can be retrieved whenever a table document is selected.
+
+## Search
+
+The project supports three retrieval strategies over the same indexed corpus:
+
+- **Keyword Search:** Uses PostgreSQL Full-Text Search (FTS) to retrieve documents based on lexical similarity, making it effective for exact financial terms and values.
+- **Vector Search:** Uses dense embeddings stored with `pgvector` to retrieve semantically similar documents, allowing relevant information to be found even when the query wording differs from the source text.
+- **Hybrid Search:** Combines keyword and vector retrieval using Reciprocal Rank Fusion (RRF), leveraging the strengths of both lexical and semantic search to improve overall retrieval quality.
+
+Using a unified retrieval index enables narrative passages and financial tables to compete during retrieval. When a table document is returned, the application can use its `source_id` to retrieve the original structured JSON from `report_tables`, ensuring that downstream RAG components receive both high-quality retrieval results and the underlying structured financial data.
 
 
 

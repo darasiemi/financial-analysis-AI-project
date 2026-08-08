@@ -1,58 +1,94 @@
-import json
+from __future__ import annotations
 
-import psycopg
 from tabulate import tabulate
+import psycopg
 
 from ingestion.processing.database import (
     get_postgres_connection_string,
     load_environment,
 )
 
+
 TABLE_ID = (
-    "gtco_2023_gtco_2023_annual_report_p0008_table_01_235a65a8eb578fda"
+    "gtco_2023_gtco_2023_annual_report_p0008_table_02_0dfa571f014fa921"
 )
 
 
 def main() -> None:
-    # Load .env
     load_environment()
 
-    # Build PostgreSQL connection string from environment variables
-    conn = psycopg.connect(
+    connection_string = (
         get_postgres_connection_string()
     )
 
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT raw_table_json
-            FROM financial_analysis.report_tables
-            WHERE table_id = %s
-            """,
-            (TABLE_ID,),
-        )
+    with psycopg.connect(
+        connection_string
+    ) as conn:
 
-        row = cur.fetchone()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT table_data
+                FROM financial_analysis.report_tables
+                WHERE table_id = %s
+                """,
+                (TABLE_ID,),
+            )
 
-    conn.close()
+            row = cur.fetchone()
 
     if row is None:
         raise ValueError(
             f"Table '{TABLE_ID}' not found."
         )
 
-    raw_table_json = row[0]
+    table_data = row[0]
 
-    # Handle both TEXT and JSONB columns.
-    if isinstance(raw_table_json, str):
-        table = json.loads(raw_table_json)
-    else:
-        table = raw_table_json
+    if not isinstance(
+        table_data,
+        dict,
+    ):
+        raise TypeError(
+            "table_data was expected to be a JSON object."
+        )
+
+    headers = table_data.get(
+        "headers",
+        [],
+    )
+
+    rows = table_data.get(
+        "rows",
+        [],
+    )
+
+    if not headers:
+        raise ValueError(
+            "No headers found in table_data."
+        )
+
+    if not rows:
+        raise ValueError(
+            "No rows found in table_data."
+        )
+
+    # Convert JSON row dictionaries back into ordered
+    # lists using the stored header order.
+    display_rows = [
+        [
+            row_data.get(
+                header,
+                "",
+            )
+            for header in headers
+        ]
+        for row_data in rows
+    ]
 
     print(
         tabulate(
-            table[1:],
-            headers=table[0],
+            display_rows,
+            headers=headers,
             tablefmt="github",
         )
     )

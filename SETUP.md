@@ -9,20 +9,19 @@ Go to the ingestion directory
 ```bash
 cd ingestion
 ```
-To scrape the data
+Install dependencies (assumes `uv` already instead)
 ```bash
-uv add requests playwright
+uv add requests playwright pymupdf python-dotenv psycopg2-binary "dlt[postgres]" psycopg tabulate jupyter google-genai
 uv run playwright install chromium
+```
+More dependencies installation for bvector database
+```bash
+uv add sentence-transformers pgvector
 ```
 
 Run the script
 ```bash
 uv run python download_annual_reports.py
-```
-
-To install things for dlt
-```bash
-uv add pymupdf python-dotenv psycopg2-binary "dlt[postgres]"
 ```
 To run dlt ingestion to database
 First go to the dlt directory
@@ -77,10 +76,6 @@ LIMIT 20;
 To extract the tables for structured financial data extraction
 ```bash
 uv run python -m ingestion.pipelines.load_report_tables
-```
-To add dependencies to view table
-```bash
-uv add psycopg tabulate
 ```
 To view the json "table", run
 ```bash
