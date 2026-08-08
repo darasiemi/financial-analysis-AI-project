@@ -50,3 +50,12 @@ test_hybrid_search:
 		--mode hybrid \
 		--ticker GTCO \
 		--year 2023
+
+test_rag:
+	uv run python -m scripts.rag_qa \
+		"$(or $(QUERY),Who is the Group Chief Executive Officer?)" \
+		--mode $(or $(MODE),hybrid) \
+		--top-k $(or $(TOP_K),20) \
+		$(if $(TICKER),--ticker $(TICKER),) \
+		$(if $(YEAR),--year $(YEAR),) \
+		--show-context

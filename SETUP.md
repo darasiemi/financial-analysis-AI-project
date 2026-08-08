@@ -225,3 +225,127 @@ report_pages
 → load chunks into PostgreSQL
 → generate embeddings
 → store vectors with pgvector
+
+### Build the Retrieval Index
+
+After ingesting the reports, build the unified retrieval index containing both narrative chunks and extracted tables.
+
+```bash
+make build_index
+```
+
+This command:
+
+- Loads narrative chunks from `report_chunks`.
+- Loads table representations (`rag_text`) from `report_tables`.
+- Generates dense embeddings for all retrieval documents.
+- Stores the embeddings in PostgreSQL using `pgvector`.
+- Creates the keyword (Full-Text Search) and vector indexes used during retrieval.
+
+---
+
+### Search the Retrieval Index
+
+Test the retrieval system without using an LLM.
+
+#### Keyword Search
+
+```bash
+make search \
+    QUERY="What was GTCO's profit before tax in 2023?" \
+    MODE=keyword \
+    TICKER=GTCO \
+    YEAR=2023
+```
+
+#### Vector Search
+
+```bash
+make search \
+    QUERY="What was GTCO's profit before tax in 2023?" \
+    MODE=vector \
+    TICKER=GTCO \
+    YEAR=2023
+```
+
+#### Hybrid Search
+
+```bash
+make search \
+    QUERY="What was GTCO's profit before tax in 2023?" \
+    MODE=hybrid \
+    TICKER=GTCO \
+    YEAR=2023
+```
+
+Arguments:
+
+- `QUERY` – User question.
+- `MODE` – Retrieval strategy (`keyword`, `vector`, or `hybrid`).
+- `TICKER` *(optional)* – Restrict search to a specific company.
+- `YEAR` *(optional)* – Restrict search to a specific reporting year.
+
+The command returns the ranked retrieval results together with retrieval latency.
+
+---
+
+### Test the RAG Pipeline
+
+Run an end-to-end Retrieval-Augmented Generation (RAG) pipeline using the selected retrieval strategy and Gemini for answer generation.
+
+```bash
+make test_rag
+```
+
+By default, this runs the question:
+
+> Who is the Group Chief Executive Officer?
+
+using keyword retrieval (or the configured default mode) and prints both the retrieved context and the generated answer.
+
+To ask a different question:
+
+```bash
+make test_rag \
+    QUERY="What was GTCO's profit before tax in 2023?"
+```
+
+Use a different retrieval strategy:
+
+```bash
+make test_rag \
+    QUERY="What was GTCO's profit before tax in 2023?" \
+    MODE=hybrid
+```
+
+Restrict retrieval to a company and reporting year:
+
+```bash
+make test_rag \
+    QUERY="What was GTCO's profit before tax in 2023?" \
+    MODE=hybrid \
+    TICKER=GTCO \
+    YEAR=2023
+```
+
+Retrieve more documents for inspection:
+
+```bash
+make test_rag \
+    QUERY="Who is the Group Chief Executive Officer?" \
+    TOP_K=20
+```
+
+Arguments:
+
+- `QUERY` – Question to answer.
+- `MODE` – Retrieval strategy (`keyword`, `vector`, or `hybrid`).
+- `TOP_K` *(optional)* – Number of retrieved documents passed to the RAG pipeline.
+- `TICKER` *(optional)* – Restrict retrieval to a specific company.
+- `YEAR` *(optional)* – Restrict retrieval to a specific reporting year.
+
+The command displays:
+
+- Retrieved context from the search engine.
+- The generated answer.
+- End-to-end RAG execution time.
