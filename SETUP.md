@@ -86,8 +86,142 @@ To view the json "table", run
 ```bash
 uv run python -m scripts.view_table
 ```
+To check the narration
+```bash
+SELECT
+    chunk_id,
+    pdf_page_start,
+    pdf_page_end,
+    section_title,
+    text
+FROM financial_analysis.report_chunks
+WHERE ticker = 'GTCO'
+  AND text ILIKE '%Statutory Audit Committee%';
+```
+## Automated Makefile Commands for Ingestion (Recommended)
 
+The project includes a `Makefile` to simplify common development and ingestion tasks.
 
+Run all commands from the project root directory.
+
+### Start PostgreSQL
+
+```bash
+make db
+```
+
+Starts the PostgreSQL Docker container in detached mode using the Docker Compose configuration in `ingestion/docker-compose.yml`.
+
+---
+
+### View PostgreSQL logs
+
+```bash
+make logs
+```
+
+Streams the PostgreSQL container logs in real time.
+
+Press `Ctrl + C` to stop following the logs (the database container will continue running).
+
+---
+
+### Open a PostgreSQL shell
+
+```bash
+make psql
+```
+
+Opens an interactive `psql` session inside the PostgreSQL Docker container using the configured `POSTGRES_USER` and `POSTGRES_DB` environment variables.
+
+Exit the shell with:
+
+```text
+\q
+```
+
+---
+
+### Scrape annual reports
+
+```bash
+make scrape
+```
+
+Downloads and ingests the configured annual reports into the database.
+
+This should typically be run only when adding new reports or refreshing the source data.
+
+---
+
+### Generate narrative chunks
+
+```bash
+make chunks
+```
+
+Processes all annual reports into cleaned, paragraph-aware narrative chunks and stores them in:
+
+```text
+financial_analysis.report_chunks
+```
+
+The chunking pipeline:
+
+- reconstructs reading order
+- preserves paragraphs and section headings
+- supports multi-column layouts
+- excludes detected table regions from the narrative corpus
+
+---
+
+### Extract structured tables
+
+```bash
+make tables
+```
+
+Extracts tables directly from the source PDFs and stores them in:
+
+```text
+financial_analysis.report_tables
+```
+
+Each extracted table includes:
+
+- table metadata
+- page information
+- JSON representation of the table
+- a text representation for semantic retrieval
+
+---
+
+### Run the complete ingestion pipeline
+
+```bash
+make ingest
+```
+
+Runs both:
+
+```bash
+make chunks
+make tables
+```
+
+This regenerates both the narrative and structured-table datasets from the already ingested PDF reports.
+
+---
+
+### Inspect an extracted table
+
+```bash
+make check_json_table
+```
+
+Displays a human-readable version of an extracted table stored in the database.
+
+Useful for validating table extraction during development.
 Check that 
 Next ingestion step
 report_pages
