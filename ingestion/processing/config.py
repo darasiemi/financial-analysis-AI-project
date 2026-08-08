@@ -62,7 +62,8 @@ MIN_COLUMN_WORDS = 30
 PARAGRAPH_GAP_RATIO = 0.012
 MAX_PARAGRAPH_WORDS = 180
 
-
+# Table-region exclusion from narrative chunks
+TABLE_BLOCK_OVERLAP_RATIO = 0.50
 # ============================================================
 # Decorative callout handling
 # ============================================================

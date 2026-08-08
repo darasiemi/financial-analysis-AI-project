@@ -82,6 +82,12 @@ To add dependencies to view table
 ```bash
 uv add psycopg tabulate
 ```
+To view the json "table", run
+```bash
+uv run python -m scripts.view_table
+```
+
+
 Check that 
 Next ingestion step
 report_pages

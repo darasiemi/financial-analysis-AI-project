@@ -8,16 +8,14 @@ from typing import Any
 
 import pymupdf
 
-from ingestion.processing.models import (
-    ReportRecord,
-)
+from ingestion.processing.models import ReportRecord
 
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# Cleaning
+# Cell cleaning
 # ============================================================
 
 
@@ -25,7 +23,7 @@ def clean_cell(
     value: Any,
 ) -> str:
     """
-    Normalize one extracted PDF table cell.
+    Normalize one extracted table cell.
     """
 
     if value is None:
@@ -44,7 +42,7 @@ def clean_cell(
         text,
     )
 
-    # Flatten visual line wrapping inside the cell.
+    # Flatten remaining whitespace.
     text = re.sub(
         r"\s+",
         " ",
@@ -58,7 +56,7 @@ def clean_matrix(
     matrix: list[list[Any]],
 ) -> list[list[str]]:
     """
-    Clean cells and discard completely empty rows.
+    Clean all table cells and remove completely empty rows.
     """
 
     cleaned: list[list[str]] = []
@@ -70,9 +68,7 @@ def clean_matrix(
         ]
 
         if any(cleaned_row):
-            cleaned.append(
-                cleaned_row
-            )
+            cleaned.append(cleaned_row)
 
     return cleaned
 
@@ -81,7 +77,7 @@ def normalize_matrix_width(
     matrix: list[list[str]],
 ) -> list[list[str]]:
     """
-    Ensure every extracted row has the same number of columns.
+    Ensure every row has the same number of columns.
     """
 
     if not matrix:
@@ -95,14 +91,215 @@ def normalize_matrix_width(
     return [
         row
         + [""] * (
-            column_count - len(row)
+            column_count
+            - len(row)
         )
         for row in matrix
     ]
 
 
 # ============================================================
-# Headers
+# Malformed-row repair
+# ============================================================
+
+
+VALUE_PATTERN = re.compile(
+    r"""
+    (?<!\S)
+    (
+        # Numeric values:
+        # 609,308
+        # 184.5%
+        # (0.1%)
+        # ₦1,186.47
+        \(?
+        [-–—]?
+        (?:₦|N|\$|£|€)?
+        \d[\d,]*
+        (?:\.\d+)?
+        %?
+        \)?
+        |
+        # Missing values
+        [-–—]
+        |
+        N/?A
+    )
+    (?!\S)
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
+
+
+def repair_collapsed_row(
+    row: list[str],
+    expected_columns: int,
+) -> list[str]:
+    """
+    Repair rows where PyMuPDF collapsed the whole row into the
+    first cell.
+
+    Example:
+
+        [
+            "Profit before income tax 609,308 214,154 "
+            "184.5% 107,984 88,605 21.9%",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ]
+
+    becomes:
+
+        [
+            "Profit before income tax",
+            "609,308",
+            "214,154",
+            "184.5%",
+            "107,984",
+            "88,605",
+            "21.9%",
+        ]
+    """
+
+    if expected_columns <= 1:
+        return row
+
+    normalized = (
+        row[:expected_columns]
+        + [""] * max(
+            0,
+            expected_columns
+            - len(row),
+        )
+    )
+
+    first_cell = (
+        normalized[0].strip()
+    )
+
+    if not first_cell:
+        return normalized
+
+    # Only repair rows where every other cell is empty.
+    if any(
+        cell.strip()
+        for cell in normalized[1:]
+    ):
+        return normalized
+
+    expected_values = (
+        expected_columns - 1
+    )
+
+    matches = list(
+        VALUE_PATTERN.finditer(
+            first_cell
+        )
+    )
+
+    if len(matches) < expected_values:
+        return normalized
+
+    # Use the last N values because the left side is expected
+    # to contain the row label.
+    value_matches = matches[
+        -expected_values:
+    ]
+
+    first_value_start = (
+        value_matches[0].start()
+    )
+
+    label = (
+        first_cell[
+            :first_value_start
+        ]
+        .strip()
+    )
+
+    if not label:
+        return normalized
+
+    trailing_text = (
+        first_cell[
+            first_value_start:
+        ]
+        .strip()
+    )
+
+    values = [
+        match.group(1).strip()
+        for match in value_matches
+    ]
+
+    reconstructed_values = (
+        " ".join(values)
+    )
+
+    normalized_trailing = re.sub(
+        r"\s+",
+        " ",
+        trailing_text,
+    )
+
+    normalized_reconstructed = re.sub(
+        r"\s+",
+        " ",
+        reconstructed_values,
+    )
+
+    # Only repair when the trailing portion consists exactly
+    # of the expected value tokens.
+    if (
+        normalized_trailing
+        != normalized_reconstructed
+    ):
+        return normalized
+
+    return [
+        label,
+        *values,
+    ]
+
+
+def repair_table_rows(
+    matrix: list[list[str]],
+) -> list[list[str]]:
+    """
+    Repair malformed collapsed rows across a table.
+    """
+
+    if not matrix:
+        return []
+
+    expected_columns = max(
+        len(row)
+        for row in matrix
+    )
+
+    repaired: list[
+        list[str]
+    ] = []
+
+    for row in matrix:
+        repaired.append(
+            repair_collapsed_row(
+                row=row,
+                expected_columns=(
+                    expected_columns
+                ),
+            )
+        )
+
+    return repaired
+
+
+# ============================================================
+# Header handling
 # ============================================================
 
 
@@ -110,20 +307,10 @@ def make_unique_headers(
     headers: list[str],
 ) -> list[str]:
     """
-    Generate unique column names.
-
-    Duplicate names such as:
-
-        Increase/(Decrease)
-        Increase/(Decrease)
-
-    become:
-
-        Increase/(Decrease)
-        Increase/(Decrease)_2
+    Ensure every column name is unique.
     """
 
-    output: list[str] = []
+    result: list[str] = []
     counts: dict[str, int] = {}
 
     for index, raw_header in enumerate(
@@ -148,13 +335,13 @@ def make_unique_headers(
         occurrence = counts[base]
 
         if occurrence == 1:
-            output.append(base)
+            result.append(base)
         else:
-            output.append(
+            result.append(
                 f"{base}_{occurrence}"
             )
 
-    return output
+    return result
 
 
 def get_table_headers(
@@ -162,28 +349,29 @@ def get_table_headers(
     matrix: list[list[str]],
 ) -> list[str]:
     """
-    Prefer PyMuPDF detected headers.
-
-    Fall back to the first table row.
+    Prefer PyMuPDF-detected table headers.
+    Fall back to the first extracted row.
     """
 
-    detected: list[str] = []
+    detected_headers: list[str] = []
 
     try:
-        detected = [
+        detected_headers = [
             clean_cell(value)
             for value in (
                 table.header.names
                 or []
             )
         ]
-
     except Exception:
-        detected = []
+        detected_headers = []
 
-    if detected and any(detected):
+    if (
+        detected_headers
+        and any(detected_headers)
+    ):
         return make_unique_headers(
-            detected
+            detected_headers
         )
 
     if matrix:
@@ -194,8 +382,100 @@ def get_table_headers(
     return []
 
 
+def remove_repeated_header_row(
+    matrix: list[list[str]],
+    headers: list[str],
+) -> list[list[str]]:
+    """
+    Remove the first matrix row when it effectively duplicates
+    the detected header.
+    """
+
+    if not matrix:
+        return matrix
+
+    first_row = matrix[0]
+
+    if (
+        len(first_row)
+        != len(headers)
+    ):
+        return matrix
+
+    matches = 0
+    comparable = 0
+
+    for cell, header in zip(
+        first_row,
+        headers,
+    ):
+        cell_normalized = re.sub(
+            r"\s+",
+            " ",
+            cell.strip().lower(),
+        )
+
+        header_normalized = re.sub(
+            r"\s+",
+            " ",
+            header.strip().lower(),
+        )
+
+        # Ignore generated names such as column_1 when
+        # determining whether a header is duplicated.
+        if (
+            header_normalized.startswith(
+                "column_"
+            )
+            and not cell_normalized
+        ):
+            continue
+
+        comparable += 1
+
+        if (
+            cell_normalized
+            == header_normalized
+        ):
+            matches += 1
+
+    if (
+        comparable > 0
+        and matches / comparable
+        >= 0.80
+    ):
+        return matrix[1:]
+
+    return matrix
+
+
+def make_semantic_first_header(
+    headers: list[str],
+) -> list[str]:
+    """
+    Rename a generated first-column heading to 'Metric'.
+
+    This is useful for most financial tables where the first
+    column contains row labels such as:
+        Gross earnings
+        Profit before income tax
+        Total assets
+    """
+
+    if (
+        headers
+        and headers[0].startswith(
+            "column_"
+        )
+    ):
+        headers = list(headers)
+        headers[0] = "Metric"
+
+    return headers
+
+
 # ============================================================
-# Table titles
+# Table title detection
 # ============================================================
 
 
@@ -204,7 +484,7 @@ def get_nearby_table_title(
     table_bbox,
 ) -> str | None:
     """
-    Find a short text block immediately above the detected table.
+    Find a probable title immediately above the table.
     """
 
     table_x0 = float(
@@ -228,8 +508,8 @@ def get_nearby_table_title(
         sort=False,
     ):
         x0 = float(block[0])
-        y1 = float(block[3])
         x1 = float(block[2])
+        y1 = float(block[3])
 
         text = clean_cell(
             block[4]
@@ -289,7 +569,8 @@ def infer_title_from_rows(
     matrix: list[list[str]],
 ) -> str | None:
     """
-    Detect section/table titles embedded inside the table itself.
+    Detect a likely table title or subsection title embedded
+    inside the table.
     """
 
     keywords = (
@@ -308,7 +589,6 @@ def infer_title_from_rows(
     )
 
     for row in matrix[:12]:
-
         non_empty = [
             cell
             for cell in row
@@ -354,7 +634,7 @@ def is_useful_table(
     matrix: list[list[str]],
 ) -> bool:
     """
-    Reject tiny false-positive tables.
+    Reject obviously tiny or invalid table detections.
     """
 
     if len(matrix) < 2:
@@ -369,7 +649,9 @@ def is_useful_table(
         return False
 
     if (
-        count_non_empty_cells(matrix)
+        count_non_empty_cells(
+            matrix
+        )
         < 4
     ):
         return False
@@ -378,7 +660,7 @@ def is_useful_table(
 
 
 # ============================================================
-# JSON representation
+# JSON storage representation
 # ============================================================
 
 
@@ -388,20 +670,19 @@ def matrix_to_json_structure(
     matrix: list[list[str]],
 ) -> dict:
     """
-    Convert the extracted matrix into a clean JSON structure.
+    Convert the table into a JSON-friendly structure.
 
-    Returns:
+    Example:
 
-        {
-            "headers": [...],
-            "rows": [
-                {
-                    "Metric": "...",
-                    "Group Dec-23": "...",
-                    ...
-                }
-            ]
-        }
+    {
+        "headers": [...],
+        "rows": [
+            {
+                "Metric": "Gross earnings",
+                "Group Dec-23 N'million": "1,186,465"
+            }
+        ]
+    }
     """
 
     rows: list[
@@ -409,7 +690,6 @@ def matrix_to_json_structure(
     ] = []
 
     for matrix_row in matrix:
-
         row_object: dict[
             str,
             str,
@@ -427,7 +707,6 @@ def matrix_to_json_structure(
 
             row_object[key] = value
 
-        # Do not keep completely empty rows.
         if any(
             row_object.values()
         ):
@@ -456,11 +735,11 @@ def matrix_to_rag_text(
     page_number: int,
 ) -> str:
     """
-    Convert table information into explicit text suitable for
+    Convert table data into explicit text suitable for
     embeddings and LLM context.
     """
 
-    output = [
+    output: list[str] = [
         f"Company: {ticker}",
         f"Reporting year: {report_year}",
         f"PDF page: {page_number}",
@@ -474,23 +753,23 @@ def matrix_to_rag_text(
     output.append("")
 
     for row in matrix:
-
-        non_empty = [
-            value
-            for value in row
-            if value
-        ]
-
-        if not non_empty:
+        if not any(row):
             continue
 
         row_label = (
-            non_empty[0]
+            row[0].strip()
+            if row
+            else ""
         )
 
-        output.append(
-            f"Metric: {row_label}"
-        )
+        if row_label:
+            output.append(
+                f"Metric: {row_label}"
+            )
+        else:
+            output.append(
+                "Table row:"
+            )
 
         for index, value in enumerate(
             row
@@ -498,21 +777,24 @@ def matrix_to_rag_text(
             if not value:
                 continue
 
+            # First cell has already been used as the metric.
             if (
                 index == 0
-                and value == row_label
+                and row_label
             ):
                 continue
 
             if index < len(headers):
-                column = headers[index]
+                column_name = (
+                    headers[index]
+                )
             else:
-                column = (
+                column_name = (
                     f"column_{index + 1}"
                 )
 
             output.append(
-                f"{column}: {value}"
+                f"{column_name}: {value}"
             )
 
         output.append("")
@@ -534,10 +816,14 @@ def make_table_id(
     table_index: int,
     matrix: list[list[str]],
 ) -> str:
+    """
+    Create a deterministic table identifier.
+    """
 
     serialized = json.dumps(
         matrix,
         ensure_ascii=False,
+        sort_keys=False,
     )
 
     digest = hashlib.sha256(
@@ -560,7 +846,7 @@ def make_table_id(
 
 
 # ============================================================
-# PyMuPDF detection
+# PyMuPDF table detection
 # ============================================================
 
 
@@ -568,11 +854,10 @@ def detect_page_tables(
     page: pymupdf.Page,
 ) -> list:
     """
-    Fast line-based table detection.
+    Detect tables using PyMuPDF's fast line-based strategy.
     """
 
     try:
-
         finder = page.find_tables(
             strategy="lines",
         )
@@ -582,7 +867,6 @@ def detect_page_tables(
         )
 
     except Exception as exc:
-
         logger.warning(
             "Table detection failed "
             "on page %d: %s",
@@ -594,7 +878,7 @@ def detect_page_tables(
 
 
 # ============================================================
-# Single report
+# Single-report extraction
 # ============================================================
 
 
@@ -602,9 +886,7 @@ def extract_tables_from_report(
     report: ReportRecord,
 ) -> list[dict]:
     """
-    Extract structured tables from one PDF.
-
-    Returns one dictionary per detected table.
+    Extract structured tables from one annual-report PDF.
     """
 
     extracted_tables: list[
@@ -621,7 +903,6 @@ def extract_tables_from_report(
     with pymupdf.open(
         report.file_path
     ) as document:
-
         total_pages = len(
             document
         )
@@ -629,7 +910,6 @@ def extract_tables_from_report(
         for page_index, page in enumerate(
             document
         ):
-
             page_number = (
                 page_index + 1
             )
@@ -649,7 +929,6 @@ def extract_tables_from_report(
             )
 
             if detected_tables:
-
                 logger.info(
                     "Found %d candidate table(s)",
                     len(detected_tables),
@@ -662,15 +941,12 @@ def extract_tables_from_report(
                 detected_tables,
                 start=1,
             ):
-
                 try:
-
-                    matrix = (
+                    raw_matrix = (
                         table.extract()
                     )
 
                 except Exception as exc:
-
                     logger.warning(
                         "Could not extract table %d "
                         "on page %d: %s",
@@ -678,15 +954,31 @@ def extract_tables_from_report(
                         page_number,
                         exc,
                     )
-
                     continue
 
+                # --------------------------------------------
+                # 1. Basic cleaning
+                # --------------------------------------------
+
                 matrix = clean_matrix(
-                    matrix
+                    raw_matrix
                 )
 
                 matrix = (
                     normalize_matrix_width(
+                        matrix
+                    )
+                )
+
+                if not matrix:
+                    continue
+
+                # --------------------------------------------
+                # 2. Repair collapsed rows
+                # --------------------------------------------
+
+                matrix = (
+                    repair_table_rows(
                         matrix
                     )
                 )
@@ -701,6 +993,10 @@ def extract_tables_from_report(
                     for row in matrix
                 )
 
+                # --------------------------------------------
+                # 3. Headers
+                # --------------------------------------------
+
                 headers = (
                     get_table_headers(
                         table,
@@ -712,7 +1008,6 @@ def extract_tables_from_report(
                     len(headers)
                     < column_count
                 ):
-
                     headers.extend(
                         [
                             f"column_{index}"
@@ -727,12 +1022,35 @@ def extract_tables_from_report(
                     len(headers)
                     > column_count
                 ):
-
                     headers = (
                         headers[
                             :column_count
                         ]
                     )
+
+                headers = (
+                    make_semantic_first_header(
+                        headers
+                    )
+                )
+
+                # --------------------------------------------
+                # 4. Remove duplicated header row
+                # --------------------------------------------
+
+                matrix = (
+                    remove_repeated_header_row(
+                        matrix,
+                        headers,
+                    )
+                )
+
+                if not matrix:
+                    continue
+
+                # --------------------------------------------
+                # 5. Table title
+                # --------------------------------------------
 
                 title = (
                     infer_title_from_rows(
@@ -744,12 +1062,20 @@ def extract_tables_from_report(
                     )
                 )
 
+                # --------------------------------------------
+                # 6. Structured JSON
+                # --------------------------------------------
+
                 table_data = (
                     matrix_to_json_structure(
                         headers=headers,
                         matrix=matrix,
                     )
                 )
+
+                # --------------------------------------------
+                # 7. RAG-friendly text
+                # --------------------------------------------
 
                 rag_text = (
                     matrix_to_rag_text(
@@ -768,6 +1094,10 @@ def extract_tables_from_report(
                     )
                 )
 
+                # --------------------------------------------
+                # 8. Stable ID
+                # --------------------------------------------
+
                 table_id = (
                     make_table_id(
                         report_id=(
@@ -783,9 +1113,15 @@ def extract_tables_from_report(
                     )
                 )
 
+                # --------------------------------------------
+                # 9. Final record
+                # --------------------------------------------
+
                 extracted_tables.append(
                     {
-                        "table_id": table_id,
+                        "table_id": (
+                            table_id
+                        ),
                         "report_id": (
                             report.report_id
                         ),
@@ -811,14 +1147,13 @@ def extract_tables_from_report(
                             column_count
                         ),
 
-                        # IMPORTANT:
-                        # This is a Python dictionary.
-                        # Do NOT json.dumps() it.
+                        # Native dict.
+                        # dlt stores this as JSON.
                         "table_data": (
                             table_data
                         ),
 
-                        # RAG-friendly representation.
+                        # For embeddings / semantic retrieval.
                         "rag_text": (
                             rag_text
                         ),
@@ -855,13 +1190,16 @@ def extract_tables_from_report(
 
 
 # ============================================================
-# All reports
+# All-report extraction
 # ============================================================
 
 
 def extract_tables_from_all_reports(
     reports: list[ReportRecord],
 ) -> list[dict]:
+    """
+    Extract tables from all annual-report PDFs.
+    """
 
     all_tables: list[
         dict
@@ -871,14 +1209,16 @@ def extract_tables_from_all_reports(
         reports
     )
 
-    for index, report in enumerate(
+    for (
+        report_index,
+        report,
+    ) in enumerate(
         reports,
         start=1,
     ):
-
         logger.info(
             "Report %d/%d",
-            index,
+            report_index,
             total_reports,
         )
 
