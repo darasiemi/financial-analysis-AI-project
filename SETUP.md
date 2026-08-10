@@ -18,6 +18,10 @@ More dependencies installation for bvector database
 ```bash
 uv add sentence-transformers pgvector
 ```
+More depencies for the agent
+```bash
+uv add python-pptx
+```
 
 Run the script
 ```bash
@@ -332,8 +336,9 @@ Retrieve more documents for inspection:
 
 ```bash
 make test_rag \
-    QUERY="Who is the Group Chief Executive Officer?" \
-    TOP_K=20
+    QUERY="Who is the Group Chief Executive Officer of Zenith?" \
+    MODE=hybrid \
+    TOP_K=20 \
 ```
 
 Arguments:
@@ -349,3 +354,118 @@ The command displays:
 - Retrieved context from the search engine.
 - The generated answer.
 - End-to-end RAG execution time.
+
+
+## Running the Agent
+
+Provide any question using the `QUERY` variable.
+
+```bash
+make test_agent \
+    QUERY="What was GTCO's profit before tax in 2023?"
+```
+
+---
+
+## Restrict Search to a Company
+
+Limit the initial retrieval to a particular company.
+
+```bash
+make test_agent \
+    QUERY="Who is the Group Chief Executive Officer?" \
+    TICKER=GTCO
+```
+
+---
+
+## Restrict Search to a Reporting Year
+
+Limit the initial retrieval to a specific annual report.
+
+```bash
+make test_agent \
+    QUERY="Who is the Group Chief Executive Officer?" \
+    TICKER=GTCO \
+    YEAR=2023
+```
+
+---
+
+## Change Initial Retrieval Size
+
+Specify the number of documents retrieved during the initial hybrid search.
+
+```bash
+make test_agent \
+    QUERY="Who is the Group Chief Executive Officer?" \
+    TOP_K=12
+```
+
+---
+
+## View Initial Retrieved Context
+
+To inspect the evidence retrieved before the agent begins reasoning,
+
+```bash
+make test_agent \
+    QUERY="Who is the Group Chief Executive Officer?" \
+    SHOW_CONTEXT=1
+```
+
+This prints the initial narrative chunks and table representations supplied to Gemini before any additional tool calls.
+
+---
+
+## Example Questions
+
+Retrieve information from annual reports
+
+```bash
+make test_agent \
+    QUERY="Who is the Group Chief Executive Officer?"
+```
+
+Compare financial performance
+
+```bash
+make test_agent \
+    QUERY="Compare GTCO's profit before tax in 2023 and 2024 and calculate the percentage increase."
+```
+
+Combine annual reports with current public information
+
+```bash
+make test_agent \
+    QUERY="Compare GTCO's 2024 annual report with its latest publicly reported financial performance."
+```
+Make agent to create report
+```bash
+make test_agent \
+    QUERY="Create a report comparing GTCO's profit before tax in 2023 and 2024 and explain the percentage change."
+```
+```bash
+make test_agent \
+QUERY="Create a PowerPoint presentation comparing GTCO's profit before tax in 2023 and 2024, calculate the percentage increase, and save the presentation."
+```
+
+---
+
+## Project Structure
+
+```
+agent/
+├── __init__.py
+├── context.py
+├── gemini.py
+├── pipeline.py
+└── tools/
+    ├── __init__.py
+    ├── calculator.py
+    ├── retrieval.py
+    ├── tables.py
+    └── web_search.py
+```
+
+The modular design separates orchestration, LLM interaction and tool implementations, making it straightforward to add new tools or replace existing ones without modifying the overall agent pipeline.

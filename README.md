@@ -37,5 +37,113 @@ The project supports three retrieval strategies over the same indexed corpus:
 
 Using a unified retrieval index enables narrative passages and financial tables to compete during retrieval. When a table document is returned, the application can use its `source_id` to retrieve the original structured JSON from `report_tables`, ensuring that downstream RAG components receive both high-quality retrieval results and the underlying structured financial data.
 
+## Agentic Financial Analysis
+
+The project includes a lightweight agentic AI layer built on top of the RAG pipeline. Instead of relying on a single retrieval step, Gemini can inspect retrieved evidence and autonomously select additional tools when needed.
+
+### Architecture
+
+The agent follows a two-stage workflow:
+
+1. **Initial Retrieval**
+   - Hybrid search is performed over the indexed annual reports.
+   - Retrieved narrative chunks and tables are supplied to Gemini as initial evidence.
+   - Local annual reports remain the primary source of financial information.
+
+2. **Agent Reasoning and Tool Use**
+   - Gemini evaluates the initial evidence.
+   - If sufficient, it answers directly.
+   - Otherwise, it can perform additional retrieval, inspect structured tables, calculate values, search the web, or generate a PowerPoint presentation.
+
+```text
+User Question
+      │
+      ▼
+Initial Hybrid Retrieval
+      │
+      ▼
+Annual Report Context
+      │
+      ▼
+Gemini Agent
+      │
+      ├── Keyword Search
+      ├── Semantic Search
+      ├── Hybrid Search
+      ├── Table Lookup
+      ├── Calculator
+      ├── Web Search
+      └── PowerPoint Generation
+      │
+      ▼
+Final Response / Presentation
+```
+
+### Agent Tools
+
+| Tool | Purpose |
+| --- | --- |
+| **Hybrid Search** | Combines lexical and semantic retrieval using Reciprocal Rank Fusion (RRF). |
+| **Keyword Search** | Retrieves exact names, financial metrics, executive titles, and accounting terminology. |
+| **Semantic Search** | Retrieves conceptually similar narrative chunks and tables using embeddings. |
+| **Table Lookup** | Retrieves the original structured JSON for an extracted table when exact values or row/column relationships are required. |
+| **Calculator** | Performs deterministic calculations such as percentage changes, ratios, margins, and differences. |
+| **Web Search** | Uses Gemini with Google Search grounding for current or external information. |
+| **PowerPoint Generation** | Creates designed `.pptx` presentations containing metrics, comparisons, charts, highlights, summaries, and sources. |
+
+### Source Priority
+
+The agent prioritizes evidence in the following order:
+
+1. Local annual reports
+2. Structured extracted tables
+3. Deterministic calculations
+4. Public web information
+
+Web search is primarily used when information is current, external, or unavailable in the indexed reports.
+
+### PowerPoint Generation
+
+When explicitly requested, the agent can gather evidence, perform calculations, and generate a designed PowerPoint presentation.
+
+Supported slide types include:
+
+- Bullet summaries
+- Financial metric cards
+- Year-on-year comparisons
+- Key figure highlights
+- Charts
+- Source/reference slides
+
+Presentations are saved to:
+
+```text
+outputs/
+```
 
 
+### Tool Traceability
+
+The CLI reports the initial retrieval query and the additional tools selected by Gemini, including their arguments and responses.
+
+```text
+Tool: search_keyword
+Arguments:
+  ticker: GTCO
+  report_year: 2023
+  query: Profit before tax
+
+Tool: calculate
+Arguments:
+  expression: ...
+
+Tool: create_powerpoint
+Arguments:
+  title: GTCO Profit Before Tax Analysis
+  ...
+
+Tool response:
+  Status: SUCCESS
+```
+
+This makes the agent workflow inspectable and helps evaluate how retrieval, tool selection, and query refinement contribute to the final result.

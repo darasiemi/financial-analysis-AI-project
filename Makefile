@@ -59,3 +59,12 @@ test_rag:
 		$(if $(TICKER),--ticker $(TICKER),) \
 		$(if $(YEAR),--year $(YEAR),) \
 		--show-context
+
+test_agent:
+	uv run python -m scripts.agent_qa \
+		"$(or $(QUERY),Who is the Group Chief Executive Officer?)" \
+		--top-k $(or $(TOP_K),8) \
+		$(if $(TICKER),--ticker $(TICKER),) \
+		$(if $(YEAR),--year $(YEAR),) \
+		$(if $(SHOW_CONTEXT),--show-context,) \
+		$(if $(SHOW_RAW_TOOLS),--show-raw-tools,)
