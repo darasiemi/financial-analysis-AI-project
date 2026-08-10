@@ -68,3 +68,28 @@ test_agent:
 		$(if $(YEAR),--year $(YEAR),) \
 		$(if $(SHOW_CONTEXT),--show-context,) \
 		$(if $(SHOW_RAW_TOOLS),--show-raw-tools,)
+
+generate_eval:
+	uv run python -m scripts.generate_eval_data \
+		--n $(or $(N),100) \
+		--output $(or $(DATASET),data/evaluation/benchmark.jsonl) \
+		--seed $(or $(SEED),42) \
+		--pool-size $(or $(POOL_SIZE),2000) \
+		--minimum-quality $(or $(MIN_QUALITY),0.90) \
+		--minimum-difficulty $(or $(MIN_DIFFICULTY),0.80) \
+		--minimum-financial-relevance $(or $(MIN_FINANCIAL),0.90)
+
+eval_rag:
+	uv run python -m scripts.evaluate \
+		--pipeline rag \
+		--dataset $(or $(DATASET),data/evaluation/benchmark.jsonl) \
+		--mode $(or $(MODE),hybrid) \
+		--top-k $(or $(TOP_K),8) \
+		$(if $(LIMIT),--limit $(LIMIT),)
+
+eval_agent:
+	uv run python -m scripts.evaluate \
+		--pipeline agent \
+		--dataset $(or $(DATASET),data/evaluation/benchmark.jsonl) \
+		--top-k $(or $(TOP_K),8) \
+		$(if $(LIMIT),--limit $(LIMIT),)

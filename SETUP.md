@@ -18,9 +18,9 @@ More dependencies installation for bvector database
 ```bash
 uv add sentence-transformers pgvector
 ```
-More depencies for the agent
+More depencies for the agent and evaluation
 ```bash
-uv add python-pptx
+uv add python-pptx openpyxl
 ```
 
 Run the script
@@ -440,11 +440,8 @@ Combine annual reports with current public information
 make test_agent \
     QUERY="Compare GTCO's 2024 annual report with its latest publicly reported financial performance."
 ```
-Make agent to create report
-```bash
-make test_agent \
-    QUERY="Create a report comparing GTCO's profit before tax in 2023 and 2024 and explain the percentage change."
-```
+Make agent to create presentation
+
 ```bash
 make test_agent \
 QUERY="Create a PowerPoint presentation comparing GTCO's profit before tax in 2023 and 2024, calculate the percentage increase, and save the presentation."
@@ -469,3 +466,83 @@ agent/
 ```
 
 The modular design separates orchestration, LLM interaction and tool implementations, making it straightforward to add new tools or replace existing ones without modifying the overall agent pipeline.
+
+## Evaluation 
+
+
+### Generate the Benchmark
+
+Generate the default benchmark:
+
+```bash
+make generate_eval
+```
+
+Generate a benchmark with a specific number of questions:
+
+```bash
+make generate_eval N=100
+```
+
+A stricter configuration can be used with:
+
+```bash
+make generate_eval \
+	N=100 \
+	POOL_SIZE=2000 \
+	MIN_QUALITY=0.90 \
+	MIN_DIFFICULTY=0.80 \
+	MIN_FINANCIAL=0.90
+```
+
+The generated benchmark is saved to:
+
+```text
+data/evaluation/benchmark.jsonl
+```
+
+---
+
+### Evaluate RAG
+
+Evaluate hybrid retrieval:
+
+```bash
+make eval_rag MODE=hybrid
+```
+
+Evaluate keyword retrieval:
+
+```bash
+make eval_rag MODE=keyword
+```
+
+Evaluate semantic/vector retrieval:
+
+```bash
+make eval_rag MODE=vector
+```
+
+Run against only a subset of the benchmark:
+
+```bash
+make eval_rag MODE=hybrid LIMIT=10
+```
+
+---
+
+### Evaluate the Agent
+
+Evaluate the agent pipeline:
+
+```bash
+make eval_agent
+```
+
+Run a smaller agent evaluation:
+
+```bash
+make eval_agent LIMIT=10
+```
+
+---

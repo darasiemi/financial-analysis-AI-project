@@ -147,3 +147,420 @@ Tool response:
 ```
 
 This makes the agent workflow inspectable and helps evaluate how retrieval, tool selection, and query refinement contribute to the final result.
+
+## Evaluation Framework
+
+The project includes an evaluation framework for comparing the standard RAG pipeline with the agentic financial-analysis pipeline.
+
+The framework evaluates:
+
+- retrieval quality;
+- answer correctness;
+- faithfulness to retrieved evidence;
+- answer relevance;
+- latency;
+- agent tool use and execution success.
+
+---
+
+## Benchmark Generation
+
+Because no manually labelled ground-truth dataset was initially available, the evaluation benchmark is generated from the indexed annual-report corpus.
+
+The benchmark generation pipeline is:
+
+```text
+Annual Report Corpus
+        │
+        ▼
+Stratified Sampling
+(Ticker × Report Year)
+        │
+        ▼
+Financial Question Generation
+        │
+        ▼
+Static Quality Checks
+        │
+        ▼
+LLM Validation
+        │
+        ▼
+Quality / Difficulty Thresholds
+        │
+        ▼
+Benchmark Dataset
+```
+
+Documents are sampled across **ticker and reporting year** to reduce over-representation of a single company or period.
+
+Generated examples are stored in:
+
+```text
+data/evaluation/benchmark.jsonl
+```
+
+### Benchmark Question Types
+
+The benchmark focuses on sufficiently challenging financial-analysis tasks.
+
+| Category | Description |
+| --- | --- |
+| **Financial Metric** | Retrieves financially meaningful values while preserving the correct entity, period, unit, and accounting context. |
+| **Table Reasoning** | Requires reasoning across multiple rows, columns, periods, entities, or financial categories. |
+| **Within-Source Comparison** | Compares financially related values contained within the same source. |
+| **Cross-Report Comparison** | Compares the same financial metric across different reporting periods. |
+| **Calculation** | Requires deterministic calculations such as percentage growth, absolute change, ratios, margins, and contribution percentages. |
+| **Multi-Hop** | Requires combining evidence from multiple sources. |
+| **Financial Interpretation** | Requires an objective financial conclusion supported by reported values. |
+
+The default benchmark distribution is:
+
+```text
+Financial Metric              10%
+Table Reasoning               15%
+Within-Source Comparison      15%
+Cross-Report Comparison       20%
+Calculation                   20%
+Multi-Hop                     15%
+Financial Interpretation       5%
+```
+
+Most questions therefore require more than simple factual retrieval.
+
+### Benchmark Validation
+
+Each generated question-answer pair is automatically validated before inclusion.
+
+The validator checks:
+
+- financial relevance;
+- grounding in annual-report evidence;
+- question difficulty;
+- currency and unit accuracy;
+- reporting-period accuracy;
+- Group, Company, subsidiary, segment, and geographic distinctions;
+- calculation validity;
+- compatibility of compared financial metrics;
+- multi-source necessity;
+- absence of parser or database artifacts;
+- naturalness of the question.
+
+Each benchmark example includes validation metadata such as:
+
+```json
+{
+  "quality_score": 0.95,
+  "difficulty_score": 0.90,
+  "financial_relevance_score": 1.0,
+  "human_verified": false
+}
+```
+
+Examples that fail the configured thresholds are rejected.
+
+Synthetic examples remain marked:
+
+```text
+human_verified = false
+```
+
+until manually reviewed. A final benchmark can therefore be human-validated and frozen before being treated as a gold evaluation dataset.
+
+---
+
+## Evaluation Architecture
+
+The same benchmark can be used to evaluate both the RAG and agent pipelines.
+
+```text
+Benchmark Question
+        │
+        ├───────────────────────┐
+        ▼                       ▼
+      RAG                    Agent
+        │                       │
+        ▼                       ▼
+Initial Retrieval         Initial Retrieval
+        │                       │
+        ▼                       ▼
+Answer Generation         Gemini Agent
+                                │
+                                ├── Additional Retrieval
+                                ├── Table Lookup
+                                ├── Calculator
+                                └── Other Tools
+                                │
+                                ▼
+                             Answer
+```
+
+For the agent, the evaluator separately records the initial retrieval results and the final evidence accumulated through tool calls.
+
+---
+
+## Retrieval Metrics
+
+### Precision@K
+
+Measures the proportion of the top-K retrieved documents that are relevant.
+
+```text
+Precision@K =
+Relevant documents retrieved in top K
+-------------------------------------
+K
+```
+
+### Recall@K
+
+Measures the proportion of all relevant evidence retrieved within the top-K results.
+
+```text
+Recall@K =
+Relevant documents retrieved in top K
+-------------------------------------
+Total relevant documents
+```
+
+### Hit Rate@K
+
+Measures whether at least one relevant document appears in the top-K results.
+
+For each question:
+
+```text
+Hit = 1  if at least one relevant document is in top K
+Hit = 0  otherwise
+```
+
+The benchmark-level Hit Rate is the mean across all questions.
+
+### Mean Reciprocal Rank (MRR)
+
+Measures how highly the first relevant result appears.
+
+For one query:
+
+```text
+Reciprocal Rank = 1 / rank of first relevant result
+```
+
+Examples:
+
+```text
+Rank 1 → 1.00
+Rank 2 → 0.50
+Rank 4 → 0.25
+No relevant result → 0.00
+```
+
+The mean across all benchmark questions gives **MRR**.
+
+### nDCG@K
+
+Normalized Discounted Cumulative Gain rewards relevant documents appearing higher in the ranking and supports questions with multiple relevant sources.
+
+---
+
+## Answer Evaluation
+
+### Token F1
+
+Measures lexical overlap between the generated answer and reference answer.
+
+Token F1 provides a deterministic baseline but is not sufficient by itself because financially equivalent answers may use different wording.
+
+### Answer Correctness
+
+An LLM judge compares the generated answer with the benchmark reference answer.
+
+The judge checks:
+
+- financial values;
+- currencies;
+- units;
+- reporting periods;
+- entity distinctions;
+- completeness.
+
+### Faithfulness
+
+Measures whether factual claims in the generated answer are supported by the evidence retrieved by the pipeline.
+
+This is evaluated separately from correctness. An answer may contain the correct fact but still receive a lower faithfulness score if the retrieved evidence does not support the claim.
+
+### Answer Relevance
+
+Measures whether the response directly and sufficiently answers the question without unnecessary or unrelated information.
+
+### LLM Judge Explanations
+
+The LLM judge returns both a score and a concise explanation for each metric.
+
+```json
+{
+  "correctness": {
+    "score": 1.0,
+    "reason": "The values, units, and reporting periods match the reference answer."
+  },
+  "faithfulness": {
+    "score": 0.9,
+    "reason": "Most claims are supported by the retrieved evidence."
+  },
+  "relevance": {
+    "score": 1.0,
+    "reason": "The response directly answers the requested financial comparison."
+  }
+}
+```
+
+These explanations make individual evaluation failures easier to inspect.
+
+---
+
+## Agent-Specific Evaluation
+
+The agent pipeline also records tool-related metrics.
+
+| Metric | Description |
+| --- | --- |
+| **Tool Count** | Number of additional tools invoked by the agent. |
+| **Tool Success Rate** | Proportion of invoked tools that execute successfully. |
+| **Tool F1** | Compares selected tools with expected tools when tool annotations are available. |
+| **Latency** | Total time required to complete the query. |
+
+Tool-call traces are retained so the evaluation can inspect:
+
+- which tools Gemini selected;
+- the arguments sent to each tool;
+- whether each tool succeeded;
+- how additional retrieval affected the final evidence set.
+
+---
+
+## Initial vs Final Retrieval
+
+For the agent pipeline, retrieval is evaluated at two stages.
+
+```text
+User Question
+      │
+      ▼
+Initial Hybrid Retrieval
+      │
+      ├── Initial Precision@K
+      ├── Initial Recall@K
+      ├── Initial Hit Rate@K
+      ├── Initial MRR
+      └── Initial nDCG@K
+      │
+      ▼
+Gemini Agent
+      │
+      ├── Keyword Search
+      ├── Semantic Search
+      ├── Hybrid Search
+      ├── Table Lookup
+      └── Other Tools
+      │
+      ▼
+Final Evidence Set
+      │
+      ├── Final Precision@K
+      ├── Final Recall@K
+      ├── Final Hit Rate@K
+      ├── Final MRR
+      └── Final nDCG@K
+      │
+      ▼
+Final Answer
+```
+
+This allows the evaluation to determine whether agentic retrieval improves evidence coverage beyond the initial RAG stage.
+
+---
+
+## Evaluation Output
+
+Evaluation results are stored as Excel workbooks under:
+
+```text
+outputs/evaluation/
+```
+
+Example outputs:
+
+```text
+outputs/evaluation/
+├── rag_keyword_evaluation.xlsx
+├── rag_vector_evaluation.xlsx
+├── rag_hybrid_evaluation.xlsx
+└── agent_evaluation.xlsx
+```
+
+Each workbook contains three sheets.
+
+### Summary
+
+Contains averaged evaluation metrics such as:
+
+- Precision@K;
+- Recall@K;
+- Hit Rate@K;
+- MRR;
+- nDCG@K;
+- Token F1;
+- Answer Correctness;
+- Faithfulness;
+- Answer Relevance;
+- Latency;
+- Tool Success Rate.
+
+### Detailed Results
+
+Contains one row per benchmark question, including:
+
+- question;
+- reference answer;
+- generated answer;
+- benchmark category;
+- gold source IDs;
+- retrieved source IDs;
+- retrieval metrics;
+- answer-quality scores;
+- LLM judge explanations;
+- tool calls;
+- latency;
+- errors.
+
+### Errors
+
+Contains benchmark examples that failed during:
+
+- retrieval;
+- answer generation;
+- tool execution;
+- LLM judging;
+- evaluation processing.
+
+---
+
+### Metrics Summary
+
+| Evaluation Dimension | Metric |
+| --- | --- |
+| Retrieval relevance | Precision@K |
+| Evidence coverage | Recall@K |
+| Retrieval success | Hit Rate@K |
+| First relevant result ranking | MRR |
+| Overall ranking quality | nDCG@K |
+| Lexical answer similarity | Token F1 |
+| Factual answer accuracy | Answer Correctness |
+| Evidence grounding | Faithfulness |
+| Question-answer alignment | Answer Relevance |
+| Agent reliability | Tool Success Rate |
+| Agent tool behavior | Tool Count / Tool F1 |
+| Efficiency | Latency |
+
+The framework therefore provides a consistent way to compare **keyword RAG, semantic RAG, hybrid RAG, and the agentic financial-analysis pipeline** using the same financially focused benchmark.
