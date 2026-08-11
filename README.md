@@ -76,6 +76,8 @@ The project supports three retrieval strategies:
 
  Narrative passages and financial tables are processed separately but combined into a **single retrieval index**. Tables are converted to a text representation so they can be searched and ranked alongside narrative chunks using keyword, semantic, or hybrid retrieval. The original tables are preserved as structured **JSON**, allowing the system to access their rows, columns, and values when detailed table reasoning is required.
 
+ ```
+
 Narrative Pipeline                    Table Pipeline
        │                                    │
        ▼                                    ▼
@@ -95,7 +97,7 @@ Narrative Chunks                   Structured Table JSON
                       ▼
                 Hybrid Search
                      (RRF)
-
+```
 ### RAG Pipeline
 
 The RAG pipeline retrieves relevant evidence from the indexed annual reports, constructs a grounded context, and uses **Gemini** to generate the final answer.
