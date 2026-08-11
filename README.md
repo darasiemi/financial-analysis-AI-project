@@ -564,3 +564,25 @@ Contains benchmark examples that failed during:
 | Efficiency | Latency |
 
 The framework therefore provides a consistent way to compare **keyword RAG, semantic RAG, hybrid RAG, and the agentic financial-analysis pipeline** using the same financially focused benchmark.
+
+## Design Trade-offs
+
+I made several key design changes as the project evolved, mainly to improve retrieval quality, financial reasoning, and evaluation reliability.
+
+1. **I stored extracted tables as JSON rather than recreating them as relational PostgreSQL tables.**  
+   Annual-report tables vary widely in structure, so mapping every table into a fixed relational schema would have required substantial table-specific logic. I instead store the structured table representation as JSON, which preserves rows, columns, labels, and values while keeping ingestion flexible. The trade-off is that SQL querying over individual table cells is less direct, so I use a dedicated table lookup tool when exact structure matters.
+
+2. **I chunked narrative text but treated tables differently.**  
+   I split long narrative sections into smaller retrieval chunks to improve search precision and reduce context size. However, chunking tables like normal text can destroy row-column relationships, so I preserve tables as structured units and index a searchable textual representation alongside the original JSON. This gives me both retrievability and structural fidelity.
+
+3. **I kept retrieval in PostgreSQL and combined lexical and semantic search.**  
+   I use PostgreSQL for document metadata, full-text retrieval, and vector embeddings rather than maintaining separate search systems. I then combine keyword and semantic retrieval using hybrid search. This keeps the architecture simpler while still handling both exact financial terminology and semantically similar wording.
+
+4. **I moved from a simple RAG pipeline to a lightweight agent only where additional reasoning was useful.**  
+   The system performs initial hybrid retrieval first, then lets Gemini decide whether it needs more retrieval, structured table lookup, calculation, web search, or report generation. I chose this instead of a fully autonomous multi-agent architecture because it keeps the annual reports as the primary evidence source and makes failures easier to trace.
+
+5. **I changed the benchmark after finding that the first synthetic questions were too easy and too document-specific.**  
+   The initial generator often produced simple lookup questions, governance facts, and even questions influenced by extraction artifacts such as generic table columns. These were useful for retrieval sanity checks but did not adequately test financial analysis. I redesigned generation to focus on harder tasks such as table reasoning, cross-year comparisons, percentage changes, ratios, multi-hop retrieval, and financial interpretation, while rejecting parser-oriented or trivial questions.
+
+6. **I added validation and stratified sampling because synthetic benchmarks can otherwise be misleading.**  
+   The benchmark is now sampled across ticker and report year rather than whichever documents happen to appear first in the database. Generated questions are also checked for financial relevance, difficulty, grounding, unit consistency, calculation validity, and semantic compatibility. This improves benchmark quality, although I still mark synthetic examples as not human-verified because LLM-generated ground truth can contain errors.
