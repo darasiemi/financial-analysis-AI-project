@@ -246,7 +246,34 @@ This makes the agent workflow inspectable and helps evaluate how retrieval, tool
 
 ## Evaluation
 
-The evaluation framework provides a consistent way to compare the **keyword, semantic, hybrid RAG, and agentic financial-analysis pipelines** using the same financially focused benchmark. Because no labelled ground-truth dataset was initially available, I generate and validate synthetic benchmark questions from the indexed annual reports, with stratified sampling across companies and reporting years and an emphasis on challenging tasks such as table reasoning, calculations, cross-report comparisons, and multi-hop analysis. Retrieval is assessed using **Precision@K, Recall@K, Hit Rate@K, MRR, and nDCG@K**, while answer quality is evaluated using **Token F1** and LLM-based measures of **correctness, faithfulness, and relevance**. Agent runs additionally retain tool-call traces and execution timing to support detailed analysis of retrieval, reasoning, and tool-use failures.
+The evaluation framework provides a consistent way to compare the **keyword, semantic, hybrid RAG, and agentic financial-analysis pipelines** using the same financially focused benchmark. Because no labelled ground-truth dataset was initially available, I generated and validated synthetic benchmark questions from the indexed annual reports, with stratified sampling across companies and reporting years and an emphasis on challenging tasks such as table reasoning, calculations, cross-report comparisons, and multi-hop analysis. Retrieval is assessed using **Precision@K, Recall@K, Hit Rate@K, MRR, and nDCG@K**, while answer quality is evaluated using **Token F1** and LLM-based measures of **correctness, faithfulness, and relevance**. Agent runs additionally retain tool-call traces and execution timing to support detailed analysis of retrieval, reasoning, and tool-use failures.
+
+**How synthetic benchmark validation was done***: Each synthetic question-answer pair is independently evaluated by an LLM validator for evidence grounding, financial relevance, difficulty, calculation validity, entity/period/unit consistency, and naturalness. Examples are retained only if they achieve a minimum **quality score of 0.90**, **difficulty score of 0.80**, and **financial relevance score of 0.90**. The current benchmark targets **75 accepted examples**, with `gemini-2.5-flash` used for both generation and validation. Accepted examples remain marked as synthetic and not human-verified until manually reviewed.
+
+```
+                    Benchmark
+                        │
+                        ▼
+                 Run RAG / Agent
+                        │
+          ┌─────────────┼─────────────┐
+          ▼             ▼             ▼
+      Retrieval      Generated     Retrieved
+       Sources        Answer        Context
+          │             │             │
+          ▼             ▼             │
+   Gold Source IDs  Reference Answer  │
+          │             │             │
+          ▼             └──────┬──────┘
+ Deterministic Metrics         ▼
+ Precision / Recall      Gemini LLM Judge
+ Hit Rate / MRR / nDCG          │
+                               ├── Correctness
+ Generated ↔ Reference          ├── Faithfulness
+          │                     └── Relevance
+          ▼
+       Token F1
+```
 
 [More on evaluation](evaluation/README.md)
 
@@ -278,3 +305,6 @@ I made several design changes as the project evolved to balance extraction quali
 
 8. **I designed the repository for modularity and reproducibility.**  
    I separated ingestion, processing, indexing, retrieval, RAG, agent tools, and evaluation into modular components that can be run and tested independently. I use `Docker` for a consistent PostgreSQL environment, `uv` for dependency management, environment-based configuration, and a `Makefile` to standardize common workflows. Benchmark generation also supports a configurable random seed, although database-level random sampling means generation is not fully deterministic.
+
+9. **I used LLM validation for scalability, but retained human verification for the final gold benchmark.**  
+Because manually creating and validating a sufficiently challenging financial-analysis benchmark is time-consuming, I used an **LLM validator** to automatically screen synthetic question-answer pairs. However, LLM validation can still accept subtle factual errors, unsupported interpretations, or artificially difficult questions. I therefore keep accepted examples marked as synthetic and require **human verification before treating the benchmark as gold-standard ground truth**. This is future work considering the time constraint to deliver my project for the Zoomcamp.
