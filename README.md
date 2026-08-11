@@ -310,3 +310,9 @@ I made several design changes as the project evolved to balance extraction quali
 
 9. **I used LLM validation for scalability, but retained human verification for the final gold benchmark.**  
 Because manually creating and validating a sufficiently challenging financial-analysis benchmark is time-consuming, I used an **LLM validator** to automatically screen synthetic question-answer pairs. However, LLM validation can still accept subtle factual errors, unsupported interpretations, or artificially difficult questions. I therefore keep accepted examples marked as synthetic and require **human verification before treating the benchmark as gold-standard ground truth**. This is future work considering the time constraint to deliver my project for the Zoomcamp.
+
+10. **I separated development and deployment dependencies to keep the production environment lean.**  
+    After encountering disk-space constraints during container builds, I separated ingestion, notebook, evaluation, and document-processing dependencies from those required to run the application. This reduces unnecessary production dependencies, resulting in a smaller, more maintainable deployment environment.
+
+11. **I configured CPU-only PyTorch to reduce deployment overhead.**  
+    `sentence-transformers` depends on PyTorch, whose default resolution pulled in large CUDA/NVIDIA packages that were unnecessary for the current CPU-based deployment and caused Docker builds to exceed available disk space. I therefore used CPU-only PyTorch, trading GPU acceleration for a substantially lighter deployment.

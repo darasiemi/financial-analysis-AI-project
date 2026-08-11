@@ -93,3 +93,8 @@ eval_agent:
 		--dataset $(or $(DATASET),data/evaluation/benchmark.jsonl) \
 		--top-k $(or $(TOP_K),8) \
 		$(if $(LIMIT),--limit $(LIMIT),)
+
+.PHONY: app
+
+app:
+	uv run streamlit run deployment/app.py

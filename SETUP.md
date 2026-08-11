@@ -2,6 +2,13 @@
 
 ## Data Ingestion
 Create data directory
+
+Set environment variables
+```bash
+set -a
+source .env
+set +a
+```
 ```bash
 mkdir data
 ```
@@ -22,6 +29,13 @@ More depencies for the agent and evaluation
 ```bash
 uv add python-pptx openpyxl
 ```
+Install dependencies for deployment
+```bash
+uv add streamlit plotly pandas
+```
+Note that during deployment, I separated development and deployment dependencies. This was edited directly on my `pyproject.loml`, removing the old lock `rm uv.lock` and running the lock again `uv lock`.
+
+For normal local development, a plain `uv sync` includes the `dev` group.
 
 Run the script
 ```bash
@@ -37,7 +51,7 @@ uv run python ingest_reports.py
 ```
 Also start postgres database
 ```bash
-docker compose up -d
+docker compose up -d postgres
 ```
 After ingestion, check that the the data is in the database
 ```bash
@@ -546,3 +560,32 @@ make eval_agent LIMIT=10
 ```
 
 ---
+
+## Streamlit app
+Create config
+```bash
+mkdir -p .streamlit
+touch .streamlit/config.toml
+```
+To start app container
+```bash
+docker compose up --build
+```
+Then start app
+```bash
+docker compose up
+```
+If you want to start database separately and then run streamlit
+```bash
+docker compose up -d postgres
+make app
+```
+To start all services using docker compose
+```bash
+docker compose up
+```
+
+To stop it them
+```bash
+docker compose down
+```
