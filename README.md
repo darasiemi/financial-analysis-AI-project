@@ -96,6 +96,41 @@ Narrative Chunks                   Structured Table JSON
                 Hybrid Search
                      (RRF)
 
+### RAG Pipeline
+
+The RAG pipeline retrieves relevant evidence from the indexed annual reports, constructs a grounded context, and uses **Gemini** to generate the final answer.
+
+- **Configurable retrieval.**  
+  The pipeline supports **keyword, semantic, and hybrid search**, with hybrid retrieval used by default. Queries can also be filtered by company and reporting year.
+
+- **Context construction.**  
+  Retrieved narrative passages and table representations are assembled into a structured context with their source metadata, including content type, company, reporting year, page range, and section.
+
+- **Grounded answer generation.**  
+  The retrieved context and user question are passed to **Gemini**, which is instructed to answer only from the supplied evidence, preserve financial values, currencies, units, periods, and entity distinctions, and cite the supporting retrieved sources.
+
+- **Insufficient evidence handling.**  
+  If retrieval returns no relevant documents, the pipeline does not generate an unsupported answer and instead reports that no relevant evidence was retrieved.
+
+```text
+User Question
+      │
+      ▼
+Retrieval
+(Keyword / Semantic / Hybrid)
+      │
+      ▼
+Top-K Evidence
+      │
+      ▼
+Context Construction
+      │
+      ▼
+Gemini
+      │
+      ▼
+Grounded Answer + Source Citations
+```
 
 ## Agentic Financial Analysis
 
