@@ -261,7 +261,7 @@ I made several design changes as the project evolved to balance extraction quali
 2. **I switched table storage from relational normalization to JSON.**  
    I initially attempted to represent extracted tables relationally, but annual-report tables vary considerably in structure and were not being preserved reliably. I therefore stored each table as structured JSON, retaining its rows, columns, labels, and values without forcing different tables into a common schema. I also maintained a textual representation of each table for retrieval and embeddings.
 
-3. **I use layout-aware chunking rather than splitting raw PDF text.**  
+3. **I used layout-aware chunking rather than splitting raw PDF text.**  
    I reconstructed narrative content from the PDF layout and use paragraph- and section-aware chunking with controlled chunk sizes and overlap. This required more preprocessing than fixed character splitting, but produced more coherent retrieval units and better preserved the context of financial-report narratives.
 
 4. **I kept lexical and vector retrieval in PostgreSQL using pgvector.**  
@@ -271,26 +271,10 @@ I made several design changes as the project evolved to balance extraction quali
    The agent starts with hybrid retrieval over the annual-report corpus and invokes additional tools—such as keyword or semantic search, structured table lookup, deterministic calculation, web search, and report generation—only when needed. This provides more flexibility than a fixed RAG pipeline while avoiding the orchestration complexity of a multi-agent system.
 
 6. **I redesigned the benchmark when the initial synthetic evaluation was too easy.**  
-   Early benchmark generation produced many simple factual or document-specific questions that did not adequately test financial analysis. I shifted generation toward harder tasks such as table reasoning, calculations, within-source and cross-report comparisons, multi-hop retrieval, and financial interpretation. I also introduced stratified sampling across companies and reporting years and validation for grounding, financial relevance, difficulty, and data consistency.
+   The initial generator often produced simple lookup questions, governance facts, and even questions influenced by extraction artifacts such as generic table columns. I shifted generation toward harder tasks such as table reasoning, calculations, within-source and cross-report comparisons, multi-hop retrieval, and financial interpretation. I also introduced stratified sampling across companies and reporting years and validation for grounding, financial relevance, difficulty, and data consistency.
 
-## Design Trade-offs
-
-I made several key design changes as the project evolved, mainly to improve retrieval quality, financial reasoning, and evaluation reliability.
-
-1. **I stored extracted tables as JSON rather than recreating them as relational PostgreSQL tables.**  
-   Annual-report tables vary widely in structure, so mapping every table into a fixed relational schema would dehave required substantial table-specific logic. I instead store the structured table representation as JSON, which preserves rows, columns, labels, and values while keeping ingestion flexible. The trade-off is that SQL querying over individual table cells is less direct, so I use a dedicated table lookup tool when exact structure matters.
-
-2. **I chunked narrative text but treated tables differently.**  
-   I split long narrative sections into smaller retrieval chunks to improve search precision and reduce context size. However, chunking tables like normal text can destroy row-column relationships, so I preserve tables as structured units and index a searchable textual representation alongside the original JSON. This gives me both retrievability and structural fidelity.
-
-3. **I kept retrieval in PostgreSQL and combined lexical and semantic search.**  
-   I use PostgreSQL for document metadata, full-text retrieval, and vector embeddings rather than maintaining separate search systems. I then combine keyword and semantic retrieval using hybrid search. This keeps the architecture simpler while still handling both exact financial terminology and semantically similar wording.
-
-4. **I moved from a simple RAG pipeline to a lightweight agent only where additional reasoning was useful.**  
-   The system performs initial hybrid retrieval first, then lets Gemini decide whether it needs more retrieval, structured table lookup, calculation, web search, or report generation. I chose this instead of a fully autonomous multi-agent architecture because it keeps the annual reports as the primary evidence source and makes failures easier to trace.
-
-5. **I changed the benchmark after finding that the first synthetic questions were too easy and too document-specific.**  
-   The initial generator often produced simple lookup questions, governance facts, and even questions influenced by extraction artifacts such as generic table columns. These were useful for retrieval sanity checks but did not adequately test financial analysis. I redesigned generation to focus on harder tasks such as table reasoning, cross-year comparisons, percentage changes, ratios, multi-hop retrieval, and financial interpretation, while rejecting parser-oriented or trivial questions.
-
-6. **I added validation and stratified sampling because synthetic benchmarks can otherwise be misleading.**  
+7. **I added validation and stratified sampling because synthetic benchmarks can otherwise be misleading.**  
    The benchmark is now sampled across ticker and report year rather than whichever documents happen to appear first in the database. Generated questions are also checked for financial relevance, difficulty, grounding, unit consistency, calculation validity, and semantic compatibility. This improves benchmark quality, although I still mark synthetic examples as not human-verified because LLM-generated ground truth can contain errors.
+
+8. **I designed the repository for modularity and reproducibility.**  
+   I separated ingestion, processing, indexing, retrieval, RAG, agent tools, and evaluation into modular components that can be run and tested independently. I use `Docker` for a consistent PostgreSQL environment, `uv` for dependency management, environment-based configuration, and a `Makefile` to standardize common workflows. Benchmark generation also supports a configurable random seed, although database-level random sampling means generation is not fully deterministic.
