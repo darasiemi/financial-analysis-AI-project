@@ -15,7 +15,14 @@ from pptx.util import Inches, Pt
 # Configuration
 # =============================================================
 
-OUTPUT_DIR = Path("outputs")
+OUTPUT_DIR = Path(
+    "outputs/generated_reports"
+)
+
+POWERPOINT_MIME_TYPE = (
+    "application/vnd.openxmlformats-officedocument."
+    "presentationml.presentation"
+)
 
 # Presentation theme
 NAVY = RGBColor(13, 35, 64)
@@ -91,6 +98,7 @@ def _add_background(
     )
 
     background.fill.solid()
+
     background.fill.fore_color.rgb = (
         color
     )
@@ -117,7 +125,9 @@ def _add_header(
     )
 
     paragraph = (
-        title_box.text_frame.paragraphs[0]
+        title_box
+        .text_frame
+        .paragraphs[0]
     )
 
     paragraph.text = title
@@ -382,6 +392,7 @@ def _add_bullet_slide(
             paragraph = (
                 text_frame.paragraphs[0]
             )
+
         else:
             paragraph = (
                 text_frame.add_paragraph()
@@ -441,6 +452,7 @@ def _add_metric_card(
     )
 
     shadow.fill.solid()
+
     shadow.fill.fore_color.rgb = (
         RGBColor(
             230,
@@ -473,6 +485,7 @@ def _add_metric_card(
     )
 
     accent.fill.solid()
+
     accent.fill.fore_color.rgb = (
         accent_color
     )
@@ -846,6 +859,7 @@ def _add_comparison_slide(
     )
 
     arrow.fill.solid()
+
     arrow.fill.fore_color.rgb = (
         MUTED_TEXT
     )
@@ -1045,6 +1059,7 @@ def _add_sources_slide(
             paragraph = (
                 text_frame.paragraphs[0]
             )
+
         else:
             paragraph = (
                 text_frame.add_paragraph()
@@ -1084,7 +1099,7 @@ def create_powerpoint(
 ) -> dict:
     """
     Create a designed PowerPoint presentation and save it in
-    the outputs directory.
+    the generated reports directory.
 
     Use this tool only when the user explicitly requests a
     PowerPoint, presentation, slide deck, or slides.
@@ -1184,7 +1199,9 @@ def create_powerpoint(
             Optional output filename without a directory path.
 
     Returns:
-        Information about the generated PowerPoint file.
+        Information about the generated PowerPoint file,
+        including the filename and metadata required by the API
+        to make the presentation downloadable.
     """
 
     try:
@@ -1363,13 +1380,15 @@ def create_powerpoint(
             "success": True,
             "title": title,
             "format": "pptx",
-            "slides_created": (
-                len(
-                    presentation.slides
-                )
+            "file_type": "powerpoint",
+            "filename": output_path.name,
+            "path": str(output_path),
+            "mime_type": POWERPOINT_MIME_TYPE,
+            "size_bytes": (
+                output_path.stat().st_size
             ),
-            "path": str(
-                output_path
+            "slides_created": len(
+                presentation.slides
             ),
         }
 

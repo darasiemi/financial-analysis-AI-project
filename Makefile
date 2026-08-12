@@ -108,7 +108,8 @@ backend:
 		--reload-dir agent \
 		--reload-dir rag \
 		--reload-dir retrieval \
-		--reload-dir ingestion
+		--reload-dir ingestion \
+		--env-file .env
 
 frontend:
 	uv run --group frontend streamlit run deployment/frontend/app.py

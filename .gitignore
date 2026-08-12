@@ -1,4 +1,7 @@
-data
+data/evaluation
+data/gtco
+data/mtnn
+data/zenithbank
 **.env
 **__pycache__
 **.DS_Store

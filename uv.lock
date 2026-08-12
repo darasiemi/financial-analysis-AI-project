@@ -697,6 +697,7 @@ dependencies = [
     { name = "pgvector" },
     { name = "psycopg" },
     { name = "python-dotenv" },
+    { name = "python-pptx" },
     { name = "requests" },
     { name = "sentence-transformers" },
     { name = "tabulate" },
@@ -712,11 +713,7 @@ dev = [
     { name = "jupyter" },
     { name = "openpyxl" },
     { name = "playwright" },
-    { name = "plotly" },
-    { name = "psycopg2-binary" },
     { name = "pymupdf" },
-    { name = "python-pptx" },
-    { name = "streamlit" },
 ]
 frontend = [
     { name = "plotly" },
@@ -730,6 +727,7 @@ requires-dist = [
     { name = "pgvector", specifier = ">=0.5.0" },
     { name = "psycopg", specifier = ">=3.3.4" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "python-pptx", specifier = ">=1.0.2" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "sentence-transformers", specifier = ">=5.7.0" },
     { name = "tabulate", specifier = ">=0.10.0" },
@@ -745,11 +743,7 @@ dev = [
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "playwright", specifier = ">=1.62.0" },
-    { name = "plotly", specifier = ">=6.9.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "pymupdf", specifier = ">=1.28.0" },
-    { name = "python-pptx", specifier = ">=1.0.2" },
-    { name = "streamlit", specifier = ">=1.61.1" },
 ]
 frontend = [
     { name = "plotly", specifier = ">=6.9.0" },

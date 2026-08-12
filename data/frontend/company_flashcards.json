@@ -1,0 +1,85 @@
+{
+  "flashcards": [
+    {
+      "id": "gtco_1",
+      "company": "GTCO",
+      "title": "Profit more than doubled",
+      "fact": "GTCO reported ₦1.266 trillion in profit before tax for 2024, up 107.8% from ₦609.3 billion in 2023.",
+      "year": 2024,
+      "category": "Financial performance",
+      "source": "GTCO 2024 Full Year Audited Results"
+    },
+    {
+      "id": "gtco_2",
+      "company": "GTCO",
+      "title": "Deposits surged",
+      "fact": "GTCO's deposit liabilities grew 37.8% in 2024, rising from ₦7.55 trillion to ₦10.40 trillion.",
+      "year": 2024,
+      "category": "Balance sheet",
+      "source": "GTCO 2024 Full Year Audited Results"
+    },
+    {
+      "id": "gtco_3",
+      "company": "GTCO",
+      "title": "A larger loan book",
+      "fact": "GTCO's net loan book increased 12.3% during 2024, from ₦2.48 trillion to ₦2.79 trillion.",
+      "year": 2024,
+      "category": "Lending",
+      "source": "GTCO 2024 Full Year Audited Results"
+    },
+    {
+      "id": "zenith_1",
+      "company": "Zenith Bank",
+      "title": "₦1 trillion profit milestone",
+      "fact": "Zenith Bank recorded ₦1.033 trillion in profit after tax in 2024, up 53% from ₦676.9 billion in 2023.",
+      "year": 2024,
+      "category": "Financial performance",
+      "source": "Zenith Bank 2024 Annual Report"
+    },
+    {
+      "id": "zenith_2",
+      "company": "Zenith Bank",
+      "title": "Nearly ₦30 trillion in assets",
+      "fact": "Zenith Bank's total assets reached about ₦29.96 trillion at the end of 2024, 47% higher than a year earlier.",
+      "year": 2024,
+      "category": "Balance sheet",
+      "source": "Zenith Bank 2024 Annual Report"
+    },
+    {
+      "id": "zenith_3",
+      "company": "Zenith Bank",
+      "title": "Deposits passed ₦21 trillion",
+      "fact": "Customer deposits at Zenith Bank rose 45% in 2024 to approximately ₦21.96 trillion.",
+      "year": 2024,
+      "category": "Deposits",
+      "source": "Zenith Bank 2024 Annual Report"
+    },
+    {
+      "id": "mtn_1",
+      "company": "MTN Nigeria",
+      "title": "More than 80 million subscribers",
+      "fact": "MTN Nigeria says its network connects more than 80.9 million mobile subscribers.",
+      "year": null,
+      "category": "Scale",
+      "source": "MTN Nigeria Investors"
+    },
+    {
+      "id": "mtn_2",
+      "company": "MTN Nigeria",
+      "title": "Nigeria's first 5G operator",
+      "fact": "MTN Nigeria was the first mobile network operator to launch a 5G network in Nigeria.",
+      "year": null,
+      "category": "Technology",
+      "source": "MTN Nigeria Investors"
+    },
+    {
+      "id": "mtn_3",
+      "company": "MTN Nigeria",
+      "title": "A 43,000 km fibre footprint",
+      "fact": "MTN Nigeria reports an expansive fibre network covering more than 43,000 kilometres.",
+      "year": null,
+      "category": "Infrastructure",
+      "source": "MTN Nigeria Investors"
+    }
+  ]
+}
