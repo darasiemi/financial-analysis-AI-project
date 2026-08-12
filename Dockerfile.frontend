@@ -9,7 +9,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync \
     --frozen \
     --no-dev \
-    --group deployment
+    --group frontend
 
 COPY . .
 
@@ -20,10 +20,10 @@ CMD [ \
     "run", \
     "--no-dev", \
     "--group", \
-    "deployment", \
+    "frontend", \
     "streamlit", \
     "run", \
-    "deployment/app.py", \
+    "deployment/frontend/app.py", \
     "--server.address=0.0.0.0", \
-    "--server.port=8501"  \
+    "--server.port=8501" \
 ]

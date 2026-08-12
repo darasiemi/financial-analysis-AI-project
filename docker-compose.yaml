@@ -2,7 +2,6 @@ services:
   postgres:
     image: pgvector/pgvector:pg17
     container_name: financial-analysis-postgres
-
     restart: unless-stopped
 
     env_file:
@@ -23,48 +22,55 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
         ]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
 
-  app:
+
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
 
-    container_name: financial-analysis-app
-
+    container_name: financial-analysis-backend
     restart: unless-stopped
 
     env_file:
       - .env
 
     environment:
-      # Inside Docker, PostgreSQL is reached by the service name,
-      # not localhost.
+      # Inside Docker, use the service name and internal port.
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
 
     ports:
-      - "${STREAMLIT_PORT:-8501}:8501"
+      - "8000:8000"
 
     depends_on:
       postgres:
         condition: service_healthy
 
-    command:
-      [
-        "uv",
-        "run",
-        "streamlit",
-        "run",
-        "deployment/app.py",
-        "--server.address=0.0.0.0",
-        "--server.port=8501",
-      ]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+
+    container_name: financial-analysis-frontend
+    restart: unless-stopped
+
+    environment:
+      # Inside Docker, "backend" resolves to the FastAPI container.
+      FASTAPI_BASE_URL: http://backend:8000
+
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+
+    depends_on:
+      - backend
 
 
 volumes:

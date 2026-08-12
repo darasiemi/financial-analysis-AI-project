@@ -577,15 +577,273 @@ docker compose up
 ```
 If you want to start database separately and then run streamlit
 ```bash
-docker compose up -d postgres
-make app
-```
-To start all services using docker compose
-```bash
-docker compose up
+make postgres
 ```
 
-To stop it them
+## Running the Application
+
+The application consists of three services:
+
+- **PostgreSQL + pgvector** — database and vector store
+- **FastAPI** — backend API for the RAG and agent pipelines
+- **Streamlit** — frontend user interface
+
+For local development, PostgreSQL runs in Docker, while FastAPI and Streamlit run locally using `uv`.
+
+### Run the Complete Application
+
+From the project root, run:
+
+```bash
+make app
+```
+
+This starts all three components:
+
+```text
+make app
+   │
+   ├── PostgreSQL + pgvector
+   │      Docker
+   │      localhost:5433
+   │
+   ├── FastAPI backend
+   │      localhost:8000
+   │
+   └── Streamlit frontend
+          localhost:8501
+```
+
+Once the application is running:
+
+- **Streamlit UI:** `http://localhost:8501`
+- **FastAPI:** `http://localhost:8000`
+- **FastAPI API documentation:** `http://localhost:8000/docs`
+
+Press `Ctrl+C` to stop the locally running FastAPI and Streamlit processes.
+
+PostgreSQL runs as a detached Docker container and may continue running after `Ctrl+C`.
+
+---
+
+### Run Individual Services
+
+Each service can also be started independently. This is useful for development and troubleshooting.
+
+#### PostgreSQL
+
+```bash
+make postgres
+```
+
+Check its status:
+
+```bash
+docker compose ps postgres
+```
+
+View recent PostgreSQL logs:
+
+```bash
+docker compose logs --tail=100 postgres
+```
+
+Follow the logs continuously:
+
+```bash
+docker compose logs -f postgres
+```
+
+#### FastAPI Backend
+
+```bash
+make backend
+```
+
+The backend will be available at:
+
+```text
+http://localhost:8000
+```
+
+Interactive API documentation is available at:
+
+```text
+http://localhost:8000/docs
+```
+
+The development server uses Uvicorn's automatic reload functionality, so relevant source-code changes restart the backend automatically.
+
+#### Streamlit Frontend
+
+In a separate terminal, run:
+
+```bash
+make frontend
+```
+
+The frontend will be available at:
+
+```text
+http://localhost:8501
+```
+
+The Streamlit frontend communicates with the FastAPI backend over HTTP. It does not directly execute the RAG/agent pipeline or query PostgreSQL.
+
+---
+
+### Local Development Architecture
+
+When using:
+
+```bash
+make app
+```
+
+the application runs as:
+
+```text
+Browser
+   │
+   ▼
+Streamlit
+localhost:8501
+   │
+   │ HTTP
+   ▼
+FastAPI
+localhost:8000
+   │
+   │ Database connection
+   ▼
+PostgreSQL + pgvector
+Docker
+localhost:5433
+```
+
+The responsibilities are separated as follows:
+
+- **Streamlit** handles presentation and user interaction.
+- **FastAPI** exposes the backend API and runs the RAG and agent pipelines.
+- **PostgreSQL/pgvector** stores the indexed financial-report content and embeddings.
+
+---
+
+### Stop the Application
+
+Press:
+
+```text
+Ctrl+C
+```
+
+in the terminal running `make app` to stop FastAPI and Streamlit.
+
+To stop the Docker services:
+
+```bash
+make stop
+```
+
+This runs `docker compose down` and does not delete the persistent PostgreSQL volume.
+
+---
+
+### Troubleshooting
+
+If `make app` does not start successfully, test each component individually.
+
+First, start PostgreSQL:
+
+```bash
+make postgres
+```
+
+Confirm that it is running:
+
+```bash
+docker compose ps postgres
+```
+
+If PostgreSQL is not healthy, inspect its logs:
+
+```bash
+docker compose logs --tail=100 postgres
+```
+
+Next, start the backend:
+
+```bash
+make backend
+```
+
+Confirm that FastAPI is available by opening:
+
+```text
+http://localhost:8000/docs
+```
+
+Finally, open another terminal and start the frontend:
+
+```bash
+make frontend
+```
+
+Then open:
+
+```text
+http://localhost:8501
+```
+
+Running the services individually makes it easier to determine whether a startup problem originates from PostgreSQL, FastAPI, or Streamlit.
+
+---
+
+## Running with Docker Compose
+
+The complete application can alternatively be run inside Docker:
+
+```bash
+docker compose up --build
+```
+
+In this mode, all three services run in separate containers:
+
+```text
+Browser
+   │
+   ▼
+Streamlit container
+   │
+   ▼
+FastAPI container
+   │
+   ▼
+PostgreSQL container
+```
+
+To inspect the running services:
+
+```bash
+docker compose ps
+```
+
+To view logs from all services:
+
+```bash
+docker compose logs -f
+```
+
+Or inspect an individual service:
+
+```bash
+docker compose logs -f postgres
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+To stop the complete Docker Compose stack:
+
 ```bash
 docker compose down
 ```

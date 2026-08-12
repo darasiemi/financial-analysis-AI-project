@@ -1,0 +1,66 @@
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+
+PipelineType = Literal[
+    "rag",
+    "agent",
+]
+
+RetrievalMode = Literal[
+    "keyword",
+    "vector",
+    "hybrid",
+]
+
+
+class QueryRequest(BaseModel):
+    question: str = Field(
+        min_length=1,
+        max_length=2000,
+    )
+
+    pipeline: PipelineType = "agent"
+    retrieval_mode: RetrievalMode = "hybrid"
+
+    top_k: int = Field(
+        default=8,
+        ge=1,
+        le=50,
+    )
+
+    ticker: str | None = None
+    report_year: int | None = None
+
+    model: str = "gemini-2.5-flash"
+
+
+class QueryResponse(BaseModel):
+    pipeline: str
+    answer: str
+
+    results: list[dict[str, Any]] = []
+    context: str = ""
+    tool_calls: list[dict[str, Any]] = []
+
+    timing: dict[str, Any] = {}
+
+
+class FiltersResponse(BaseModel):
+    tickers: list[str]
+    years: list[int]
+
+
+class CorpusStatsResponse(BaseModel):
+    documents: int
+    companies: int
+    years: int
+    tables: int
+    narratives: int
+
+
+class HealthResponse(BaseModel):
+    status: str

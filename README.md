@@ -279,6 +279,95 @@ The evaluation framework provides a consistent way to compare the **keyword, sem
 
 [More on evaluation](evaluation/README.md)
 
+## Deployment
+
+The application is deployed as a **three-layer architecture**, separating the **Streamlit frontend**, **FastAPI backend**, and **PostgreSQL/pgvector database**. The frontend provides the user interface, while the backend exposes an API that handles financial-analysis requests, RAG and agent execution, and database access.
+
+### Deployment Architecture
+
+```text
+                         User
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │ Streamlit Frontend  │
+                │      Port 8501      │
+                │                     │
+                │ • User interface    │
+                │ • Query controls    │
+                │ • Results & charts  │
+                └──────────┬──────────┘
+                           │
+                      HTTP / JSON
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   FastAPI Backend   │
+                │      Port 8000      │
+                │                     │
+                │ • API endpoints     │
+                │ • RAG pipeline      │
+                │ • Agent pipeline    │
+                │ • Gemini calls      │
+                │ • Database access   │
+                └──────────┬──────────┘
+                           │
+                    PostgreSQL
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │ PostgreSQL/pgvector │
+                │                     │
+                │ • Report chunks     │
+                │ • Metadata          │
+                │ • Embeddings        │
+                └─────────────────────┘
+```
+
+### Frontend
+
+The **Streamlit frontend** is responsible only for presentation and user interaction. It collects financial-analysis questions and configuration options, sends requests to the FastAPI backend over HTTP, and presents the returned answers, evidence, agent traces, statistics, and visualizations.
+
+### Backend
+
+The **FastAPI backend** provides the application API and contains the core financial-analysis orchestration. It receives requests from Streamlit and routes them through either the standard **RAG pipeline** or the **agentic pipeline**.
+
+The backend also handles retrieval, Gemini interactions, tool execution, and access to PostgreSQL/pgvector. This prevents the frontend from directly interacting with the database or analysis pipelines.
+
+The backend exposes:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/health` | Checks backend and database availability |
+| `GET` | `/api/v1/filters` | Returns available companies and reporting years |
+| `GET` | `/api/v1/stats` | Returns corpus statistics |
+| `POST` | `/api/v1/query` | Executes RAG or agent-based financial analysis |
+
+### Database
+
+**PostgreSQL with pgvector** provides the persistence and retrieval layer. It stores the processed annual-report content, associated metadata, and vector embeddings used by the retrieval pipelines.
+
+### Containerized Deployment
+
+For a fully containerized deployment, **Docker Compose** orchestrates the frontend, backend, and database as separate services:
+
+```text
+Docker Compose
+│
+├── frontend
+│   └── Streamlit
+│
+├── backend
+│   └── FastAPI
+│       ├── RAG
+│       ├── Agent
+│       └── Gemini
+│
+└── postgres
+    └── PostgreSQL + pgvector
+```
+
+Each application layer can therefore be developed, tested, and deployed independently while Docker Compose provides a reproducible environment for running the complete system.
 
 ## Design Trade-offs
 
@@ -311,8 +400,11 @@ I made several design changes as the project evolved to balance extraction quali
 9. **I used LLM validation for scalability, but retained human verification for the final gold benchmark.**  
 Because manually creating and validating a sufficiently challenging financial-analysis benchmark is time-consuming, I used an **LLM validator** to automatically screen synthetic question-answer pairs. However, LLM validation can still accept subtle factual errors, unsupported interpretations, or artificially difficult questions. I therefore keep accepted examples marked as synthetic and require **human verification before treating the benchmark as gold-standard ground truth**. This is future work considering the time constraint to deliver my project for the Zoomcamp.
 
-10. **I separated development and deployment dependencies to keep the production environment lean.**  
-    After encountering disk-space constraints during container builds, I separated ingestion, notebook, evaluation, and document-processing dependencies from those required to run the application. This reduces unnecessary production dependencies, resulting in a smaller, more maintainable deployment environment.
-
-11. **I configured CPU-only PyTorch to reduce deployment overhead.**  
+10. **I configured CPU-only PyTorch to reduce deployment overhead.**  
     `sentence-transformers` depends on PyTorch, whose default resolution pulled in large CUDA/NVIDIA packages that were unnecessary for the current CPU-based deployment and caused Docker builds to exceed available disk space. I therefore used CPU-only PyTorch, trading GPU acceleration for a substantially lighter deployment.
+
+11. **I separated the frontend, backend, and database, which were initially coupled within the Streamlit application.**  
+    Initially, Streamlit handled the user interface while also directly invoking the RAG/agent logic and accessing PostgreSQL. I separated these responsibilities by using Streamlit solely as the frontend, introducing FastAPI as the backend for RAG, agent orchestration, and database access, and keeping PostgreSQL/pgvector as the independent data layer. This separation adds API and service-orchestration complexity, but provides clearer separation of concerns, improves maintainability and testability, enables the frontend and backend to scale or evolve independently, and makes it easier to support additional clients beyond Streamlit in the future.
+
+12. **I separated development and deployment dependencies and workflows to address disk-space constraints and keep deployment lean.**  
+    After Docker builds exhausted the available disk space on my machine, I separated development dependencies, such as ingestion, notebooks, evaluation, and document processing, from the frontend and backend runtime dependencies. I also used a Makefile for local development and Docker Compose for fully containerized deployment. This reduces unnecessary deployment dependencies while improving maintainability and reproducibility.

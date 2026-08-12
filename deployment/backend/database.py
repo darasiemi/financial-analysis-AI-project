@@ -11,11 +11,6 @@ from ingestion.processing.database import (
 
 
 def get_available_filters() -> dict[str, list[Any]]:
-    """
-    Return the companies and report years currently available
-    in the retrieval index.
-    """
-
     load_environment()
 
     connection_string = (
@@ -46,7 +41,9 @@ def get_available_filters() -> dict[str, list[Any]]:
                     tickers.add(str(ticker))
 
                 if report_year is not None:
-                    years.add(int(report_year))
+                    years.add(
+                        int(report_year)
+                    )
 
     return {
         "tickers": sorted(tickers),
@@ -55,10 +52,6 @@ def get_available_filters() -> dict[str, list[Any]]:
 
 
 def get_corpus_stats() -> dict[str, int]:
-    """
-    Return simple corpus statistics for the dashboard.
-    """
-
     load_environment()
 
     connection_string = (
@@ -102,3 +95,27 @@ def get_corpus_stats() -> dict[str, int]:
         "tables": int(row[3] or 0),
         "narratives": int(row[4] or 0),
     }
+
+
+def database_is_available() -> bool:
+    try:
+        load_environment()
+
+        connection_string = (
+            get_postgres_connection_string()
+        )
+
+        with psycopg.connect(
+            connection_string,
+            connect_timeout=3,
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT 1"
+                )
+                cursor.fetchone()
+
+        return True
+
+    except Exception:
+        return False

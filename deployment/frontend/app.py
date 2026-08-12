@@ -7,11 +7,11 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from deployment.database import (
+from deployment.backend.database import (
     get_available_filters,
     get_corpus_stats,
 )
-from deployment.service import run_query
+from deployment.backend.service import run_query
 from ingestion.processing.database import (
     load_environment,
 )

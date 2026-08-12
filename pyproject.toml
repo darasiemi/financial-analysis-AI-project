@@ -1,7 +1,7 @@
 [project]
 name = "financial-analysis"
 version = "0.1.0"
-description = "Financial analysis over corporate annual reports using RAG and agentic AI."
+description = "RAG and agentic financial analysis over corporate annual reports."
 readme = "README.md"
 requires-python = ">=3.11"
 
@@ -11,35 +11,53 @@ dependencies = [
     "pgvector>=0.5.0",
     "psycopg>=3.3.4",
     "python-dotenv>=1.2.2",
-    "python-pptx>=1.0.2",
     "requests>=2.34.2",
     "sentence-transformers>=5.7.0",
     "tabulate>=0.10.0",
-    "torch>=2.13.0",
 ]
+
+
+# ============================================================
+# Dependency groups
+# ============================================================
 
 [dependency-groups]
 
+# Development, ingestion, evaluation, notebooks,
+# document processing, and report-generation tooling.
 dev = [
     "dlt[postgres]>=1.29.1",
     "jupyter>=1.1.1",
     "openpyxl>=3.1.5",
     "playwright>=1.62.0",
+    "plotly>=6.9.0",
     "psycopg2-binary>=2.9.12",
     "pymupdf>=1.28.0",
+    "python-pptx>=1.0.2",
+    "streamlit>=1.61.1",
 ]
 
-deployment = [
+# FastAPI backend.
+backend = [
+    "fastapi>=0.116.0",
+    "uvicorn[standard]>=0.35.0",
+]
+
+# Streamlit frontend.
+frontend = [
     "plotly>=6.9.0",
     "streamlit>=1.61.1",
 ]
 
-[tool.uv.sources]
-torch = [
-    { index = "pytorch-cpu" },
-]
+
+# ============================================================
+# CPU-only PyTorch
+# ============================================================
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
