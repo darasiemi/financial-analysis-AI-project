@@ -14,11 +14,9 @@ from deployment.frontend.api_client import (
     APIError,
     download_generated_file,
     get_filters,
-    get_stats,
     run_analysis,
     submit_feedback,
 )
-
 
 # =============================================================
 # Paths
@@ -161,15 +159,6 @@ def load_filters() -> dict[str, Any]:
     """
 
     return get_filters()
-
-
-@st.cache_data(ttl=300)
-def load_stats() -> dict[str, Any]:
-    """
-    Load corpus statistics from FastAPI.
-    """
-
-    return get_stats()
 
 
 # =============================================================
@@ -1081,8 +1070,6 @@ try:
 
     filters = load_filters()
 
-    stats = load_stats()
-
 except APIError as exc:
 
     filters = {
@@ -1090,25 +1077,13 @@ except APIError as exc:
         "years": [],
     }
 
-    stats = {
-        "documents": 0,
-        "companies": 0,
-        "years": 0,
-        "tables": 0,
-        "narratives": 0,
-    }
-
     st.sidebar.warning(
-        (
-            "Backend metadata could "
-            "not be loaded."
-        )
+        "Backend metadata could not be loaded."
     )
 
     st.sidebar.caption(
         str(exc)
     )
-
 
 # =============================================================
 # Sidebar
@@ -1259,46 +1234,6 @@ with st.sidebar:
             "additional tools when necessary."
         )
     )
-
-
-# =============================================================
-# Corpus statistics
-# =============================================================
-
-metric_columns = st.columns(
-    5
-)
-
-metric_columns[0].metric(
-    "Indexed documents",
-    f"{stats.get('documents', 0):,}",
-)
-
-metric_columns[1].metric(
-    "Companies",
-    stats.get(
-        "companies",
-        0,
-    ),
-)
-
-metric_columns[2].metric(
-    "Report years",
-    stats.get(
-        "years",
-        0,
-    ),
-)
-
-metric_columns[3].metric(
-    "Narrative",
-    f"{stats.get('narratives', 0):,}",
-)
-
-metric_columns[4].metric(
-    "Tables",
-    f"{stats.get('tables', 0):,}",
-)
 
 
 # =============================================================
@@ -1973,3 +1908,21 @@ if (
                     ),
                     language="json",
                 )
+
+# =============================================================
+# AI disclaimer
+# =============================================================
+
+st.divider()
+
+st.info(
+    """
+    **AI Disclaimer**
+
+    This app is AI-powered and can make mistakes. Its knowledge base is built
+    from the 2023, 2024, and 2025 financial reports of MTN Nigeria, GTCO, and
+    Zenith Bank. Questions outside this scope may produce incomplete,
+    inaccurate, or unsupported responses.
+    """,
+    icon="ℹ️",
+)
