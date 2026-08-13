@@ -35,6 +35,13 @@ FLASHCARDS_PATH = (
     / "company_flashcards.json"
 )
 
+INVESTOR_METRICS_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "frontend"
+    / "investor_metrics.json"
+)
+
 
 # =============================================================
 # Streamlit configuration
@@ -452,7 +459,32 @@ def display_rotating_flashcards() -> None:
 """
     )
 
+@st.cache_data
+def load_investor_metrics() -> dict[str, Any]:
+    """
+    Load the precomputed investor comparison.
+    """
 
+    try:
+
+        with INVESTOR_METRICS_PATH.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+
+            return json.load(
+                file
+            )
+
+    except (
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ):
+
+        return {
+            "companies": {}
+        }
+        
 # =============================================================
 # Generated files
 # =============================================================
@@ -835,6 +867,131 @@ def retrieval_dataframe(
         rows
     )
 
+def display_investor_snapshot() -> None:
+    """
+    Display the same two growth indicators
+    across GTCO, Zenith Bank, and MTN Nigeria.
+
+    Growth/change is the primary display value,
+    while the underlying financial values provide
+    secondary context.
+    """
+
+    snapshot = (
+        load_investor_metrics()
+    )
+
+    companies = snapshot.get(
+        "companies",
+        {},
+    )
+
+    if not companies:
+
+        return
+
+    year = snapshot.get(
+        "as_of_year",
+        2025,
+    )
+
+    previous_year = (
+        snapshot.get(
+            "previous_year",
+            2024,
+        )
+    )
+
+    title = snapshot.get(
+        "title",
+        f"{year} Growth Comparison",
+    )
+
+    subtitle = snapshot.get(
+        "subtitle",
+        (
+            f"Year-on-year comparison "
+            f"with {previous_year}."
+        ),
+    )
+
+    st.subheader(
+        title
+    )
+
+    st.caption(
+        subtitle
+    )
+
+    company_order = [
+        "GTCO",
+        "ZENITHBANK",
+        "MTNN",
+    ]
+
+    available_companies = [
+        ticker
+        for ticker in company_order
+        if ticker in companies
+    ]
+
+    if not available_companies:
+
+        return
+
+    columns = st.columns(
+        len(
+            available_companies
+        )
+    )
+
+    for (
+        column,
+        ticker,
+    ) in zip(
+        columns,
+        available_companies,
+    ):
+
+        company = (
+            companies[
+                ticker
+            ]
+        )
+
+        metrics = (
+            company.get(
+                "metrics",
+                [],
+            )
+        )
+
+        with column:
+
+            st.markdown(
+                f"### {company['name']}"
+            )
+
+            for metric in metrics:
+
+                st.metric(
+                    label=metric[
+                        "label"
+                    ],
+
+                    value=metric[
+                        "growth_display"
+                    ],
+                )
+
+                st.caption(
+                    (
+                        f"{metric['display_value']} "
+                        f"in {year} vs "
+                        f"{metric['previous_display_value']} "
+                        f"in {previous_year}"
+                    )
+                )
 
 # =============================================================
 # Agent trace helpers
@@ -1061,6 +1218,13 @@ st.html(
 """
 )
 
+# =============================================================
+# Investor growth snapshot
+# =============================================================
+
+display_investor_snapshot()
+
+st.divider()
 
 # =============================================================
 # Load backend metadata

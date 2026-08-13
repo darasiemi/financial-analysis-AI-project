@@ -1,0 +1,101 @@
+{
+  "title": "2025 Growth Comparison",
+  "subtitle": "Year-on-year growth in total assets and profit after tax across the three companies.",
+  "as_of_year": 2025,
+  "previous_year": 2024,
+  "companies": {
+    "GTCO": {
+      "name": "GTCO",
+      "metrics": [
+        {
+          "label": "Total Assets",
+          "current": 17761.152255,
+          "previous": 14795.706831,
+          "unit": "ngn_billion",
+          "change_mode": "percentage",
+          "source": "GTCO 2025 Annual Report",
+          "source_page": 244,
+          "display_value": "₦17.76tn",
+          "previous_display_value": "₦14.80tn",
+          "growth_percent": 20.042607344630493,
+          "growth_display": "+20.0%"
+        },
+        {
+          "label": "Profit After Tax",
+          "current": 865.746687,
+          "previous": 1017.802849,
+          "unit": "ngn_billion",
+          "change_mode": "percentage",
+          "source": "GTCO 2025 Annual Report",
+          "source_page": 73,
+          "display_value": "₦865.7bn",
+          "previous_display_value": "₦1.02tn",
+          "growth_percent": -14.939647904247522,
+          "growth_display": "-14.9%"
+        }
+      ]
+    },
+    "ZENITHBANK": {
+      "name": "Zenith Bank",
+      "metrics": [
+        {
+          "label": "Total Assets",
+          "current": 31458.051,
+          "previous": 29957.525,
+          "unit": "ngn_billion",
+          "change_mode": "percentage",
+          "source": "Zenith Bank 2025 Annual Report",
+          "source_page": 111,
+          "display_value": "₦31.46tn",
+          "previous_display_value": "₦29.96tn",
+          "growth_percent": 5.008845023078502,
+          "growth_display": "+5.0%"
+        },
+        {
+          "label": "Profit After Tax",
+          "current": 1040.546,
+          "previous": 1032.895,
+          "unit": "ngn_billion",
+          "change_mode": "percentage",
+          "source": "Zenith Bank 2025 Annual Report",
+          "source_page": 4,
+          "display_value": "₦1.04tn",
+          "previous_display_value": "₦1.03tn",
+          "growth_percent": 0.7407335692398616,
+          "growth_display": "+0.7%"
+        }
+      ]
+    },
+    "MTNN": {
+      "name": "MTN Nigeria",
+      "metrics": [
+        {
+          "label": "Total Assets",
+          "current": 5403.489,
+          "previous": 4196.991,
+          "unit": "ngn_billion",
+          "change_mode": "percentage",
+          "source": "MTN Nigeria 2025 Annual Report",
+          "source_page": 97,
+          "display_value": "₦5.40tn",
+          "previous_display_value": "₦4.20tn",
+          "growth_percent": 28.74673784146784,
+          "growth_display": "+28.7%"
+        },
+        {
+          "label": "Profit After Tax",
+          "current": 1112.846,
+          "previous": -400.435,
+          "unit": "ngn_billion",
+          "change_mode": "turnaround",
+          "source": "MTN Nigeria 2025 Annual Report",
+          "source_page": 161,
+          "display_value": "₦1.11tn",
+          "previous_display_value": "₦-400.4bn",
+          "growth_percent": null,
+          "growth_display": "Turnaround to profit"
+        }
+      ]
+    }
+  }
+}

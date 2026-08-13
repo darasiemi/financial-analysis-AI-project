@@ -1,0 +1,79 @@
+{
+    "as_of_year": 2025,
+    "previous_year": 2024,
+    "title": "2025 Growth Comparison",
+    "subtitle": "Year-on-year growth in total assets and profit after tax across the three companies.",
+    "companies": {
+      "GTCO": {
+        "name": "GTCO",
+        "metrics": [
+          {
+            "label": "Total Assets",
+            "current": 17761.152255,
+            "previous": 14795.706831,
+            "unit": "ngn_billion",
+            "change_mode": "percentage",
+            "source": "GTCO 2025 Annual Report",
+            "source_page": 244
+          },
+          {
+            "label": "Profit After Tax",
+            "current": 865.746687,
+            "previous": 1017.802849,
+            "unit": "ngn_billion",
+            "change_mode": "percentage",
+            "source": "GTCO 2025 Annual Report",
+            "source_page": 73
+          }
+        ]
+      },
+  
+      "ZENITHBANK": {
+        "name": "Zenith Bank",
+        "metrics": [
+          {
+            "label": "Total Assets",
+            "current": 31458.051,
+            "previous": 29957.525,
+            "unit": "ngn_billion",
+            "change_mode": "percentage",
+            "source": "Zenith Bank 2025 Annual Report",
+            "source_page": 111
+          },
+          {
+            "label": "Profit After Tax",
+            "current": 1040.546,
+            "previous": 1032.895,
+            "unit": "ngn_billion",
+            "change_mode": "percentage",
+            "source": "Zenith Bank 2025 Annual Report",
+            "source_page": 4
+          }
+        ]
+      },
+  
+      "MTNN": {
+        "name": "MTN Nigeria",
+        "metrics": [
+          {
+            "label": "Total Assets",
+            "current": 5403.489,
+            "previous": 4196.991,
+            "unit": "ngn_billion",
+            "change_mode": "percentage",
+            "source": "MTN Nigeria 2025 Annual Report",
+            "source_page": 97
+          },
+          {
+            "label": "Profit After Tax",
+            "current": 1112.846,
+            "previous": -400.435,
+            "unit": "ngn_billion",
+            "change_mode": "turnaround",
+            "source": "MTN Nigeria 2025 Annual Report",
+            "source_page": 161
+          }
+        ]
+      }
+    }
+  }

@@ -94,7 +94,7 @@ eval_agent:
 		--top-k $(or $(TOP_K),8) \
 		$(if $(LIMIT),--limit $(LIMIT),)
 
-.PHONY: app postgres monitoring backend frontend stop_app
+.PHONY: app postgres monitoring backend frontend investor_snapshot stop_app
 
 
 postgres:
@@ -103,6 +103,10 @@ postgres:
 
 monitoring:
 	docker compose up -d grafana
+
+
+investor_snapshot:
+	uv run python -m scripts.build_investor_snapshot
 
 
 backend:
@@ -126,6 +130,7 @@ frontend:
 app:
 	$(MAKE) postgres
 	$(MAKE) monitoring
+	$(MAKE) investor_snapshot
 	@trap 'kill 0' INT TERM EXIT; \
 	$(MAKE) backend & \
 	$(MAKE) frontend & \
