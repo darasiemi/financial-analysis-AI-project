@@ -209,6 +209,7 @@ def get_stats() -> dict[str, Any]:
 def run_analysis(
     question: str,
     *,
+    session_id: str,
     pipeline: str,
     retrieval_mode: str,
     top_k: int,
@@ -216,13 +217,10 @@ def run_analysis(
     report_year: int | None,
     model: str,
 ) -> dict[str, Any]:
-    """
-    Execute a financial-analysis request
-    through FastAPI.
-    """
 
     payload = {
         "question": question,
+        "session_id": session_id,
         "pipeline": pipeline,
         "retrieval_mode": (
             retrieval_mode
@@ -236,6 +234,7 @@ def run_analysis(
     }
 
     try:
+
         response = requests.post(
             (
                 f"{API_BASE_URL}"
@@ -246,21 +245,51 @@ def run_analysis(
         )
 
     except requests.Timeout as exc:
+
         raise APIError(
-            "The analysis request "
-            "timed out."
+            "The analysis request timed out."
         ) from exc
 
     except requests.RequestException as exc:
+
         raise APIError(
-            "The connection to the "
-            "FastAPI backend was lost."
+            "The connection to the backend was lost."
         ) from exc
 
     return _handle_json_response(
         response
     )
 
+
+def submit_feedback(
+    *,
+    response_id: str,
+    rating: int,
+) -> dict[str, Any]:
+
+    try:
+
+        response = requests.post(
+            (
+                f"{API_BASE_URL}"
+                "/api/v1/feedback"
+            ),
+            json={
+                "response_id": response_id,
+                "rating": rating,
+            },
+            timeout=30,
+        )
+
+    except requests.RequestException as exc:
+
+        raise APIError(
+            "Unable to save feedback."
+        ) from exc
+
+    return _handle_json_response(
+        response
+    )
 
 # =============================================================
 # Generated files

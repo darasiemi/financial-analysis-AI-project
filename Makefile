@@ -94,10 +94,16 @@ eval_agent:
 		--top-k $(or $(TOP_K),8) \
 		$(if $(LIMIT),--limit $(LIMIT),)
 
-.PHONY: app postgres backend frontend stop_app
+.PHONY: app postgres monitoring backend frontend stop_app
+
 
 postgres:
 	docker compose up -d postgres
+
+
+monitoring:
+	docker compose up -d grafana
+
 
 backend:
 	uv run --group backend uvicorn deployment.backend.main:app \
@@ -109,17 +115,22 @@ backend:
 		--reload-dir rag \
 		--reload-dir retrieval \
 		--reload-dir ingestion \
+		--reload-dir monitoring \
 		--env-file .env
+
 
 frontend:
 	uv run --group frontend streamlit run deployment/frontend/app.py
 
+
 app:
 	$(MAKE) postgres
+	$(MAKE) monitoring
 	@trap 'kill 0' INT TERM EXIT; \
 	$(MAKE) backend & \
 	$(MAKE) frontend & \
 	wait
+
 
 stop_app:
 	docker compose down

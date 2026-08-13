@@ -28,6 +28,8 @@ class QueryRequest(
         max_length=4000,
     )
 
+    session_id: str
+
     pipeline: PipelineType = (
         "agent"
     )
@@ -55,19 +57,17 @@ class GeneratedFile(
     BaseModel
 ):
     filename: str
-
     file_type: str
-
     format: str
-
     mime_type: str
-
     size_bytes: int | None = None
 
 
 class QueryResponse(
     BaseModel
 ):
+    response_id: str
+
     pipeline: str
 
     answer: str
@@ -99,17 +99,30 @@ class QueryResponse(
         default_factory=dict
     )
 
-    raw_result: dict[
-        str,
-        Any,
-    ] | None = None
+    estimated_cost_usd: float = 0.0
+
+
+class FeedbackRequest(
+    BaseModel
+):
+    response_id: str
+
+    rating: Literal[
+        -1,
+        1,
+    ]
+
+
+class FeedbackResponse(
+    BaseModel
+):
+    success: bool
 
 
 class FiltersResponse(
     BaseModel
 ):
     tickers: list[str]
-
     years: list[int]
 
 
@@ -117,13 +130,9 @@ class CorpusStatsResponse(
     BaseModel
 ):
     documents: int
-
     companies: int
-
     years: int
-
     tables: int
-
     narratives: int
 
 

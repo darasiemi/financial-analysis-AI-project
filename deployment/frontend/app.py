@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from deployment.frontend.api_client import (
     get_filters,
     get_stats,
     run_analysis,
+    submit_feedback,
 )
 
 
@@ -37,7 +39,7 @@ FLASHCARDS_PATH = (
 
 
 # =============================================================
-# Application configuration
+# Streamlit configuration
 # =============================================================
 
 st.set_page_config(
@@ -49,7 +51,22 @@ st.set_page_config(
 
 
 # =============================================================
-# Global styling
+# Monitoring session
+# =============================================================
+
+if (
+    "monitoring_session_id"
+    not in st.session_state
+):
+    st.session_state[
+        "monitoring_session_id"
+    ] = str(
+        uuid.uuid4()
+    )
+
+
+# =============================================================
+# Styling
 # =============================================================
 
 st.html(
@@ -64,6 +81,7 @@ st.html(
     .hero {
         padding: 2.2rem 2.4rem;
         border-radius: 22px;
+
         background:
             linear-gradient(
                 135deg,
@@ -71,10 +89,14 @@ st.html(
                 #172554 52%,
                 #0f766e 100%
             );
+
         color: white;
+
         margin-bottom: 1.7rem;
+
         box-shadow:
-            0 14px 40px rgba(15, 23, 42, 0.18);
+            0 14px 40px
+            rgba(15, 23, 42, 0.18);
     }
 
     .hero h1 {
@@ -94,12 +116,20 @@ st.html(
     .generated-file {
         padding: 1rem;
         border-radius: 14px;
+
         border:
             1px solid
             rgba(15, 118, 110, 0.24);
+
         background:
             rgba(15, 118, 110, 0.05);
+
         margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .feedback-area {
+        margin-top: 1rem;
         margin-bottom: 0.5rem;
     }
 
@@ -107,8 +137,10 @@ st.html(
         border:
             1px solid
             rgba(148, 163, 184, 0.2);
+
         padding: 0.9rem;
         border-radius: 14px;
+
         background:
             rgba(248, 250, 252, 0.35);
     }
@@ -125,7 +157,7 @@ st.html(
 @st.cache_data(ttl=300)
 def load_filters() -> dict[str, Any]:
     """
-    Load company and reporting-year filters from FastAPI.
+    Load company and year filters from FastAPI.
     """
 
     return get_filters()
@@ -189,20 +221,15 @@ def load_flashcards() -> list[dict[str, Any]]:
 
 def display_rotating_flashcards() -> None:
     """
-    Display company fact flashcards that rotate
-    automatically every 3 seconds.
+    Display flashcards that rotate every 3 seconds.
 
-    The animation runs entirely in the browser,
-    so it continues while FastAPI processes the
-    financial-analysis request.
+    Rotation happens in browser CSS, so it continues
+    while the backend is processing the request.
     """
 
     flashcards = load_flashcards()
 
     if not flashcards:
-        st.caption(
-            "No company facts available."
-        )
         return
 
     cards = flashcards.copy()
@@ -215,7 +242,7 @@ def display_rotating_flashcards() -> None:
         cards
     )
 
-    seconds_per_card = 5
+    seconds_per_card = 3
 
     animation_duration = (
         total_cards
@@ -232,7 +259,7 @@ def display_rotating_flashcards() -> None:
         visible_percent / 5,
     )
 
-    card_html = ""
+    cards_html = ""
 
     for index, card in enumerate(
         cards
@@ -270,7 +297,7 @@ def display_rotating_flashcards() -> None:
             * seconds_per_card
         )
 
-        card_html += f"""
+        cards_html += f"""
 <div
     class="rotating-flashcard"
     style="
@@ -307,6 +334,7 @@ def display_rotating_flashcards() -> None:
         position: relative;
         width: 100%;
         min-height: 225px;
+
         margin-top: 0.75rem;
         margin-bottom: 0.5rem;
     }}
@@ -371,35 +399,47 @@ def display_rotating_flashcards() -> None:
     .flashcard-label {{
         font-size: 0.72rem;
         font-weight: 700;
+
         color: #0f766e;
+
         letter-spacing: 0.09em;
+
         margin-bottom: 0.35rem;
     }}
 
     .flashcard-company {{
         font-size: 0.82rem;
         font-weight: 600;
+
         color: #64748b;
+
         margin-bottom: 0.65rem;
     }}
 
     .flashcard-title {{
         font-size: 1.12rem;
         font-weight: 700;
+
         color: #0f172a;
+
         margin-bottom: 0.45rem;
     }}
 
     .flashcard-fact {{
         font-size: 0.95rem;
+
         line-height: 1.6;
+
         color: #334155;
     }}
 
     .flashcard-category {{
         display: inline-block;
+
         margin-top: 0.8rem;
+
         padding: 0.22rem 0.55rem;
+
         border-radius: 999px;
 
         background:
@@ -418,7 +458,7 @@ def display_rotating_flashcards() -> None:
 </style>
 
 <div class="flashcard-rotator">
-    {card_html}
+    {cards_html}
 </div>
 """
     )
@@ -435,8 +475,7 @@ def display_generated_files(
     ],
 ) -> None:
     """
-    Display files produced by the agent
-    as downloadable files.
+    Display files generated by the agent.
     """
 
     if not generated_files:
@@ -473,15 +512,18 @@ def display_generated_files(
             "size_bytes"
         )
 
-        if file_type == "powerpoint":
-            icon = "📊"
-        else:
-            icon = "📄"
+        icon = (
+            "📊"
+            if file_type == "powerpoint"
+            else "📄"
+        )
 
         size_text = ""
 
         if size_bytes is not None:
+
             try:
+
                 size_mb = (
                     float(size_bytes)
                     / 1024
@@ -504,11 +546,15 @@ def display_generated_files(
     <strong>
         {icon} {filename}
     </strong>
+
     <br>
-    <span style="
-        font-size: 0.82rem;
-        opacity: 0.65;
-    ">
+
+    <span
+        style="
+            font-size: 0.82rem;
+            opacity: 0.65;
+        "
+    >
         {size_text}
     </span>
 </div>
@@ -516,6 +562,7 @@ def display_generated_files(
         )
 
         try:
+
             file_bytes = (
                 download_generated_file(
                     filename
@@ -538,12 +585,95 @@ def display_generated_files(
             )
 
         except APIError as exc:
+
             st.error(
                 (
                     "Could not download "
                     f"{filename}: {exc}"
                 )
             )
+
+
+# =============================================================
+# User feedback
+# =============================================================
+
+
+def display_feedback(
+    response_id: str,
+) -> None:
+    """
+    Collect thumbs-up / thumbs-down feedback.
+
+    Streamlit returns:
+        0 = thumbs down
+        1 = thumbs up
+
+    The backend stores:
+        -1 = thumbs down
+        +1 = thumbs up
+    """
+
+    st.markdown(
+        "#### Was this response helpful?"
+    )
+
+    feedback_value = st.feedback(
+        "thumbs",
+        key=(
+            f"feedback_{response_id}"
+        ),
+    )
+
+    if feedback_value is None:
+        return
+
+    rating = (
+        1
+        if feedback_value == 1
+        else -1
+    )
+
+    sent_key = (
+        f"feedback_sent_"
+        f"{response_id}"
+    )
+
+    previous_rating = (
+        st.session_state.get(
+            sent_key
+        )
+    )
+
+    if previous_rating == rating:
+        st.caption(
+            "Thanks for the feedback."
+        )
+        return
+
+    try:
+
+        submit_feedback(
+            response_id=response_id,
+            rating=rating,
+        )
+
+        st.session_state[
+            sent_key
+        ] = rating
+
+        st.caption(
+            "Thanks for the feedback."
+        )
+
+    except APIError as exc:
+
+        st.warning(
+            (
+                "Feedback could not be "
+                f"saved: {exc}"
+            )
+        )
 
 
 # =============================================================
@@ -555,9 +685,6 @@ def display_source(
     result: dict[str, Any],
     rank: int,
 ) -> None:
-    """
-    Display one retrieved evidence item.
-    """
 
     ticker = result.get(
         "ticker",
@@ -609,6 +736,7 @@ def display_source(
         page_start is not None
         and page_end is not None
     ):
+
         pages = (
             str(page_start)
             if page_start == page_end
@@ -619,6 +747,7 @@ def display_source(
         )
 
     else:
+
         pages = "—"
 
     with st.expander(
@@ -630,12 +759,15 @@ def display_source(
         ),
         expanded=rank <= 2,
     ):
+
         if section:
+
             st.markdown(
                 f"**Section:** {section}"
             )
 
         if source_id:
+
             st.caption(
                 f"Source ID: {source_id}"
             )
@@ -650,9 +782,6 @@ def retrieval_dataframe(
         dict[str, Any]
     ],
 ) -> pd.DataFrame:
-    """
-    Convert retrieval results into a dataframe.
-    """
 
     rows = []
 
@@ -660,16 +789,19 @@ def retrieval_dataframe(
         results,
         start=1,
     ):
+
         score = result.get(
             "rrf_score"
         )
 
         if score is None:
+
             score = result.get(
                 "similarity"
             )
 
         if score is None:
+
             score = result.get(
                 "score"
             )
@@ -677,24 +809,31 @@ def retrieval_dataframe(
         rows.append(
             {
                 "Rank": index,
+
                 "Ticker": result.get(
                     "ticker"
                 ),
+
                 "Year": result.get(
                     "report_year"
                 ),
+
                 "Type": result.get(
                     "content_type"
                 ),
+
                 "Section": result.get(
                     "section_title"
                 ),
+
                 "Score": score,
+
                 "Keyword Rank": (
                     result.get(
                         "keyword_rank"
                     )
                 ),
+
                 "Vector Rank": (
                     result.get(
                         "vector_rank"
@@ -716,9 +855,6 @@ def retrieval_dataframe(
 def _tool_name(
     call: dict[str, Any],
 ) -> str:
-    """
-    Normalize tool name.
-    """
 
     return str(
         call.get(
@@ -737,9 +873,6 @@ def _tool_name(
 def _tool_arguments(
     call: dict[str, Any],
 ) -> Any:
-    """
-    Normalize tool arguments.
-    """
 
     return call.get(
         "arguments",
@@ -753,9 +886,6 @@ def _tool_arguments(
 def _tool_status(
     call: dict[str, Any],
 ) -> str:
-    """
-    Infer tool status.
-    """
 
     if call.get(
         "error"
@@ -767,6 +897,7 @@ def _tool_status(
     )
 
     if status:
+
         return str(
             status
         )
@@ -776,9 +907,11 @@ def _tool_status(
     )
 
     if success is False:
+
         return "Failed"
 
     if success is True:
+
         return "Success"
 
     response = call.get(
@@ -792,6 +925,7 @@ def _tool_status(
         response,
         dict,
     ):
+
         response_success = (
             response.get(
                 "success"
@@ -812,21 +946,23 @@ def display_tool_trace(
         dict[str, Any]
     ],
 ) -> None:
-    """
-    Render agent tool calls.
-    """
 
     if not tool_calls:
+
         st.info(
-            "The agent did not invoke "
-            "any additional tools."
+            (
+                "The agent did not invoke "
+                "any additional tools."
+            )
         )
+
         return
 
     for index, call in enumerate(
         tool_calls,
         start=1,
     ):
+
         name = _tool_name(
             call
         )
@@ -842,6 +978,7 @@ def display_tool_trace(
             ),
             expanded=index == 1,
         ):
+
             st.markdown(
                 "**Arguments**"
             )
@@ -856,11 +993,13 @@ def display_tool_trace(
                 arguments,
                 (dict, list),
             ):
+
                 st.json(
                     arguments
                 )
 
             else:
+
                 st.code(
                     str(arguments),
                     language="text",
@@ -877,6 +1016,7 @@ def display_tool_trace(
             )
 
             if response is not None:
+
                 st.markdown(
                     "**Tool response**"
                 )
@@ -885,11 +1025,13 @@ def display_tool_trace(
                     response,
                     (dict, list),
                 ):
+
                     st.json(
                         response
                     )
 
                 else:
+
                     st.code(
                         str(response),
                         language="text",
@@ -900,6 +1042,7 @@ def display_tool_trace(
             )
 
             if error:
+
                 st.error(
                     str(error)
                 )
@@ -912,7 +1055,10 @@ def display_tool_trace(
 st.html(
     """
 <div class="hero">
-    <h1>Financial Analysis AI</h1>
+
+    <h1>
+        Financial Analysis AI
+    </h1>
 
     <p>
         Ask analytical questions across corporate annual reports.
@@ -921,6 +1067,7 @@ st.html(
         presentation-ready analysis, and use an agentic workflow
         when additional tools are required.
     </p>
+
 </div>
 """
 )
@@ -931,11 +1078,13 @@ st.html(
 # =============================================================
 
 try:
+
     filters = load_filters()
 
     stats = load_stats()
 
 except APIError as exc:
+
     filters = {
         "tickers": [],
         "years": [],
@@ -950,7 +1099,10 @@ except APIError as exc:
     }
 
     st.sidebar.warning(
-        "Backend metadata could not be loaded."
+        (
+            "Backend metadata could "
+            "not be loaded."
+        )
     )
 
     st.sidebar.caption(
@@ -987,34 +1139,38 @@ with st.sidebar:
 
     if pipeline == "rag":
 
-        retrieval_mode = st.selectbox(
-            "Retrieval strategy",
-            options=[
-                "hybrid",
-                "keyword",
-                "vector",
-            ],
-            index=0,
-            help=(
-                "Choose how documents are retrieved "
-                "for the standard RAG pipeline."
-            ),
+        retrieval_mode = (
+            st.selectbox(
+                "Retrieval strategy",
+                options=[
+                    "hybrid",
+                    "keyword",
+                    "vector",
+                ],
+                index=0,
+                help=(
+                    "Choose the retrieval "
+                    "strategy used by RAG."
+                ),
+            )
         )
 
     else:
 
-        retrieval_mode = st.selectbox(
-            "Retrieval strategy",
-            options=[
-                "hybrid",
-            ],
-            index=0,
-            disabled=True,
-            help=(
-                "The Agent starts with hybrid retrieval "
-                "and may invoke additional retrieval tools "
-                "when required."
-            ),
+        retrieval_mode = (
+            st.selectbox(
+                "Retrieval strategy",
+                options=[
+                    "hybrid",
+                ],
+                index=0,
+                disabled=True,
+                help=(
+                    "The Agent starts with "
+                    "hybrid retrieval and can "
+                    "invoke other search tools."
+                ),
+            )
         )
 
     # ---------------------------------------------------------
@@ -1029,9 +1185,11 @@ with st.sidebar:
         ),
     ]
 
-    selected_ticker = st.selectbox(
-        "Company",
-        ticker_options,
+    selected_ticker = (
+        st.selectbox(
+            "Company",
+            ticker_options,
+        )
     )
 
     ticker = (
@@ -1042,7 +1200,7 @@ with st.sidebar:
     )
 
     # ---------------------------------------------------------
-    # Report year
+    # Year
     # ---------------------------------------------------------
 
     year_options = [
@@ -1053,14 +1211,17 @@ with st.sidebar:
         ),
     ]
 
-    selected_year = st.selectbox(
-        "Report year",
-        year_options,
+    selected_year = (
+        st.selectbox(
+            "Report year",
+            year_options,
+        )
     )
 
     report_year = (
         None
-        if selected_year == "All years"
+        if selected_year
+        == "All years"
         else int(
             selected_year
         )
@@ -1092,13 +1253,16 @@ with st.sidebar:
     st.divider()
 
     st.caption(
-        "Annual reports are the primary source. "
-        "The agent may use additional tools when necessary."
+        (
+            "Annual reports are the primary "
+            "source. The agent may use "
+            "additional tools when necessary."
+        )
     )
 
 
 # =============================================================
-# Corpus overview
+# Corpus statistics
 # =============================================================
 
 metric_columns = st.columns(
@@ -1194,9 +1358,7 @@ with st.form(
         height=110,
         placeholder=(
             "e.g. Compare GTCO's profit "
-            "before tax in 2023 and 2024 "
-            "and calculate the percentage "
-            "increase."
+            "before tax in 2023 and 2024."
         ),
     )
 
@@ -1210,14 +1372,18 @@ with st.form(
 
 
 # =============================================================
-# Execute
+# Execute analysis
 # =============================================================
 
 if submitted:
 
     if not question.strip():
+
         st.warning(
-            "Enter a financial-analysis question."
+            (
+                "Enter a financial-analysis "
+                "question."
+            )
         )
 
         st.stop()
@@ -1228,30 +1394,46 @@ if submitted:
     ) as status:
 
         st.write(
-            "Searching the financial-report corpus..."
+            (
+                "Searching the "
+                "financial-report corpus..."
+            )
         )
 
-        # Flashcards rotate every 3 seconds in the browser.
         display_rotating_flashcards()
 
         try:
 
             result = run_analysis(
                 question.strip(),
+
+                session_id=(
+                    st.session_state[
+                        "monitoring_session_id"
+                    ]
+                ),
+
                 pipeline=pipeline,
+
                 retrieval_mode=(
                     retrieval_mode
                 ),
+
                 top_k=top_k,
+
                 ticker=ticker,
+
                 report_year=(
                     report_year
                 ),
+
                 model=model,
             )
 
             status.update(
-                label="Analysis complete",
+                label=(
+                    "Analysis complete"
+                ),
                 state="complete",
                 expanded=False,
             )
@@ -1259,7 +1441,9 @@ if submitted:
         except APIError as exc:
 
             status.update(
-                label="Analysis failed",
+                label=(
+                    "Analysis failed"
+                ),
                 state="error",
                 expanded=True,
             )
@@ -1273,7 +1457,9 @@ if submitted:
         except Exception as exc:
 
             status.update(
-                label="Analysis failed",
+                label=(
+                    "Analysis failed"
+                ),
                 state="error",
                 expanded=True,
             )
@@ -1374,6 +1560,10 @@ if (
             answer
         )
 
+        # -----------------------------------------------------
+        # Generated files
+        # -----------------------------------------------------
+
         display_generated_files(
             result.get(
                 "generated_files",
@@ -1381,17 +1571,26 @@ if (
             )
         )
 
+        # -----------------------------------------------------
+        # Latency
+        # -----------------------------------------------------
+
         timing = result.get(
             "timing",
             {},
         )
 
         total_time = timing.get(
-            "total_seconds"
+            "total_seconds",
+            timing.get(
+                "api_total_seconds"
+            ),
         )
 
         if total_time is not None:
+
             try:
+
                 st.caption(
                     (
                         "Completed in "
@@ -1406,6 +1605,20 @@ if (
             ):
                 pass
 
+        # -----------------------------------------------------
+        # Feedback
+        # -----------------------------------------------------
+
+        response_id = result.get(
+            "response_id"
+        )
+
+        if response_id:
+
+            display_feedback(
+                response_id
+            )
+
 
     # =========================================================
     # Evidence
@@ -1419,8 +1632,12 @@ if (
         )
 
         if not results:
+
             st.info(
-                "No retrieval evidence is available."
+                (
+                    "No retrieval evidence "
+                    "is available."
+                )
             )
 
         else:
@@ -1444,6 +1661,7 @@ if (
                     results,
                     start=1,
                 ):
+
                     display_source(
                         source,
                         rank,
@@ -1557,11 +1775,16 @@ if (
 
                         figure = px.pie(
                             type_counts,
-                            names="Content type",
-                            values="Documents",
+                            names=(
+                                "Content type"
+                            ),
+                            values=(
+                                "Documents"
+                            ),
                             hole=0.55,
                             title=(
-                                "Retrieved content mix"
+                                "Retrieved "
+                                "content mix"
                             ),
                         )
 
@@ -1591,9 +1814,11 @@ if (
         ):
 
             st.info(
-                "Tool traces are available "
-                "when the Agent pipeline "
-                "is selected."
+                (
+                    "Tool traces are available "
+                    "when the Agent pipeline "
+                    "is selected."
+                )
             )
 
         else:
@@ -1684,6 +1909,7 @@ if (
                                 )
                                 .title()
                             ),
+
                             "Seconds": value,
                         }
                     )
@@ -1700,7 +1926,9 @@ if (
                     timing_frame,
                     x="Stage",
                     y="Seconds",
-                    title="Pipeline latency",
+                    title=(
+                        "Pipeline latency"
+                    ),
                 )
 
                 st.plotly_chart(
@@ -1730,6 +1958,7 @@ if (
             )
 
             try:
+
                 st.json(
                     raw
                 )

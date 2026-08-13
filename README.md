@@ -401,6 +401,11 @@ Docker Compose
 
 Each application layer can therefore be developed, tested, and deployed independently while Docker Compose provides a reproducible environment for running the complete system.
 
+## Monitoring and Observability
+
+The application includes a monitoring and observability layer that tracks **user interactions, response latency, LLM usage and cost, user feedback, and answer relevance**. Each query and response is logged to PostgreSQL, while users can provide thumbs-up or thumbs-down feedback directly through the Streamlit interface. An asynchronous LLM-as-a-judge evaluates a sample of responses for question–answer relevance after the response has been returned to the user, with the judge's cost tracked separately from the application's LLM cost. Grafana connects directly to the monitoring data in PostgreSQL and provides dashboards for response volume, latency, application and evaluation costs, relevance scores, user feedback, and recent interactions. The Grafana datasource and dashboards are provisioned from version-controlled configuration files, allowing the complete monitoring environment to be reproduced automatically when the application is deployed.
+
+
 ## Design Trade-offs
 
 I made several design changes as the project evolved to balance extraction quality, retrieval accuracy, system complexity, and evaluation reliability.

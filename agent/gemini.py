@@ -4,6 +4,10 @@ from typing import Any
 from google import genai
 from google.genai import types
 
+from monitoring.telemetry import (
+    record_gemini_response,
+)
+
 from agent.tools import (
     calculate,
     create_powerpoint,
@@ -690,6 +694,12 @@ slides, or slide deck:
                 contents=prompt,
                 config=self.config,
             )
+        )
+
+        record_gemini_response(
+            response=response,
+            model=self.model,
+            purpose="agent_generation",
         )
 
         # =====================================================

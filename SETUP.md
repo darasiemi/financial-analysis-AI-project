@@ -847,3 +847,198 @@ To stop the complete Docker Compose stack:
 ```bash
 docker compose down
 ```
+
+## Monitoring: Grafana SQL Panels
+
+Grafana uses the provisioned PostgreSQL datasource to visualise application monitoring data. The SQL queries below power the dashboard panels for response volume, latency, application and judge costs, answer relevance, and user feedback. These panels do not need to be created manually because their queries are already defined in the version-controlled Grafana dashboard JSON and are loaded automatically when Grafana starts.
+
+### Total Responses
+
+```sql
+SELECT
+    COUNT(*) AS responses
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at);
+```
+
+### Average Latency
+
+```sql
+SELECT
+    AVG(total_latency_seconds) AS avg_latency_seconds
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+  AND status = 'completed';
+```
+
+### Application Cost
+
+```sql
+SELECT
+    COALESCE(
+        SUM(application_cost_usd),
+        0
+    ) AS application_cost_usd
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at);
+```
+
+### Judge Cost
+
+The judge cost is tracked separately from the main application cost.
+
+```sql
+SELECT
+    COALESCE(
+        SUM(judge_cost_usd),
+        0
+    ) AS judge_cost_usd
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at);
+```
+
+### Average Answer Relevance
+
+```sql
+SELECT
+    AVG(relevance_score) AS avg_relevance
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+  AND relevance_score IS NOT NULL;
+```
+
+### Thumbs-Up Rate
+
+```sql
+SELECT
+    COALESCE(
+        100.0
+        * SUM(
+            CASE
+                WHEN f.rating = 1 THEN 1
+                ELSE 0
+            END
+        )
+        / NULLIF(
+            COUNT(*),
+            0
+        ),
+        0
+    ) AS thumbs_up_percent
+FROM monitoring.feedback f
+JOIN monitoring.interactions i
+    ON i.response_id = f.response_id
+WHERE $__timeFilter(i.created_at);
+```
+
+### Response Volume Over Time
+
+```sql
+SELECT
+    $__timeGroupAlias(
+        created_at,
+        '5m'
+    ),
+    COUNT(*) AS responses
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+GROUP BY 1
+ORDER BY 1;
+```
+
+### Latency Over Time
+
+```sql
+SELECT
+    $__timeGroupAlias(
+        created_at,
+        '5m'
+    ),
+    AVG(
+        total_latency_seconds
+    ) AS latency
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+  AND status = 'completed'
+GROUP BY 1
+ORDER BY 1;
+```
+
+### Application vs. Judge Cost
+
+```sql
+SELECT
+    $__timeGroupAlias(
+        created_at,
+        '1h'
+    ),
+    SUM(
+        application_cost_usd
+    ) AS application_cost,
+    SUM(
+        judge_cost_usd
+    ) AS judge_cost
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+GROUP BY 1
+ORDER BY 1;
+```
+
+### Agent vs. RAG Latency
+
+```sql
+SELECT
+    pipeline,
+    AVG(
+        total_latency_seconds
+    ) AS avg_latency
+FROM monitoring.interactions
+WHERE $__timeFilter(created_at)
+  AND status = 'completed'
+GROUP BY pipeline
+ORDER BY pipeline;
+```
+
+### User Feedback by Pipeline
+
+```sql
+SELECT
+    i.pipeline,
+    COUNT(*) FILTER (
+        WHERE f.rating = 1
+    ) AS thumbs_up,
+    COUNT(*) FILTER (
+        WHERE f.rating = -1
+    ) AS thumbs_down
+FROM monitoring.interactions i
+JOIN monitoring.feedback f
+    ON f.response_id = i.response_id
+WHERE $__timeFilter(i.created_at)
+GROUP BY i.pipeline
+ORDER BY i.pipeline;
+```
+
+### Dashboard Provisioning
+
+The Grafana dashboard is stored in:
+
+```text
+monitoring/grafana/dashboards/financial-analysis-monitoring.json
+```
+
+The dashboard provider is configured in:
+
+```text
+monitoring/grafana/provisioning/dashboards/dashboards.yml
+```
+
+and the PostgreSQL datasource is configured in:
+
+```text
+monitoring/grafana/provisioning/datasources/datasource.yml
+```
+
+These files are mounted into the Grafana container through Docker Compose. As a result, the monitoring dashboard and its SQL panels are provisioned automatically when Grafana starts, making the monitoring setup reproducible without requiring the panels to be configured manually through the Grafana UI.
+
+The grafana can be viewed locally in
+`http://localhost:3000`

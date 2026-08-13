@@ -1,0 +1,612 @@
+{
+    "annotations": {
+      "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(*) AS responses FROM monitoring.interactions WHERE $__timeFilter(created_at);",
+            "refId": "A"
+          }
+        ],
+        "title": "Total Responses",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 2,
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 4,
+          "y": 0
+        },
+        "id": 2,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT AVG(total_latency_seconds) AS avg_latency_seconds FROM monitoring.interactions WHERE $__timeFilter(created_at) AND status = 'completed';",
+            "refId": "A"
+          }
+        ],
+        "title": "Average Latency",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 4,
+            "unit": "currencyUSD"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 8,
+          "y": 0
+        },
+        "id": 3,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COALESCE(SUM(application_cost_usd), 0) AS application_cost_usd FROM monitoring.interactions WHERE $__timeFilter(created_at);",
+            "refId": "A"
+          }
+        ],
+        "title": "Application Cost",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 4,
+            "unit": "currencyUSD"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 12,
+          "y": 0
+        },
+        "id": 4,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COALESCE(SUM(judge_cost_usd), 0) AS judge_cost_usd FROM monitoring.interactions WHERE $__timeFilter(created_at);",
+            "refId": "A"
+          }
+        ],
+        "title": "Judge Cost",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 2,
+            "max": 1,
+            "min": 0,
+            "unit": "percentunit"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 16,
+          "y": 0
+        },
+        "id": 5,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT AVG(relevance_score) AS average_relevance FROM monitoring.interactions WHERE $__timeFilter(created_at) AND relevance_score IS NOT NULL;",
+            "refId": "A"
+          }
+        ],
+        "title": "Average Relevance",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 1,
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 4,
+          "x": 20,
+          "y": 0
+        },
+        "id": 6,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COALESCE(100.0 * COUNT(*) FILTER (WHERE f.rating = 1) / NULLIF(COUNT(*), 0), 0) AS thumbs_up_percent FROM monitoring.feedback f JOIN monitoring.interactions i ON i.response_id = f.response_id WHERE $__timeFilter(i.created_at);",
+            "refId": "A"
+          }
+        ],
+        "title": "Thumbs-Up Rate",
+        "type": "stat"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        },
+        "id": 7,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": true,
+            "rawSql": "SELECT $__timeGroupAlias(created_at, '5m'), COUNT(*) AS responses FROM monitoring.interactions WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1;",
+            "refId": "A"
+          }
+        ],
+        "title": "Response Volume Over Time",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        },
+        "id": 8,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": true,
+            "rawSql": "SELECT $__timeGroupAlias(created_at, '5m'), AVG(total_latency_seconds) AS latency FROM monitoring.interactions WHERE $__timeFilter(created_at) AND status = 'completed' GROUP BY 1 ORDER BY 1;",
+            "refId": "A"
+          }
+        ],
+        "title": "Average Latency Over Time",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        },
+        "id": 9,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": true,
+            "rawSql": "SELECT $__timeGroupAlias(created_at, '1h'), SUM(application_cost_usd) AS application_cost, SUM(judge_cost_usd) AS judge_cost FROM monitoring.interactions WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1;",
+            "refId": "A"
+          }
+        ],
+        "title": "Application vs Judge Cost",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        },
+        "id": 10,
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": false
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT pipeline, AVG(total_latency_seconds) AS avg_latency FROM monitoring.interactions WHERE $__timeFilter(created_at) AND status = 'completed' GROUP BY pipeline ORDER BY pipeline;",
+            "refId": "A"
+          }
+        ],
+        "title": "Average Latency by Pipeline",
+        "type": "barchart"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        },
+        "id": 11,
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT i.pipeline, COUNT(*) FILTER (WHERE f.rating = 1) AS thumbs_up, COUNT(*) FILTER (WHERE f.rating = -1) AS thumbs_down FROM monitoring.interactions i JOIN monitoring.feedback f ON f.response_id = i.response_id WHERE $__timeFilter(i.created_at) GROUP BY i.pipeline ORDER BY i.pipeline;",
+            "refId": "A"
+          }
+        ],
+        "title": "User Feedback by Pipeline",
+        "type": "barchart"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "max": 1,
+            "min": 0,
+            "unit": "percentunit"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        },
+        "id": 12,
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": true,
+            "rawSql": "SELECT $__timeGroupAlias(created_at, '1h'), AVG(relevance_score) AS relevance FROM monitoring.interactions WHERE $__timeFilter(created_at) AND relevance_score IS NOT NULL GROUP BY 1 ORDER BY 1;",
+            "refId": "A"
+          }
+        ],
+        "title": "Answer Relevance Over Time",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "financial-analysis-postgres"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 24,
+          "x": 0,
+          "y": 28
+        },
+        "id": 13,
+        "options": {
+          "cellHeight": "sm",
+          "showHeader": true
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "financial-analysis-postgres"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT i.created_at AS time, i.pipeline, i.question, i.total_latency_seconds AS latency_seconds, i.application_cost_usd AS app_cost_usd, i.relevance_score, CASE WHEN f.rating = 1 THEN '👍' WHEN f.rating = -1 THEN '👎' ELSE '—' END AS feedback, i.status FROM monitoring.interactions i LEFT JOIN monitoring.feedback f ON f.response_id = i.response_id WHERE $__timeFilter(i.created_at) ORDER BY i.created_at DESC LIMIT 100;",
+            "refId": "A"
+          }
+        ],
+        "title": "Recent Interactions",
+        "type": "table"
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 39,
+    "tags": [
+      "financial-analysis",
+      "rag",
+      "llm",
+      "monitoring"
+    ],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Financial Analysis AI Monitoring",
+    "uid": "financial-analysis-monitoring",
+    "version": 1,
+    "weekStart": ""
+  }

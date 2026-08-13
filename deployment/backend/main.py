@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import logging
+import time
+import uuid
 
 from fastapi import (
+    BackgroundTasks,
     FastAPI,
     HTTPException,
 )
@@ -20,6 +23,8 @@ from deployment.backend.files import (
 )
 from deployment.backend.schemas import (
     CorpusStatsResponse,
+    FeedbackRequest,
+    FeedbackResponse,
     FiltersResponse,
     HealthResponse,
     QueryRequest,
@@ -27,6 +32,19 @@ from deployment.backend.schemas import (
 )
 from deployment.backend.service import (
     run_query,
+)
+
+from monitoring.database import (
+    ensure_monitoring_schema,
+    save_failed_interaction,
+    save_feedback,
+    save_interaction,
+)
+from monitoring.judge import (
+    judge_relevance_background,
+)
+from monitoring.telemetry import (
+    monitoring_context,
 )
 
 
@@ -38,18 +56,23 @@ logger = logging.getLogger(
 app = FastAPI(
     title="Financial Analysis API",
     description=(
-        "RAG and agentic financial "
-        "analysis over corporate "
-        "annual reports."
+        "RAG and agentic financial analysis "
+        "over corporate annual reports."
     ),
-    version="0.1.0",
+    version="0.2.0",
 )
+
+
+@app.on_event(
+    "startup"
+)
+def startup() -> None:
+    ensure_monitoring_schema()
 
 
 @app.get(
     "/health",
     response_model=HealthResponse,
-    tags=["System"],
 )
 def health() -> HealthResponse:
 
@@ -69,31 +92,12 @@ def health() -> HealthResponse:
 @app.get(
     "/api/v1/filters",
     response_model=FiltersResponse,
-    tags=["Metadata"],
 )
 def filters() -> FiltersResponse:
 
-    try:
-        result = (
-            get_available_filters()
-        )
-
-        return FiltersResponse(
-            **result
-        )
-
-    except Exception as exc:
-        logger.exception(
-            "Failed to load filters."
-        )
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Unable to load "
-                "corpus filters."
-            ),
-        ) from exc
+    return FiltersResponse(
+        **get_available_filters()
+    )
 
 
 @app.get(
@@ -101,69 +105,172 @@ def filters() -> FiltersResponse:
     response_model=(
         CorpusStatsResponse
     ),
-    tags=["Metadata"],
 )
 def stats() -> CorpusStatsResponse:
 
-    try:
-        result = (
-            get_corpus_stats()
-        )
-
-        return CorpusStatsResponse(
-            **result
-        )
-
-    except Exception as exc:
-        logger.exception(
-            "Failed to load "
-            "corpus statistics."
-        )
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Unable to load "
-                "corpus statistics."
-            ),
-        ) from exc
+    return CorpusStatsResponse(
+        **get_corpus_stats()
+    )
 
 
 @app.post(
     "/api/v1/query",
     response_model=QueryResponse,
-    tags=["Analysis"],
 )
 def query(
     request: QueryRequest,
+    background_tasks: BackgroundTasks,
 ) -> QueryResponse:
 
-    try:
-        result = run_query(
-            request.question,
-            pipeline=request.pipeline,
-            retrieval_mode=(
-                request.retrieval_mode
-            ),
-            top_k=request.top_k,
-            ticker=request.ticker,
-            report_year=(
-                request.report_year
-            ),
-            model=request.model,
-        )
+    response_id = str(
+        uuid.uuid4()
+    )
 
-        return QueryResponse(
-            **result
-        )
+    request_start = (
+        time.perf_counter()
+    )
+
+    try:
+
+        with monitoring_context(
+            response_id
+        ) as telemetry:
+
+            result = run_query(
+                request.question,
+                pipeline=request.pipeline,
+                retrieval_mode=(
+                    request.retrieval_mode
+                ),
+                top_k=request.top_k,
+                ticker=request.ticker,
+                report_year=(
+                    request.report_year
+                ),
+                model=request.model,
+            )
+
+            total_latency = (
+                time.perf_counter()
+                - request_start
+            )
+
+            timing = dict(
+                result.get(
+                    "timing",
+                    {},
+                )
+            )
+
+            timing[
+                "api_total_seconds"
+            ] = total_latency
+
+            answer = result.get(
+                "answer",
+                "",
+            )
+
+            save_interaction(
+                response_id=response_id,
+                session_id=request.session_id,
+                question=request.question,
+                answer=answer,
+                pipeline=request.pipeline,
+                retrieval_mode=(
+                    request.retrieval_mode
+                ),
+                ticker=request.ticker,
+                report_year=(
+                    request.report_year
+                ),
+                model=request.model,
+                total_latency_seconds=(
+                    total_latency
+                ),
+                latencies=timing,
+                telemetry=telemetry,
+            )
+
+            # -----------------------------------------------
+            # Runs AFTER response is returned to Streamlit.
+            # -----------------------------------------------
+
+            background_tasks.add_task(
+                judge_relevance_background,
+                response_id=response_id,
+                question=request.question,
+                answer=answer,
+            )
+
+            return QueryResponse(
+                response_id=response_id,
+                pipeline=result.get(
+                    "pipeline",
+                    request.pipeline,
+                ),
+                answer=answer,
+                results=result.get(
+                    "results",
+                    [],
+                ),
+                context=result.get(
+                    "context",
+                    "",
+                ),
+                tool_calls=result.get(
+                    "tool_calls",
+                    [],
+                ),
+                generated_files=(
+                    result.get(
+                        "generated_files",
+                        [],
+                    )
+                ),
+                timing=timing,
+                estimated_cost_usd=(
+                    telemetry
+                    .estimated_cost_usd
+                ),
+            )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
         ) from exc
 
     except Exception as exc:
+
+        total_latency = (
+            time.perf_counter()
+            - request_start
+        )
+
+        try:
+
+            save_failed_interaction(
+                response_id=response_id,
+                session_id=request.session_id,
+                question=request.question,
+                pipeline=request.pipeline,
+                retrieval_mode=(
+                    request.retrieval_mode
+                ),
+                model=request.model,
+                latency_seconds=(
+                    total_latency
+                ),
+                error=str(exc),
+            )
+
+        except Exception:
+            logger.exception(
+                "Could not persist failed interaction."
+            )
+
         logger.exception(
             "Financial analysis failed."
         )
@@ -171,22 +278,53 @@ def query(
         raise HTTPException(
             status_code=500,
             detail=(
-                "Financial analysis "
-                "could not be completed."
+                "Financial analysis could "
+                "not be completed."
+            ),
+        ) from exc
+
+
+@app.post(
+    "/api/v1/feedback",
+    response_model=FeedbackResponse,
+)
+def feedback(
+    request: FeedbackRequest,
+) -> FeedbackResponse:
+
+    try:
+
+        save_feedback(
+            response_id=(
+                request.response_id
+            ),
+            rating=request.rating,
+        )
+
+        return FeedbackResponse(
+            success=True
+        )
+
+    except Exception as exc:
+
+        logger.exception(
+            "Could not save feedback."
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Could not save feedback."
             ),
         ) from exc
 
 
 @app.get(
     "/api/v1/files/{filename}",
-    tags=["Files"],
 )
 def download_generated_file(
     filename: str,
 ) -> FileResponse:
-    """
-    Download a generated PowerPoint.
-    """
 
     try:
         file_path = (
@@ -196,6 +334,7 @@ def download_generated_file(
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail="Invalid filename.",
@@ -207,17 +346,10 @@ def download_generated_file(
     ):
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Generated presentation "
-                "was not found."
-            ),
+            detail="File not found.",
         )
 
     return FileResponse(
         path=file_path,
         filename=file_path.name,
-        media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "presentationml.presentation"
-        ),
     )

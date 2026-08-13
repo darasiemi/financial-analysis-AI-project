@@ -5,6 +5,10 @@ from google.genai import types
 
 from ingestion.processing.database import load_environment
 
+from monitoring.telemetry import (
+    record_gemini_response,
+)
+
 
 def _extract_sources(
     response,
@@ -168,6 +172,12 @@ def web_search(
                     temperature=0.1,
                 ),
             )
+        )
+
+        record_gemini_response(
+            response=response,
+            model=model,
+            purpose="web_search",
         )
 
         answer = (

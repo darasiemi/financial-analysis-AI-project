@@ -5,6 +5,9 @@ import os
 from google import genai
 
 from rag.generator import AnswerGenerator
+from monitoring.telemetry import (
+    record_gemini_response,
+)
 
 
 SYSTEM_PROMPT = """
@@ -61,6 +64,12 @@ Retrieved context:
                 model=self.model,
                 contents=prompt,
             )
+        )
+
+        record_gemini_response(
+            response=response,
+            model=self.model,
+            purpose="rag_generation",
         )
 
         if response.text is None:
