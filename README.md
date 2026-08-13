@@ -248,7 +248,7 @@ This makes the agent workflow inspectable and helps evaluate how retrieval, tool
 
 ## Evaluation
 
-The evaluation framework provides a consistent way to compare the **keyword, semantic, hybrid RAG, and agentic financial-analysis pipelines** using the same financially focused benchmark. Because no labelled ground-truth dataset was initially available, I generated and validated synthetic benchmark questions from the indexed annual reports, with stratified sampling across companies and reporting years and an emphasis on challenging tasks such as table reasoning, calculations, cross-report comparisons, and multi-hop analysis. Retrieval is assessed using **Precision@K, Recall@K, Hit Rate@K, MRR, and nDCG@K**, while answer quality is evaluated using **Token F1** and LLM-based measures of **correctness, faithfulness, and relevance**. Agent runs additionally retain tool-call traces and execution timing to support detailed analysis of retrieval, reasoning, and tool-use failures.
+The evaluation framework provides a consistent way to compare the **keyword, semantic, hybrid RAG, and agentic financial-analysis pipelines** using the same financially focused benchmark. Because no labelled ground-truth dataset was initially available, I generated and validated synthetic benchmark questions from the indexed annual reports, with stratified sampling across companies and reporting years and an emphasis on challenging tasks such as table reasoning, calculations, cross-report comparisons, and multi-hop analysis. While  **Hit Rate@K, MRR** were the metrics for evaluation in the Zoomcamp, I further assessed my pipeline using **Precision@K, Recall@K, and nDCG@K**, while answer quality is evaluated using **Token F1** and LLM-based measures of **correctness, faithfulness, and relevance**. Agent runs additionally retain tool-call traces and execution timing to support detailed analysis of retrieval, reasoning, and tool-use failures.
 
 **How synthetic benchmark validation was done***: Each synthetic question-answer pair is independently evaluated by an LLM validator for evidence grounding, financial relevance, difficulty, calculation validity, entity/period/unit consistency, and naturalness. Examples are retained only if they achieve a minimum **quality score of 0.90**, **difficulty score of 0.80**, and **financial relevance score of 0.90**. The current benchmark targets **75 accepted examples**, with `gemini-2.5-flash` used for both generation and validation. Accepted examples remain marked as synthetic and not human-verified until manually reviewed.
 
@@ -278,6 +278,38 @@ The evaluation framework provides a consistent way to compare the **keyword, sem
 ```
 
 [More on evaluation](evaluation/README.md)
+
+### Evaluation Results
+
+The hybrid Retrieval-Augmented Generation (RAG) pipeline was evaluated using a benchmark of **75 financial-analysis questions** covering tasks such as financial metric extraction, table reasoning, within-source comparisons, cross-report comparisons, financial interpretation, and multi-hop reasoning.
+
+
+| Metric | Score |
+|---|---:|
+| Precision@8 | 0.079 |
+| Recall@8 | 0.446 |
+| Hit Rate@8 | 0.523 |
+| MRR | 0.380 |
+| NDCG@8 | 0.369 |
+| Answer Token F1 | 0.474 |
+| Answer Correctness | 0.779 |
+| Faithfulness | **0.969** |
+| Answer Relevance | **0.904** |
+| Average Latency | 9.88 s |
+| Successfully Evaluated Questions | 65 / 75 |
+| Evaluation Completion Rate | 86.7% |
+
+### Interpretation
+
+The evaluation demonstrates strong answer quality when the required evidence is successfully retrieved. The pipeline achieved **96.9% faithfulness**, indicating that generated answers were highly grounded in the retrieved financial-report context, and **90.4% answer relevance**, showing that responses generally addressed the questions directly. Answer correctness was **77.9%**.
+
+Retrieval performance presents the main opportunity for improvement. **Recall@8 was 44.6%** and **Hit Rate@8 was 52.3%**, indicating that the expected supporting evidence was not consistently present among the top eight retrieved documents. The **Precision@8 of 7.9%** further indicates that only a relatively small proportion of the retrieved chunks matched the benchmark's expected relevant evidence.
+
+Of the **75 benchmark questions, 65 were successfully evaluated (86.7%)**. The remaining **10 evaluations were not completed because the external Gemini API returned `429 RESOURCE_EXHAUSTED` errors after the available prepayment credits were exhausted during the evaluation run**. These cases therefore represent **external API/evaluation infrastructure failures rather than failures of the RAG pipeline itself** and should not be interpreted as incorrect answers produced by the system.
+
+The successfully completed evaluations had an average end-to-end latency of **9.88 seconds**.
+
+Overall, the results suggest that **generation quality is strong when relevant evidence is available, while retrieval remains the primary area for improvement**. Future work should therefore focus on improving retrieval recall and ranking quality, particularly for complex table-based, cross-report, and multi-hop financial questions.
 
 ## Deployment
 
