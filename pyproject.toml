@@ -106,3 +106,7 @@ disable = [
     # Intentional implementation patterns
     "consider-using-enumerate",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
