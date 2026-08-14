@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Any
 
 from agent.gemini import (
@@ -17,14 +17,10 @@ from rag.pipeline import (
     run_rag,
 )
 
-
-DEFAULT_MODEL = (
-    "gemini-2.5-flash"
-)
+DEFAULT_MODEL = "gemini-2.5-flash"
 
 POWERPOINT_MIME_TYPE = (
-    "application/vnd.openxmlformats-officedocument."
-    "presentationml.presentation"
+    "application/vnd.openxmlformats-officedocument." "presentationml.presentation"
 )
 
 
@@ -47,9 +43,7 @@ def run_rag_query(
     normalize its output for the API.
     """
 
-    generator = GeminiGenerator(
-        model=model
-    )
+    generator = GeminiGenerator(model=model)
 
     start = time.perf_counter()
 
@@ -62,37 +56,27 @@ def run_rag_query(
         report_year=report_year,
     )
 
-    elapsed = (
-        time.perf_counter()
-        - start
-    )
+    elapsed = time.perf_counter() - start
 
     return {
         "pipeline": "rag",
-
         "answer": result.get(
             "answer",
             "No answer was generated.",
         ),
-
         "results": result.get(
             "results",
             [],
         ),
-
         "context": result.get(
             "context",
             "",
         ),
-
         "tool_calls": [],
-
         "generated_files": [],
-
         "timing": {
             "total_seconds": elapsed,
         },
-
         "raw_result": result,
     }
 
@@ -109,9 +93,7 @@ def _extract_agent_answer(
     Normalize different agent answer structures.
     """
 
-    answer = result.get(
-        "answer"
-    )
+    answer = result.get("answer")
 
     if isinstance(
         answer,
@@ -128,9 +110,7 @@ def _extract_agent_answer(
             "final_answer",
             "text",
         ):
-            value = answer.get(
-                key
-            )
+            value = answer.get(key)
 
             if isinstance(
                 value,
@@ -138,9 +118,7 @@ def _extract_agent_answer(
             ):
                 return value
 
-    agent_result = result.get(
-        "agent_result"
-    )
+    agent_result = result.get("agent_result")
 
     if isinstance(
         agent_result,
@@ -151,11 +129,7 @@ def _extract_agent_answer(
             "final_answer",
             "text",
         ):
-            value = (
-                agent_result.get(
-                    key
-                )
-            )
+            value = agent_result.get(key)
 
             if isinstance(
                 value,
@@ -163,10 +137,7 @@ def _extract_agent_answer(
             ):
                 return value
 
-    return str(
-        answer
-        or ""
-    )
+    return str(answer or "")
 
 
 def _extract_tool_calls(
@@ -178,17 +149,11 @@ def _extract_tool_calls(
     """
 
     candidates = [
-        result.get(
-            "tool_calls"
-        ),
-        result.get(
-            "tools_used"
-        ),
+        result.get("tool_calls"),
+        result.get("tools_used"),
     ]
 
-    agent_result = result.get(
-        "agent_result"
-    )
+    agent_result = result.get("agent_result")
 
     if isinstance(
         agent_result,
@@ -196,18 +161,12 @@ def _extract_tool_calls(
     ):
         candidates.extend(
             [
-                agent_result.get(
-                    "tool_calls"
-                ),
-                agent_result.get(
-                    "tools_used"
-                ),
+                agent_result.get("tool_calls"),
+                agent_result.get("tools_used"),
             ]
         )
 
-    answer = result.get(
-        "answer"
-    )
+    answer = result.get("answer")
 
     if isinstance(
         answer,
@@ -215,12 +174,8 @@ def _extract_tool_calls(
     ):
         candidates.extend(
             [
-                answer.get(
-                    "tool_calls"
-                ),
-                answer.get(
-                    "tools_used"
-                ),
+                answer.get("tool_calls"),
+                answer.get("tools_used"),
             ]
         )
 
@@ -241,9 +196,7 @@ def _extract_initial_results(
     Extract initial retrieval evidence.
     """
 
-    retrieval = result.get(
-        "initial_retrieval"
-    )
+    retrieval = result.get("initial_retrieval")
 
     if isinstance(
         retrieval,
@@ -260,11 +213,7 @@ def _extract_initial_results(
             "documents",
             "items",
         ):
-            value = (
-                retrieval.get(
-                    key
-                )
-            )
+            value = retrieval.get(key)
 
             if isinstance(
                 value,
@@ -298,9 +247,7 @@ def _unwrap_tool_response(
         "result",
         "output",
     ):
-        nested = response.get(
-            key
-        )
+        nested = response.get(key)
 
         if isinstance(
             nested,
@@ -312,9 +259,7 @@ def _unwrap_tool_response(
 
 
 def _extract_generated_files(
-    tool_calls: list[
-        dict[str, Any]
-    ],
+    tool_calls: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
     Extract downloadable files produced by
@@ -323,9 +268,7 @@ def _extract_generated_files(
     Currently supports PowerPoint generation.
     """
 
-    generated_files: list[
-        dict[str, Any]
-    ] = []
+    generated_files: list[dict[str, Any]] = []
 
     seen: set[str] = set()
 
@@ -344,26 +287,18 @@ def _extract_generated_files(
             )
         )
 
-        if tool_name != (
-            "create_powerpoint"
-        ):
+        if tool_name != ("create_powerpoint"):
             continue
 
         response = call.get(
             "response",
             call.get(
                 "result",
-                call.get(
-                    "raw_response"
-                ),
+                call.get("raw_response"),
             ),
         )
 
-        response = (
-            _unwrap_tool_response(
-                response
-            )
-        )
+        response = _unwrap_tool_response(response)
 
         if not isinstance(
             response,
@@ -371,80 +306,52 @@ def _extract_generated_files(
         ):
             continue
 
-        if (
-            response.get(
-                "success"
-            )
-            is not True
-        ):
+        if response.get("success") is not True:
             continue
 
-        filename = response.get(
-            "filename"
-        )
+        filename = response.get("filename")
 
         # Backwards compatibility with
         # older presentation tool output.
         if not filename:
 
-            path = response.get(
-                "path"
-            )
+            path = response.get("path")
 
             if path:
-                filename = (
-                    Path(
-                        str(path)
-                    )
-                    .name
-                )
+                filename = Path(str(path)).name
 
         if not filename:
             continue
 
-        filename = str(
-            filename
-        )
+        filename = str(filename)
 
         if filename in seen:
             continue
 
-        seen.add(
-            filename
-        )
+        seen.add(filename)
 
         generated_files.append(
             {
-                "filename": (
-                    filename
-                ),
-
+                "filename": (filename),
                 "file_type": (
                     response.get(
                         "file_type",
                         "powerpoint",
                     )
                 ),
-
                 "format": (
                     response.get(
                         "format",
                         "pptx",
                     )
                 ),
-
                 "mime_type": (
                     response.get(
                         "mime_type",
                         POWERPOINT_MIME_TYPE,
                     )
                 ),
-
-                "size_bytes": (
-                    response.get(
-                        "size_bytes"
-                    )
-                ),
+                "size_bytes": (response.get("size_bytes")),
             }
         )
 
@@ -469,9 +376,7 @@ def run_agent_query(
     pipeline.
     """
 
-    agent = GeminiFinancialAgent(
-        model=model
-    )
+    agent = GeminiFinancialAgent(model=model)
 
     result = run_agent(
         question,
@@ -481,51 +386,24 @@ def run_agent_query(
         top_k=top_k,
     )
 
-    tool_calls = (
-        _extract_tool_calls(
-            result
-        )
-    )
+    tool_calls = _extract_tool_calls(result)
 
-    generated_files = (
-        _extract_generated_files(
-            tool_calls
-        )
-    )
+    generated_files = _extract_generated_files(tool_calls)
 
     return {
         "pipeline": "agent",
-
-        "answer": (
-            _extract_agent_answer(
-                result
-            )
-        ),
-
-        "results": (
-            _extract_initial_results(
-                result
-            )
-        ),
-
+        "answer": (_extract_agent_answer(result)),
+        "results": (_extract_initial_results(result)),
         "context": result.get(
             "initial_context",
             "",
         ),
-
-        "tool_calls": (
-            tool_calls
-        ),
-
-        "generated_files": (
-            generated_files
-        ),
-
+        "tool_calls": (tool_calls),
+        "generated_files": (generated_files),
         "timing": result.get(
             "timing",
             {},
         ),
-
         "raw_result": result,
     }
 
@@ -552,9 +430,7 @@ def run_query(
     if pipeline == "rag":
         return run_rag_query(
             question,
-            retrieval_mode=(
-                retrieval_mode
-            ),
+            retrieval_mode=(retrieval_mode),
             top_k=top_k,
             ticker=ticker,
             report_year=report_year,
@@ -570,7 +446,4 @@ def run_query(
             model=model,
         )
 
-    raise ValueError(
-        f"Unsupported pipeline: "
-        f"{pipeline}"
-    )
+    raise ValueError(f"Unsupported pipeline: " f"{pipeline}")

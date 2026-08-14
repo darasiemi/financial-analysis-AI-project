@@ -19,9 +19,7 @@ def load_environment() -> None:
     """Load environment variables from ingestion/.env."""
 
     if not ENV_PATH.exists():
-        raise FileNotFoundError(
-            f"Environment file not found: {ENV_PATH}"
-        )
+        raise FileNotFoundError(f"Environment file not found: {ENV_PATH}")
 
     load_dotenv(ENV_PATH)
 
@@ -35,9 +33,7 @@ def get_postgres_connection_string() -> str:
     environment variables.
     """
 
-    configured_url = os.getenv(
-        "DESTINATION__POSTGRES__CREDENTIALS"
-    )
+    configured_url = os.getenv("DESTINATION__POSTGRES__CREDENTIALS")
 
     if configured_url:
         return configured_url
@@ -59,15 +55,9 @@ def get_postgres_connection_string() -> str:
     ]
 
     if missing:
-        raise RuntimeError(
-            "Missing PostgreSQL configuration: "
-            + ", ".join(missing)
-        )
+        raise RuntimeError("Missing PostgreSQL configuration: " + ", ".join(missing))
 
-    return (
-        f"postgresql://{username}:{password}"
-        f"@{host}:{port}/{database}"
-    )
+    return f"postgresql://{username}:{password}" f"@{host}:{port}/{database}"
 
 
 def load_reports(
@@ -88,9 +78,7 @@ def load_reports(
     reports: list[ReportRecord] = []
 
     with psycopg2.connect(connection_string) as connection:
-        with connection.cursor(
-            cursor_factory=RealDictCursor
-        ) as cursor:
+        with connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query)
 
             for row in cursor:
@@ -98,8 +86,7 @@ def load_reports(
 
                 if not file_path.exists():
                     raise FileNotFoundError(
-                        "PDF referenced in PostgreSQL does not exist: "
-                        f"{file_path}"
+                        "PDF referenced in PostgreSQL does not exist: " f"{file_path}"
                     )
 
                 reports.append(
@@ -113,8 +100,7 @@ def load_reports(
 
     if not reports:
         raise RuntimeError(
-            f"No reports found in "
-            f"{POSTGRES_SCHEMA}.{REPORTS_TABLE}."
+            f"No reports found in " f"{POSTGRES_SCHEMA}.{REPORTS_TABLE}."
         )
 
     return reports

@@ -16,12 +16,7 @@ from ingestion.processing.models import (
 def _report_debug_dir(
     report: ReportRecord,
 ) -> Path:
-    directory = (
-        DEBUG_DIR
-        / report.ticker
-        / str(report.report_year)
-        / report.report_id
-    )
+    directory = DEBUG_DIR / report.ticker / str(report.report_year) / report.report_id
 
     directory.mkdir(
         parents=True,
@@ -45,10 +40,7 @@ def write_raw_blocks(
     if not DEBUG_PROCESSING:
         return
 
-    directory = (
-        _report_debug_dir(report)
-        / "raw_blocks"
-    )
+    directory = _report_debug_dir(report) / "raw_blocks"
 
     directory.mkdir(
         parents=True,
@@ -59,9 +51,7 @@ def write_raw_blocks(
         pages,
         start=1,
     ):
-        path = directory / (
-            f"page_{page_index:04d}.txt"
-        )
+        path = directory / (f"page_{page_index:04d}.txt")
 
         parts: list[str] = []
 
@@ -105,10 +95,7 @@ def write_processed_pages(
     if not DEBUG_PROCESSING:
         return
 
-    directory = (
-        _report_debug_dir(report)
-        / "reconstructed_pages"
-    )
+    directory = _report_debug_dir(report) / "reconstructed_pages"
 
     directory.mkdir(
         parents=True,
@@ -116,9 +103,7 @@ def write_processed_pages(
     )
 
     for page in pages:
-        path = directory / (
-            f"page_{page.page_number:04d}.txt"
-        )
+        path = directory / (f"page_{page.page_number:04d}.txt")
 
         parts = [
             f"PAGE: {page.page_number}",
@@ -156,10 +141,7 @@ def write_chunks(
     if not DEBUG_PROCESSING:
         return
 
-    directory = (
-        _report_debug_dir(report)
-        / "chunks"
-    )
+    directory = _report_debug_dir(report) / "chunks"
 
     directory.mkdir(
         parents=True,
@@ -167,9 +149,7 @@ def write_chunks(
     )
 
     for chunk in chunks:
-        path = directory / (
-            f"chunk_{chunk['chunk_index']:05d}.txt"
-        )
+        path = directory / (f"chunk_{chunk['chunk_index']:05d}.txt")
 
         content = "\n".join(
             [

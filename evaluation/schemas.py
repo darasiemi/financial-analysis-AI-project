@@ -16,13 +16,9 @@ class EvalExample:
     category: str = "factual"
 
     # Optional manual annotation for agent evaluation.
-    expected_tools: list[str] = field(
-        default_factory=list
-    )
+    expected_tools: list[str] = field(default_factory=list)
 
-    metadata: dict[str, Any] = field(
-        default_factory=dict
-    )
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -49,10 +45,6 @@ class PipelineResult:
 
     latency_seconds: float
 
-    tool_calls: list[dict] = field(
-        default_factory=list
-    )
+    tool_calls: list[dict] = field(default_factory=list)
 
-    metadata: dict[str, Any] = field(
-        default_factory=dict
-    )
+    metadata: dict[str, Any] = field(default_factory=dict)

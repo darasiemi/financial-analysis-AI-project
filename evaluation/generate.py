@@ -15,7 +15,6 @@ from ingestion.processing.database import (
     load_environment,
 )
 
-
 # =============================================================
 # Benchmark configuration
 # =============================================================
@@ -542,9 +541,7 @@ def fetch_candidate_documents(
 
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
     group_query = """
         SELECT
@@ -560,13 +557,9 @@ def fetch_candidate_documents(
         ORDER BY ticker, report_year
     """
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
         with connection.cursor() as cursor:
-            cursor.execute(
-                group_query
-            )
+            cursor.execute(group_query)
             groups = cursor.fetchall()
 
     if not groups:
@@ -598,9 +591,7 @@ def fetch_candidate_documents(
 
     documents = []
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
         with connection.cursor() as cursor:
 
             for (
@@ -635,16 +626,10 @@ def fetch_candidate_documents(
                     )
 
     # Fill remaining capacity from the complete corpus.
-    remaining = (
-        pool_size
-        - len(documents)
-    )
+    remaining = pool_size - len(documents)
 
     if remaining > 0:
-        existing_ids = {
-            document["source_id"]
-            for document in documents
-        }
+        existing_ids = {document["source_id"] for document in documents}
 
         fill_query = """
             SELECT
@@ -665,9 +650,7 @@ def fetch_candidate_documents(
             LIMIT %s
         """
 
-        with psycopg.connect(
-            connection_string
-        ) as connection:
+        with psycopg.connect(connection_string) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     fill_query,
@@ -704,9 +687,7 @@ def fetch_candidate_documents(
                 }
             )
 
-            existing_ids.add(
-                source_id
-            )
+            existing_ids.add(source_id)
 
     return documents[:pool_size]
 
@@ -721,11 +702,7 @@ def _format_document(
     number: Optional[int] = None,
 ) -> str:
 
-    prefix = (
-        f"SOURCE {number}\n"
-        if number is not None
-        else ""
-    )
+    prefix = f"SOURCE {number}\n" if number is not None else ""
 
     return f"""
 {prefix}
@@ -749,13 +726,9 @@ def _contains_forbidden_artifact(
     question: str,
 ) -> bool:
 
-    question_lower = (
-        question.lower()
-    )
+    question_lower = question.lower()
 
-    for pattern in (
-        FORBIDDEN_QUESTION_PATTERNS
-    ):
+    for pattern in FORBIDDEN_QUESTION_PATTERNS:
         if re.search(
             pattern,
             question_lower,
@@ -797,9 +770,7 @@ def _basic_quality_check(
             "Reference answer is too long.",
         )
 
-    if _contains_forbidden_artifact(
-        question
-    ):
+    if _contains_forbidden_artifact(question):
         return (
             False,
             "Question contains extraction artifacts.",
@@ -840,33 +811,23 @@ def _generate_json(
     temperature: float,
 ) -> dict:
 
-    response = (
-        client.models.generate_content(
-            model=model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type=(
-                    "application/json"
-                ),
-                temperature=temperature,
-            ),
-        )
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type=("application/json"),
+            temperature=temperature,
+        ),
     )
 
     if not response.text:
-        raise RuntimeError(
-            "Gemini returned no JSON response."
-        )
+        raise RuntimeError("Gemini returned no JSON response.")
 
     try:
-        return json.loads(
-            response.text
-        )
+        return json.loads(response.text)
 
     except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            "Gemini returned invalid JSON."
-        ) from exc
+        raise RuntimeError("Gemini returned invalid JSON.") from exc
 
 
 # =============================================================
@@ -890,8 +851,7 @@ def validate_generated_example(
             document,
             number=index,
         )
-        for index, document
-        in enumerate(
+        for index, document in enumerate(
             documents,
             start=1,
         )
@@ -980,10 +940,8 @@ def _passes_validation_thresholds(
 
     return (
         quality >= minimum_quality
-        and difficulty
-        >= minimum_difficulty
-        and financial_relevance
-        >= minimum_financial_relevance
+        and difficulty >= minimum_difficulty
+        and financial_relevance >= minimum_financial_relevance
     )
 
 
@@ -1005,13 +963,9 @@ def generate_single_source_example(
 ) -> Optional[EvalExample]:
 
     prompt = (
-        SINGLE_SOURCE_PROMPT.format(
-            task_type=category
-        )
+        SINGLE_SOURCE_PROMPT.format(task_type=category)
         + "\n\n"
-        + _format_document(
-            document
-        )
+        + _format_document(document)
     )
 
     generated = _generate_json(
@@ -1041,27 +995,21 @@ def generate_single_source_example(
         )
     ).strip()
 
-    passed, _ = (
-        _basic_quality_check(
-            question,
-            answer,
-        )
+    passed, _ = _basic_quality_check(
+        question,
+        answer,
     )
 
     if not passed:
         return None
 
-    validation = (
-        validate_generated_example(
-            client,
-            model=validation_model,
-            question=question,
-            reference_answer=answer,
-            documents=[
-                document
-            ],
-            category=category,
-        )
+    validation = validate_generated_example(
+        client,
+        model=validation_model,
+        question=question,
+        reference_answer=answer,
+        documents=[document],
+        category=category,
     )
 
     if not validation.get(
@@ -1074,55 +1022,31 @@ def generate_single_source_example(
         quality_score,
         difficulty_score,
         financial_relevance_score,
-    ) = _validation_scores(
-        validation
-    )
+    ) = _validation_scores(validation)
 
     if not _passes_validation_thresholds(
         quality=quality_score,
         difficulty=difficulty_score,
-        financial_relevance=(
-            financial_relevance_score
-        ),
-        minimum_quality=(
-            minimum_quality
-        ),
-        minimum_difficulty=(
-            minimum_difficulty
-        ),
-        minimum_financial_relevance=(
-            minimum_financial_relevance
-        ),
+        financial_relevance=(financial_relevance_score),
+        minimum_quality=(minimum_quality),
+        minimum_difficulty=(minimum_difficulty),
+        minimum_financial_relevance=(minimum_financial_relevance),
     ):
         return None
 
-    corrected_question = (
-        validation.get(
-            "corrected_question"
-        )
-    )
+    corrected_question = validation.get("corrected_question")
 
-    corrected_answer = (
-        validation.get(
-            "corrected_reference_answer"
-        )
-    )
+    corrected_answer = validation.get("corrected_reference_answer")
 
     if corrected_question:
-        question = str(
-            corrected_question
-        ).strip()
+        question = str(corrected_question).strip()
 
     if corrected_answer:
-        answer = str(
-            corrected_answer
-        ).strip()
+        answer = str(corrected_answer).strip()
 
-    passed, _ = (
-        _basic_quality_check(
-            question,
-            answer,
-        )
+    passed, _ = _basic_quality_check(
+        question,
+        answer,
     )
 
     if not passed:
@@ -1130,74 +1054,29 @@ def generate_single_source_example(
 
     expected_tools = []
 
-    if (
-        document.get(
-            "content_type"
-        )
-        == "table"
-    ):
-        expected_tools.append(
-            "get_table"
-        )
+    if document.get("content_type") == "table":
+        expected_tools.append("get_table")
 
     return EvalExample(
-        id=str(
-            uuid.uuid4()
-        ),
+        id=str(uuid.uuid4()),
         question=question,
         reference_answer=answer,
-        gold_source_ids=[
-            document[
-                "source_id"
-            ]
-        ],
-        ticker=document.get(
-            "ticker"
-        ),
-        report_year=document.get(
-            "report_year"
-        ),
+        gold_source_ids=[document["source_id"]],
+        ticker=document.get("ticker"),
+        report_year=document.get("report_year"),
         category=category,
-        expected_tools=(
-            expected_tools
-        ),
+        expected_tools=(expected_tools),
         metadata={
-            "content_type": (
-                document.get(
-                    "content_type"
-                )
-            ),
-            "page_start": (
-                document.get(
-                    "page_start"
-                )
-            ),
-            "page_end": (
-                document.get(
-                    "page_end"
-                )
-            ),
-            "section_title": (
-                document.get(
-                    "section_title"
-                )
-            ),
+            "content_type": (document.get("content_type")),
+            "page_start": (document.get("page_start")),
+            "page_end": (document.get("page_end")),
+            "section_title": (document.get("section_title")),
             "synthetic": True,
             "human_verified": False,
-            "quality_score": (
-                quality_score
-            ),
-            "difficulty_score": (
-                difficulty_score
-            ),
-            "financial_relevance_score": (
-                financial_relevance_score
-            ),
-            "validation_reason": (
-                validation.get(
-                    "reason"
-                )
-            ),
+            "quality_score": (quality_score),
+            "difficulty_score": (difficulty_score),
+            "financial_relevance_score": (financial_relevance_score),
+            "validation_reason": (validation.get("reason")),
             "source_count": 1,
         },
     )
@@ -1228,20 +1107,13 @@ def generate_multi_source_example(
             document,
             number=index,
         )
-        for index, document
-        in enumerate(
+        for index, document in enumerate(
             documents,
             start=1,
         )
     )
 
-    prompt = (
-        MULTI_SOURCE_PROMPT.format(
-            task_type=category
-        )
-        + "\n\n"
-        + evidence
-    )
+    prompt = MULTI_SOURCE_PROMPT.format(task_type=category) + "\n\n" + evidence
 
     generated = _generate_json(
         client,
@@ -1270,34 +1142,24 @@ def generate_multi_source_example(
         )
     ).strip()
 
-    calculation_expression = (
-        generated.get(
-            "calculation_expression"
-        )
-    )
+    calculation_expression = generated.get("calculation_expression")
 
-    passed, _ = (
-        _basic_quality_check(
-            question,
-            answer,
-        )
+    passed, _ = _basic_quality_check(
+        question,
+        answer,
     )
 
     if not passed:
         return None
 
-    validation = (
-        validate_generated_example(
-            client,
-            model=validation_model,
-            question=question,
-            reference_answer=answer,
-            documents=documents,
-            category=category,
-            calculation_expression=(
-                calculation_expression
-            ),
-        )
+    validation = validate_generated_example(
+        client,
+        model=validation_model,
+        question=question,
+        reference_answer=answer,
+        documents=documents,
+        category=category,
+        calculation_expression=(calculation_expression),
     )
 
     if not validation.get(
@@ -1310,207 +1172,92 @@ def generate_multi_source_example(
         quality_score,
         difficulty_score,
         financial_relevance_score,
-    ) = _validation_scores(
-        validation
-    )
+    ) = _validation_scores(validation)
 
     if not _passes_validation_thresholds(
         quality=quality_score,
         difficulty=difficulty_score,
-        financial_relevance=(
-            financial_relevance_score
-        ),
-        minimum_quality=(
-            minimum_quality
-        ),
-        minimum_difficulty=(
-            minimum_difficulty
-        ),
-        minimum_financial_relevance=(
-            minimum_financial_relevance
-        ),
+        financial_relevance=(financial_relevance_score),
+        minimum_quality=(minimum_quality),
+        minimum_difficulty=(minimum_difficulty),
+        minimum_financial_relevance=(minimum_financial_relevance),
     ):
         return None
 
-    corrected_question = (
-        validation.get(
-            "corrected_question"
-        )
-    )
+    corrected_question = validation.get("corrected_question")
 
-    corrected_answer = (
-        validation.get(
-            "corrected_reference_answer"
-        )
-    )
+    corrected_answer = validation.get("corrected_reference_answer")
 
     if corrected_question:
-        question = str(
-            corrected_question
-        ).strip()
+        question = str(corrected_question).strip()
 
     if corrected_answer:
-        answer = str(
-            corrected_answer
-        ).strip()
+        answer = str(corrected_answer).strip()
 
-    passed, _ = (
-        _basic_quality_check(
-            question,
-            answer,
-        )
+    passed, _ = _basic_quality_check(
+        question,
+        answer,
     )
 
     if not passed:
         return None
 
-    expected_tools = [
-        "search_hybrid"
-    ]
+    expected_tools = ["search_hybrid"]
 
-    if any(
-        document.get(
-            "content_type"
-        )
-        == "table"
-        for document
-        in documents
-    ):
-        expected_tools.append(
-            "get_table"
-        )
+    if any(document.get("content_type") == "table" for document in documents):
+        expected_tools.append("get_table")
 
     if category == "calculation":
-        expected_tools.append(
-            "calculate"
-        )
+        expected_tools.append("calculate")
 
-    expected_tools = list(
-        dict.fromkeys(
-            expected_tools
-        )
-    )
+    expected_tools = list(dict.fromkeys(expected_tools))
 
     ticker_values = {
-        document.get(
-            "ticker"
-        )
-        for document in documents
-        if document.get(
-            "ticker"
-        )
+        document.get("ticker") for document in documents if document.get("ticker")
     }
 
     year_values = {
-        document.get(
-            "report_year"
-        )
+        document.get("report_year")
         for document in documents
-        if document.get(
-            "report_year"
-        )
-        is not None
+        if document.get("report_year") is not None
     }
 
-    ticker = (
-        next(
-            iter(
-                ticker_values
-            )
-        )
-        if len(
-            ticker_values
-        )
-        == 1
-        else None
-    )
+    ticker = next(iter(ticker_values)) if len(ticker_values) == 1 else None
 
-    report_year = (
-        next(
-            iter(
-                year_values
-            )
-        )
-        if len(
-            year_values
-        )
-        == 1
-        else None
-    )
+    report_year = next(iter(year_values)) if len(year_values) == 1 else None
 
     metadata = {
         "synthetic": True,
         "human_verified": False,
-        "quality_score": (
-            quality_score
-        ),
-        "difficulty_score": (
-            difficulty_score
-        ),
-        "financial_relevance_score": (
-            financial_relevance_score
-        ),
-        "validation_reason": (
-            validation.get(
-                "reason"
-            )
-        ),
-        "source_count": (
-            len(
-                documents
-            )
-        ),
+        "quality_score": (quality_score),
+        "difficulty_score": (difficulty_score),
+        "financial_relevance_score": (financial_relevance_score),
+        "validation_reason": (validation.get("reason")),
+        "source_count": (len(documents)),
         "source_content_types": [
-            document.get(
-                "content_type"
-            )
-            for document
-            in documents
+            document.get("content_type") for document in documents
         ],
         "source_pages": [
             {
-                "page_start": (
-                    document.get(
-                        "page_start"
-                    )
-                ),
-                "page_end": (
-                    document.get(
-                        "page_end"
-                    )
-                ),
+                "page_start": (document.get("page_start")),
+                "page_end": (document.get("page_end")),
             }
-            for document
-            in documents
+            for document in documents
         ],
     }
 
     if calculation_expression:
-        metadata[
-            "calculation_expression"
-        ] = (
-            calculation_expression
-        )
+        metadata["calculation_expression"] = calculation_expression
 
     return EvalExample(
-        id=str(
-            uuid.uuid4()
-        ),
+        id=str(uuid.uuid4()),
         question=question,
         reference_answer=answer,
-        gold_source_ids=[
-            document[
-                "source_id"
-            ]
-            for document
-            in documents
-        ],
+        gold_source_ids=[document["source_id"] for document in documents],
         ticker=ticker,
         report_year=report_year,
         category=category,
-        expected_tools=(
-            expected_tools
-        ),
+        expected_tools=(expected_tools),
         metadata=metadata,
     )
 
@@ -1524,25 +1271,15 @@ def _group_by_ticker_and_year(
     documents: list[dict],
 ) -> dict:
 
-    grouped = defaultdict(
-        list
-    )
+    grouped = defaultdict(list)
 
     for document in documents:
         key = (
-            document.get(
-                "ticker"
-            ),
-            document.get(
-                "report_year"
-            ),
+            document.get("ticker"),
+            document.get("report_year"),
         )
 
-        grouped[
-            key
-        ].append(
-            document
-        )
+        grouped[key].append(document)
 
     return grouped
 
@@ -1571,38 +1308,14 @@ def _financial_similarity_score(
 
     score = 0
 
-    if (
-        first.get(
-            "content_type"
-        )
-        == second.get(
-            "content_type"
-        )
-    ):
+    if first.get("content_type") == second.get("content_type"):
         score += 1
 
-    first_section = (
-        _normalize_section(
-            first.get(
-                "section_title"
-            )
-        )
-    )
+    first_section = _normalize_section(first.get("section_title"))
 
-    second_section = (
-        _normalize_section(
-            second.get(
-                "section_title"
-            )
-        )
-    )
+    second_section = _normalize_section(second.get("section_title"))
 
-    if (
-        first_section
-        and second_section
-        and first_section
-        == second_section
-    ):
+    if first_section and second_section and first_section == second_section:
         score += 3
 
     financial_terms = [
@@ -1624,43 +1337,16 @@ def _financial_similarity_score(
     ]
 
     first_text = (
-        (
-            first.get(
-                "section_title"
-            )
-            or ""
-        )
-        + " "
-        + (
-            first.get(
-                "text"
-            )
-            or ""
-        )[:1000]
+        (first.get("section_title") or "") + " " + (first.get("text") or "")[:1000]
     ).lower()
 
     second_text = (
-        (
-            second.get(
-                "section_title"
-            )
-            or ""
-        )
-        + " "
-        + (
-            second.get(
-                "text"
-            )
-            or ""
-        )[:1000]
+        (second.get("section_title") or "") + " " + (second.get("text") or "")[:1000]
     ).lower()
 
     for term in financial_terms:
 
-        if (
-            term in first_text
-            and term in second_text
-        ):
+        if term in first_text and term in second_text:
             score += 1
 
     return score
@@ -1674,94 +1360,45 @@ def _build_cross_year_pairs(
     financial-semantic compatibility.
     """
 
-    by_ticker = defaultdict(
-        lambda: defaultdict(
-            list
-        )
-    )
+    by_ticker = defaultdict(lambda: defaultdict(list))
 
     for document in documents:
 
-        ticker = document.get(
-            "ticker"
-        )
+        ticker = document.get("ticker")
 
-        year = document.get(
-            "report_year"
-        )
+        year = document.get("report_year")
 
-        if (
-            ticker is None
-            or year is None
-        ):
+        if ticker is None or year is None:
             continue
 
-        by_ticker[
-            ticker
-        ][
-            year
-        ].append(
-            document
-        )
+        by_ticker[ticker][year].append(document)
 
     candidate_pairs = []
 
-    for _, years in (
-        by_ticker.items()
-    ):
+    for _, years in by_ticker.items():
 
-        year_list = sorted(
-            years.keys()
-        )
+        year_list = sorted(years.keys())
 
-        for first_index in range(
-            len(
-                year_list
-            )
-        ):
+        for first_index in range(len(year_list)):
 
             for second_index in range(
                 first_index + 1,
-                len(
-                    year_list
-                ),
+                len(year_list),
             ):
 
-                first_year = (
-                    year_list[
-                        first_index
-                    ]
-                )
+                first_year = year_list[first_index]
 
-                second_year = (
-                    year_list[
-                        second_index
-                    ]
-                )
+                second_year = year_list[second_index]
 
-                for first_doc in (
-                    years[
-                        first_year
-                    ][
-                        :120
-                    ]
-                ):
+                for first_doc in years[first_year][:120]:
 
                     scored_candidates = []
 
-                    for second_doc in (
-                        years[
-                            second_year
-                        ][
-                            :120
-                        ]
-                    ):
+                    for second_doc in years[second_year][:120]:
 
-                        score = (
-                            _financial_similarity_score(
-                                first_doc,
-                                second_doc,
-                            )
+                        score = _financial_similarity_score(
+                            first_doc,
+                            second_doc,
                         )
 
                         if score >= 2:
@@ -1773,15 +1410,11 @@ def _build_cross_year_pairs(
                             )
 
                     scored_candidates.sort(
-                        key=lambda item: (
-                            item[0]
-                        ),
+                        key=lambda item: (item[0]),
                         reverse=True,
                     )
 
-                    for _, second_doc in (
-                        scored_candidates[:5]
-                    ):
+                    for _, second_doc in scored_candidates[:5]:
                         candidate_pairs.append(
                             [
                                 first_doc,
@@ -1800,50 +1433,28 @@ def _build_same_report_pairs(
     same ticker/report year.
     """
 
-    grouped = (
-        _group_by_ticker_and_year(
-            documents
-        )
-    )
+    grouped = _group_by_ticker_and_year(documents)
 
     pairs = []
 
-    for group_documents in (
-        grouped.values()
-    ):
+    for group_documents in grouped.values():
 
-        for first_index in range(
-            len(
-                group_documents
-            )
-        ):
+        for first_index in range(len(group_documents)):
 
-            first = (
-                group_documents[
-                    first_index
-                ]
-            )
+            first = group_documents[first_index]
 
             scored_candidates = []
 
             for second_index in range(
                 first_index + 1,
-                len(
-                    group_documents
-                ),
+                len(group_documents),
             ):
 
-                second = (
-                    group_documents[
-                        second_index
-                    ]
-                )
+                second = group_documents[second_index]
 
-                score = (
-                    _financial_similarity_score(
-                        first,
-                        second,
-                    )
+                score = _financial_similarity_score(
+                    first,
+                    second,
                 )
 
                 if score >= 1:
@@ -1855,15 +1466,11 @@ def _build_same_report_pairs(
                     )
 
             scored_candidates.sort(
-                key=lambda item: (
-                    item[0]
-                ),
+                key=lambda item: (item[0]),
                 reverse=True,
             )
 
-            for _, second in (
-                scored_candidates[:4]
-            ):
+            for _, second in scored_candidates[:4]:
                 pairs.append(
                     [
                         first,
@@ -1887,73 +1494,37 @@ def _target_counts(
     ],
 ) -> dict[str, int]:
 
-    total_weight = sum(
-        distribution.values()
-    )
+    total_weight = sum(distribution.values())
 
     if total_weight <= 0:
-        raise ValueError(
-            "Benchmark distribution must have positive weight."
-        )
+        raise ValueError("Benchmark distribution must have positive weight.")
 
     normalized = {
-        category: (
-            proportion
-            / total_weight
-        )
-        for category, proportion
-        in distribution.items()
+        category: (proportion / total_weight)
+        for category, proportion in distribution.items()
     }
 
     counts = {
-        category: int(
-            round(
-                n * proportion
-            )
-        )
-        for category, proportion
-        in normalized.items()
+        category: int(round(n * proportion))
+        for category, proportion in normalized.items()
     }
 
-    difference = (
-        n
-        - sum(
-            counts.values()
-        )
-    )
+    difference = n - sum(counts.values())
 
-    categories = list(
-        counts.keys()
-    )
+    categories = list(counts.keys())
 
     index = 0
 
     while difference != 0:
 
-        category = (
-            categories[
-                index
-                % len(
-                    categories
-                )
-            ]
-        )
+        category = categories[index % len(categories)]
 
         if difference > 0:
-            counts[
-                category
-            ] += 1
+            counts[category] += 1
             difference -= 1
 
-        elif (
-            counts[
-                category
-            ]
-            > 0
-        ):
-            counts[
-                category
-            ] -= 1
+        elif counts[category] > 0:
+            counts[category] -= 1
             difference += 1
 
         index += 1
@@ -1981,35 +1552,21 @@ def _print_candidate_distribution(
     documents: list[dict],
 ) -> None:
 
-    distribution = (
-        defaultdict(
-            int
-        )
-    )
+    distribution = defaultdict(int)
 
     for document in documents:
 
         distribution[
             (
-                document.get(
-                    "ticker"
-                ),
-                document.get(
-                    "report_year"
-                ),
+                document.get("ticker"),
+                document.get("report_year"),
             )
         ] += 1
 
     print()
-    print(
-        "=" * 80
-    )
-    print(
-        "CANDIDATE POOL DISTRIBUTION"
-    )
-    print(
-        "=" * 80
-    )
+    print("=" * 80)
+    print("CANDIDATE POOL DISTRIBUTION")
+    print("=" * 80)
 
     for (
         ticker,
@@ -2017,32 +1574,18 @@ def _print_candidate_distribution(
     ), count in sorted(
         distribution.items(),
         key=lambda item: (
-            str(
-                item[0][0]
-            ),
-            str(
-                item[0][1]
-            ),
+            str(item[0][0]),
+            str(item[0][1]),
         ),
     ):
-        print(
-            f"{ticker} "
-            f"{report_year}: "
-            f"{count}"
-        )
+        print(f"{ticker} " f"{report_year}: " f"{count}")
 
 
 def _print_final_distribution(
-    examples: list[
-        EvalExample
-    ],
+    examples: list[EvalExample],
 ) -> None:
 
-    distribution = (
-        defaultdict(
-            int
-        )
-    )
+    distribution = defaultdict(int)
 
     for example in examples:
 
@@ -2054,15 +1597,9 @@ def _print_final_distribution(
         ] += 1
 
     print()
-    print(
-        "=" * 80
-    )
-    print(
-        "FINAL COMPANY/YEAR DISTRIBUTION"
-    )
-    print(
-        "=" * 80
-    )
+    print("=" * 80)
+    print("FINAL COMPANY/YEAR DISTRIBUTION")
+    print("=" * 80)
 
     for (
         ticker,
@@ -2070,19 +1607,11 @@ def _print_final_distribution(
     ), count in sorted(
         distribution.items(),
         key=lambda item: (
-            str(
-                item[0][0]
-            ),
-            str(
-                item[0][1]
-            ),
+            str(item[0][0]),
+            str(item[0][1]),
         ),
     ):
-        print(
-            f"{ticker} "
-            f"{report_year}: "
-            f"{count}"
-        )
+        print(f"{ticker} " f"{report_year}: " f"{count}")
 
 
 # =============================================================
@@ -2101,167 +1630,87 @@ def generate_dataset(
     minimum_difficulty: float = 0.80,
     minimum_financial_relevance: float = 0.90,
     max_attempt_multiplier: int = 10,
-    distribution: Optional[
-        dict[str, float]
-    ] = None,
+    distribution: Optional[dict[str, float]] = None,
 ) -> list[EvalExample]:
 
     load_environment()
 
     if n <= 0:
-        raise ValueError(
-            "n must be greater than 0."
-        )
+        raise ValueError("n must be greater than 0.")
 
     if validation_model is None:
-        validation_model = (
-            model
-        )
+        validation_model = model
 
     if distribution is None:
-        distribution = (
-            DEFAULT_DISTRIBUTION
-        )
+        distribution = DEFAULT_DISTRIBUTION
 
-    rng = random.Random(
-        seed
-    )
+    rng = random.Random(seed)
 
-    documents = (
-        fetch_candidate_documents(
-            pool_size=pool_size
-        )
-    )
+    documents = fetch_candidate_documents(pool_size=pool_size)
 
     if not documents:
-        raise RuntimeError(
-            "No candidate retrieval documents were found."
-        )
+        raise RuntimeError("No candidate retrieval documents were found.")
 
-    _print_candidate_distribution(
-        documents
-    )
+    _print_candidate_distribution(documents)
 
     table_docs = [
-        document
-        for document in documents
-        if document.get(
-            "content_type"
-        )
-        == "table"
+        document for document in documents if document.get("content_type") == "table"
     ]
 
-    cross_year_pairs = (
-        _build_cross_year_pairs(
-            documents
-        )
-    )
+    cross_year_pairs = _build_cross_year_pairs(documents)
 
-    same_report_pairs = (
-        _build_same_report_pairs(
-            documents
-        )
-    )
+    same_report_pairs = _build_same_report_pairs(documents)
 
-    rng.shuffle(
-        documents
-    )
+    rng.shuffle(documents)
 
-    rng.shuffle(
-        table_docs
-    )
+    rng.shuffle(table_docs)
 
-    rng.shuffle(
-        cross_year_pairs
-    )
+    rng.shuffle(cross_year_pairs)
 
-    rng.shuffle(
-        same_report_pairs
-    )
+    rng.shuffle(same_report_pairs)
 
-    client = (
-        genai.Client()
-    )
+    client = genai.Client()
 
-    targets = (
-        _target_counts(
-            n,
-            distribution,
-        )
+    targets = _target_counts(
+        n,
+        distribution,
     )
 
     generated_examples = []
 
     existing_questions = set()
 
-    generated_by_category = (
-        defaultdict(
-            int
-        )
-    )
+    generated_by_category = defaultdict(int)
 
-    attempts_by_category = (
-        defaultdict(
-            int
-        )
-    )
+    attempts_by_category = defaultdict(int)
 
     print()
-    print(
-        "=" * 80
-    )
-    print(
-        "BENCHMARK TARGET DISTRIBUTION"
-    )
-    print(
-        "=" * 80
-    )
+    print("=" * 80)
+    print("BENCHMARK TARGET DISTRIBUTION")
+    print("=" * 80)
 
-    for category, count in (
-        targets.items()
-    ):
-        print(
-            f"{category}: {count}"
-        )
+    for category, count in targets.items():
+        print(f"{category}: {count}")
 
-    for category, target in (
-        targets.items()
-    ):
+    for category, target in targets.items():
 
         print()
-        print(
-            "=" * 80
-        )
-        print(
-            f"Generating {category}"
-        )
-        print(
-            f"Target: {target}"
-        )
-        print(
-            "=" * 80
-        )
+        print("=" * 80)
+        print(f"Generating {category}")
+        print(f"Target: {target}")
+        print("=" * 80)
 
         maximum_attempts = max(
-            target
-            * max_attempt_multiplier,
+            target * max_attempt_multiplier,
             30,
         )
 
         while (
-            generated_by_category[
-                category
-            ]
-            < target
-            and attempts_by_category[
-                category
-            ]
-            < maximum_attempts
+            generated_by_category[category] < target
+            and attempts_by_category[category] < maximum_attempts
         ):
 
-            attempts_by_category[
-                category
-            ] += 1
+            attempts_by_category[category] += 1
 
             example = None
 
@@ -2271,318 +1720,173 @@ def generate_dataset(
                 # Financial metric
                 # =================================================
 
-                if (
-                    category
-                    == "financial_metric"
-                ):
+                if category == "financial_metric":
 
-                    document = (
-                        rng.choice(
-                            documents
-                        )
-                    )
+                    document = rng.choice(documents)
 
-                    example = (
-                        generate_single_source_example(
-                            client,
-                            document,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_single_source_example(
+                        client,
+                        document,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Table reasoning
                 # =================================================
 
-                elif (
-                    category
-                    == "table_reasoning"
-                ):
+                elif category == "table_reasoning":
 
                     if not table_docs:
                         break
 
-                    document = (
-                        rng.choice(
-                            table_docs
-                        )
-                    )
+                    document = rng.choice(table_docs)
 
-                    example = (
-                        generate_single_source_example(
-                            client,
-                            document,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_single_source_example(
+                        client,
+                        document,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Same-source comparison
                 # =================================================
 
-                elif (
-                    category
-                    == "comparison_within_source"
-                ):
+                elif category == "comparison_within_source":
 
-                    document = (
-                        rng.choice(
-                            documents
-                        )
-                    )
+                    document = rng.choice(documents)
 
-                    example = (
-                        generate_single_source_example(
-                            client,
-                            document,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_single_source_example(
+                        client,
+                        document,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Single-source interpretation
                 # =================================================
 
-                elif (
-                    category
-                    == "financial_interpretation"
-                ):
+                elif category == "financial_interpretation":
 
-                    document = (
-                        rng.choice(
-                            documents
-                        )
-                    )
+                    document = rng.choice(documents)
 
-                    example = (
-                        generate_single_source_example(
-                            client,
-                            document,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_single_source_example(
+                        client,
+                        document,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Cross-report comparison
                 # =================================================
 
-                elif (
-                    category
-                    == "cross_report_comparison"
-                ):
+                elif category == "cross_report_comparison":
 
                     if not cross_year_pairs:
                         break
 
-                    pair = (
-                        rng.choice(
-                            cross_year_pairs
-                        )
-                    )
+                    pair = rng.choice(cross_year_pairs)
 
-                    example = (
-                        generate_multi_source_example(
-                            client,
-                            pair,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_multi_source_example(
+                        client,
+                        pair,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Calculation
                 # =================================================
 
-                elif (
-                    category
-                    == "calculation"
-                ):
+                elif category == "calculation":
 
-                    candidate_pairs = (
-                        cross_year_pairs
-                        + same_report_pairs
-                    )
+                    candidate_pairs = cross_year_pairs + same_report_pairs
 
                     if not candidate_pairs:
                         break
 
-                    pair = (
-                        rng.choice(
-                            candidate_pairs
-                        )
-                    )
+                    pair = rng.choice(candidate_pairs)
 
-                    example = (
-                        generate_multi_source_example(
-                            client,
-                            pair,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_multi_source_example(
+                        client,
+                        pair,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 # =================================================
                 # Multi-hop
                 # =================================================
 
-                elif (
-                    category
-                    == "multi_hop"
-                ):
+                elif category == "multi_hop":
 
-                    candidate_pairs = (
-                        same_report_pairs
-                        + cross_year_pairs
-                    )
+                    candidate_pairs = same_report_pairs + cross_year_pairs
 
                     if not candidate_pairs:
                         break
 
-                    pair = (
-                        rng.choice(
-                            candidate_pairs
-                        )
-                    )
+                    pair = rng.choice(candidate_pairs)
 
-                    example = (
-                        generate_multi_source_example(
-                            client,
-                            pair,
-                            category=category,
-                            generation_model=model,
-                            validation_model=(
-                                validation_model
-                            ),
-                            minimum_quality=(
-                                minimum_quality
-                            ),
-                            minimum_difficulty=(
-                                minimum_difficulty
-                            ),
-                            minimum_financial_relevance=(
-                                minimum_financial_relevance
-                            ),
-                        )
+                    example = generate_multi_source_example(
+                        client,
+                        pair,
+                        category=category,
+                        generation_model=model,
+                        validation_model=(validation_model),
+                        minimum_quality=(minimum_quality),
+                        minimum_difficulty=(minimum_difficulty),
+                        minimum_financial_relevance=(minimum_financial_relevance),
                     )
 
                 else:
-                    raise ValueError(
-                        "Unsupported benchmark category: "
-                        f"{category}"
-                    )
+                    raise ValueError("Unsupported benchmark category: " f"{category}")
 
             except Exception as exc:
 
-                print(
-                    "Generation attempt failed: "
-                    f"{type(exc).__name__}: "
-                    f"{exc}"
-                )
+                print("Generation attempt failed: " f"{type(exc).__name__}: " f"{exc}")
 
                 continue
 
             if example is None:
                 continue
 
-            normalized_question = (
-                _normalize_question(
-                    example.question
-                )
-            )
+            normalized_question = _normalize_question(example.question)
 
-            if (
-                normalized_question
-                in existing_questions
-            ):
+            if normalized_question in existing_questions:
                 continue
 
-            existing_questions.add(
-                normalized_question
-            )
+            existing_questions.add(normalized_question)
 
-            generated_examples.append(
-                example
-            )
+            generated_examples.append(example)
 
-            generated_by_category[
-                category
-            ] += 1
+            generated_by_category[category] += 1
 
             print(
                 "["
@@ -2593,12 +1897,7 @@ def generate_dataset(
                 f"{example.question}"
             )
 
-        if (
-            generated_by_category[
-                category
-            ]
-            < target
-        ):
+        if generated_by_category[category] < target:
             print()
             print(
                 "WARNING: Generated only "
@@ -2607,54 +1906,29 @@ def generate_dataset(
                 f"for '{category}'."
             )
 
-    rng.shuffle(
-        generated_examples
-    )
+    rng.shuffle(generated_examples)
 
     print()
-    print(
-        "=" * 80
-    )
-    print(
-        "BENCHMARK GENERATION COMPLETE"
-    )
-    print(
-        "=" * 80
-    )
+    print("=" * 80)
+    print("BENCHMARK GENERATION COMPLETE")
+    print("=" * 80)
 
-    print(
-        f"Requested: {n}"
-    )
+    print(f"Requested: {n}")
 
-    print(
-        "Generated: "
-        f"{len(generated_examples)}"
-    )
+    print("Generated: " f"{len(generated_examples)}")
 
     print()
-    print(
-        "CATEGORY DISTRIBUTION"
-    )
+    print("CATEGORY DISTRIBUTION")
 
     for category in targets:
-        print(
-            f"{category}: "
-            f"{generated_by_category[category]}"
-        )
+        print(f"{category}: " f"{generated_by_category[category]}")
 
     print()
-    print(
-        "GENERATION ATTEMPTS"
-    )
+    print("GENERATION ATTEMPTS")
 
     for category in targets:
-        print(
-            f"{category}: "
-            f"{attempts_by_category[category]}"
-        )
+        print(f"{category}: " f"{attempts_by_category[category]}")
 
-    _print_final_distribution(
-        generated_examples
-    )
+    _print_final_distribution(generated_examples)
 
     return generated_examples

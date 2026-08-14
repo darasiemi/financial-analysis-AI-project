@@ -121,6 +121,19 @@ backend:
 		--reload-dir ingestion \
 		--reload-dir monitoring \
 		
+test_backend:
+	curl -X POST http://localhost:8000/api/v1/query \
+		-H "Content-Type: application/json" \
+		-d '{ \
+			"question": "What was GTCO'\''s profit before tax in 2025?", \
+			"session_id": "'$$(uuidgen)'", \
+			"pipeline": "rag", \
+			"retrieval_mode": "hybrid", \
+			"top_k": 8, \
+			"ticker": null, \
+			"report_year": null, \
+			"model": "gemini-2.5-flash" \
+		}'
 
 frontend:
 	uv run --group frontend streamlit run deployment/frontend/app.py
@@ -141,6 +154,6 @@ stop_app:
 
 synthetic_test:
 	uv run python scripts/synthetic_traffic.py \
-		--requests 5 \
+		--requests $(REQUESTS) \
 		--delay 3 \
 		--pipeline mixed

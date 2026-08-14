@@ -20,25 +20,17 @@ def _make_json_safe(value: Any) -> Any:
         return value
 
     if isinstance(value, dict):
-        return {
-            str(key): _make_json_safe(item)
-            for key, item in value.items()
-        }
+        return {str(key): _make_json_safe(item) for key, item in value.items()}
 
     if isinstance(
         value,
         (list, tuple),
     ):
-        return [
-            _make_json_safe(item)
-            for item in value
-        ]
+        return [_make_json_safe(item) for item in value]
 
     if hasattr(value, "item"):
         try:
-            return _make_json_safe(
-                value.item()
-            )
+            return _make_json_safe(value.item())
         except Exception:
             pass
 
@@ -64,41 +56,19 @@ def _compact_results(
 
     for result in results:
         document = {
-            "source_id": result.get(
-                "source_id"
-            ),
-            "content_type": result.get(
-                "content_type"
-            ),
-            "ticker": result.get(
-                "ticker"
-            ),
-            "report_year": result.get(
-                "report_year"
-            ),
-            "page_start": result.get(
-                "page_start"
-            ),
-            "page_end": result.get(
-                "page_end"
-            ),
-            "section_title": result.get(
-                "section_title"
-            ),
-            "text": result.get(
-                "text"
-            ),
-            "score": result.get(
-                "score"
-            ),
-            "rrf_score": result.get(
-                "rrf_score"
-            ),
+            "source_id": result.get("source_id"),
+            "content_type": result.get("content_type"),
+            "ticker": result.get("ticker"),
+            "report_year": result.get("report_year"),
+            "page_start": result.get("page_start"),
+            "page_end": result.get("page_end"),
+            "section_title": result.get("section_title"),
+            "text": result.get("text"),
+            "score": result.get("score"),
+            "rrf_score": result.get("rrf_score"),
         }
 
-        documents.append(
-            _make_json_safe(document)
-        )
+        documents.append(_make_json_safe(document))
 
     return {
         "success": True,

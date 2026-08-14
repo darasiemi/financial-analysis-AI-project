@@ -1,5 +1,3 @@
-from typing import Any
-
 import psycopg
 
 from ingestion.processing.database import (
@@ -25,13 +23,9 @@ def get_table(
     try:
         load_environment()
 
-        connection_string = (
-            get_postgres_connection_string()
-        )
+        connection_string = get_postgres_connection_string()
 
-        with psycopg.connect(
-            connection_string
-        ) as connection:
+        with psycopg.connect(connection_string) as connection:
 
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -57,10 +51,7 @@ def get_table(
             return {
                 "success": False,
                 "found": False,
-                "error": (
-                    f"Table '{table_id}' "
-                    "was not found."
-                ),
+                "error": (f"Table '{table_id}' " "was not found."),
             }
 
         (
@@ -81,9 +72,7 @@ def get_table(
             "report_id": report_id,
             "ticker": ticker,
             "report_year": report_year,
-            "pdf_page_number": (
-                page_number
-            ),
+            "pdf_page_number": (page_number),
             "table_index": table_index,
             "table_title": table_title,
             "table_data": table_data,
@@ -93,8 +82,6 @@ def get_table(
         return {
             "success": False,
             "found": False,
-            "error_type": (
-                type(exc).__name__
-            ),
+            "error_type": (type(exc).__name__),
             "error": str(exc),
         }

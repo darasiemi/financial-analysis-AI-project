@@ -18,17 +18,14 @@ from ingestion.processing.database import (
     load_environment,
 )
 
-
 _model: SentenceTransformer | None = None
 
 
 def get_embedding_model() -> SentenceTransformer:
-    global _model
+    global _model  # pylint: disable=global-statement
 
     if _model is None:
-        _model = SentenceTransformer(
-            EMBEDDING_MODEL
-        )
+        _model = SentenceTransformer(EMBEDDING_MODEL)
 
     return _model
 
@@ -46,9 +43,7 @@ def vector_search(
 
     load_environment()
 
-    model = (
-        get_embedding_model()
-    )
+    model = get_embedding_model()
 
     query_embedding = model.encode(
         query,
@@ -60,30 +55,17 @@ def vector_search(
     filter_values: list = []
 
     if ticker is not None:
-        filters.append(
-            "ticker = %s"
-        )
-        filter_values.append(
-            ticker
-        )
+        filters.append("ticker = %s")
+        filter_values.append(ticker)
 
     if report_year is not None:
-        filters.append(
-            "report_year = %s"
-        )
-        filter_values.append(
-            report_year
-        )
+        filters.append("report_year = %s")
+        filter_values.append(report_year)
 
     where_clause = ""
 
     if filters:
-        where_clause = (
-            "WHERE "
-            + " AND ".join(
-                filters
-            )
-        )
+        where_clause = "WHERE " + " AND ".join(filters)
 
     sql = f"""
         SELECT
@@ -121,17 +103,11 @@ def vector_search(
         top_k,
     ]
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
 
-        register_vector(
-            connection
-        )
+        register_vector(connection)
 
         with connection.cursor() as cursor:
 
@@ -140,11 +116,7 @@ def vector_search(
                 parameters,
             )
 
-            columns = [
-                description.name
-                for description
-                in cursor.description
-            ]
+            columns = [description.name for description in cursor.description]
 
             return [
                 dict(
@@ -153,6 +125,5 @@ def vector_search(
                         row,
                     )
                 )
-                for row
-                in cursor.fetchall()
+                for row in cursor.fetchall()
             ]

@@ -23,9 +23,7 @@ def _unwrap_response(
             dict,
         )
     ):
-        return response[
-            "result"
-        ]
+        return response["result"]
 
     return response
 
@@ -42,19 +40,15 @@ class AgentAdapter:
 
         self.top_k = top_k
 
-        self.agent = (
-            GeminiFinancialAgent(
-                model=(
-                    model
-                    or os.environ.get(
-                        "GEMINI_AGENT_MODEL",
-                        "gemini-2.5-flash",
-                    )
-                ),
-                max_tool_calls=(
-                    max_tool_calls
-                ),
-            )
+        self.agent = GeminiFinancialAgent(
+            model=(
+                model
+                or os.environ.get(
+                    "GEMINI_AGENT_MODEL",
+                    "gemini-2.5-flash",
+                )
+            ),
+            max_tool_calls=(max_tool_calls),
         )
 
     def run(
@@ -66,36 +60,20 @@ class AgentAdapter:
             example.question,
             agent=self.agent,
             ticker=example.ticker,
-            report_year=(
-                example.report_year
-            ),
+            report_year=(example.report_year),
             top_k=self.top_k,
         )
 
-        initial_documents = (
-            result[
-                "initial_retrieval"
-            ].get(
-                "documents",
-                [],
-            )
+        initial_documents = result["initial_retrieval"].get(
+            "documents",
+            [],
         )
 
-        initial_ids = [
-            document["source_id"]
-            for document
-            in initial_documents
-        ]
+        initial_ids = [document["source_id"] for document in initial_documents]
 
-        all_ids = list(
-            initial_ids
-        )
+        all_ids = list(initial_ids)
 
-        contexts = [
-            document["text"]
-            for document
-            in initial_documents
-        ]
+        contexts = [document["text"] for document in initial_documents]
 
         # Add evidence gathered through later tool calls.
         for call in result.get(
@@ -103,13 +81,7 @@ class AgentAdapter:
             [],
         ):
 
-            response = (
-                _unwrap_response(
-                    call.get(
-                        "response"
-                    )
-                )
-            )
+            response = _unwrap_response(call.get("response"))
 
             if not isinstance(
                 response,
@@ -124,50 +96,22 @@ class AgentAdapter:
 
             for document in documents:
 
-                source_id = (
-                    document.get(
-                        "source_id"
-                    )
-                )
+                source_id = document.get("source_id")
 
-                text = document.get(
-                    "text"
-                )
+                text = document.get("text")
 
-                if (
-                    source_id
-                    and source_id
-                    not in all_ids
-                ):
-                    all_ids.append(
-                        source_id
-                    )
+                if source_id and source_id not in all_ids:
+                    all_ids.append(source_id)
 
-                if (
-                    text
-                    and text
-                    not in contexts
-                ):
-                    contexts.append(
-                        text
-                    )
+                if text and text not in contexts:
+                    contexts.append(text)
 
         return PipelineResult(
             answer=result["answer"],
-            initial_retrieved_source_ids=(
-                initial_ids
-            ),
-            retrieved_source_ids=(
-                all_ids
-            ),
+            initial_retrieved_source_ids=(initial_ids),
+            retrieved_source_ids=(all_ids),
             contexts=contexts,
-            latency_seconds=(
-                result[
-                    "timing"
-                ][
-                    "total_seconds"
-                ]
-            ),
+            latency_seconds=(result["timing"]["total_seconds"]),
             tool_calls=result.get(
                 "tool_calls",
                 [],

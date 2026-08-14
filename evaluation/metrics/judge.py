@@ -4,7 +4,6 @@ import os
 from google import genai
 from google.genai import types
 
-
 JUDGE_PROMPT = """
 Evaluate a financial question-answering system.
 
@@ -107,12 +106,9 @@ class GeminiJudge:
         model: str | None = None,
     ) -> None:
 
-        self.model = (
-            model
-            or os.environ.get(
-                "GEMINI_EVAL_JUDGE_MODEL",
-                "gemini-2.5-flash",
-            )
+        self.model = model or os.environ.get(
+            "GEMINI_EVAL_JUDGE_MODEL",
+            "gemini-2.5-flash",
         )
 
         self.client = genai.Client()
@@ -135,9 +131,7 @@ class GeminiJudge:
         - relevance
         """
 
-        context = "\n\n".join(
-            contexts[:8]
-        )
+        context = "\n\n".join(contexts[:8])
 
         # Prevent extremely large evaluation prompts.
         context = context[:24000]
@@ -162,31 +156,21 @@ RETRIEVED CONTEXT
 {context}
 """.strip()
 
-        response = (
-            self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type=(
-                        "application/json"
-                    ),
-                    temperature=0.0,
-                ),
-            )
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type=("application/json"),
+                temperature=0.0,
+            ),
         )
 
         if not response.text:
-            raise RuntimeError(
-                "Evaluation judge returned no response."
-            )
+            raise RuntimeError("Evaluation judge returned no response.")
 
-        result = json.loads(
-            response.text
-        )
+        result = json.loads(response.text)
 
-        self._validate_result(
-            result
-        )
+        self._validate_result(result)
 
         return result
 
@@ -207,53 +191,25 @@ RETRIEVED CONTEXT
         for metric in required_metrics:
 
             if metric not in result:
-                raise ValueError(
-                    f"Judge response missing metric: {metric}"
-                )
+                raise ValueError(f"Judge response missing metric: {metric}")
 
-            metric_result = result[
-                metric
-            ]
+            metric_result = result[metric]
 
             if not isinstance(
                 metric_result,
                 dict,
             ):
-                raise ValueError(
-                    f"Judge metric '{metric}' "
-                    "must be an object."
-                )
+                raise ValueError(f"Judge metric '{metric}' " "must be an object.")
 
-            if (
-                "score"
-                not in metric_result
-            ):
-                raise ValueError(
-                    f"Judge metric '{metric}' "
-                    "is missing score."
-                )
+            if "score" not in metric_result:
+                raise ValueError(f"Judge metric '{metric}' " "is missing score.")
 
-            if (
-                "reason"
-                not in metric_result
-            ):
-                raise ValueError(
-                    f"Judge metric '{metric}' "
-                    "is missing reason."
-                )
+            if "reason" not in metric_result:
+                raise ValueError(f"Judge metric '{metric}' " "is missing reason.")
 
-            score = float(
-                metric_result[
-                    "score"
-                ]
-            )
+            score = float(metric_result["score"])
 
-            if not (
-                0.0
-                <= score
-                <= 1.0
-            ):
+            if not 0.0 <= score <= 1.0:
                 raise ValueError(
-                    f"Judge score for '{metric}' "
-                    "must be between 0 and 1."
+                    f"Judge score for '{metric}' " "must be between 0 and 1."
                 )

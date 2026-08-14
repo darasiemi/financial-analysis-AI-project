@@ -35,31 +35,15 @@ def estimate_cost_usd(
     Gemini thinking models.
     """
 
-    pricing = MODEL_PRICING.get(
-        model
-    )
+    pricing = MODEL_PRICING.get(model)
 
     if pricing is None:
         return 0.0
 
-    billable_output_tokens = (
-        output_tokens
-        + thinking_tokens
-    )
+    billable_output_tokens = output_tokens + thinking_tokens
 
-    input_cost = (
-        input_tokens
-        / 1_000_000
-        * pricing.input_per_million
-    )
+    input_cost = input_tokens / 1_000_000 * pricing.input_per_million
 
-    output_cost = (
-        billable_output_tokens
-        / 1_000_000
-        * pricing.output_per_million
-    )
+    output_cost = billable_output_tokens / 1_000_000 * pricing.output_per_million
 
-    return (
-        input_cost
-        + output_cost
-    )
+    return input_cost + output_cost

@@ -9,7 +9,6 @@ import dlt
 import pymupdf
 from dotenv import load_dotenv
 
-
 # -------------------------------------------------------------------
 # Configuration
 # -------------------------------------------------------------------
@@ -31,6 +30,7 @@ logger = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------
+
 
 def sha256_file(path: Path) -> str:
     """Return the SHA-256 checksum of a file."""
@@ -70,27 +70,19 @@ def make_report_id(
 ) -> str:
     """Create a stable identifier for each report file."""
 
-    return (
-        f"{ticker}_{report_year}_{path.stem}"
-        .lower()
-        .replace(" ", "_")
-    )
+    return f"{ticker}_{report_year}_{path.stem}".lower().replace(" ", "_")
 
 
 def get_pdf_files() -> list[Path]:
     """Return all PDF files under the data directory."""
 
     if not DATA_DIR.exists():
-        raise FileNotFoundError(
-            f"Data directory does not exist: {DATA_DIR}"
-        )
+        raise FileNotFoundError(f"Data directory does not exist: {DATA_DIR}")
 
     pdf_files = sorted(DATA_DIR.rglob("*.pdf"))
 
     if not pdf_files:
-        raise FileNotFoundError(
-            f"No PDF files were found under: {DATA_DIR}"
-        )
+        raise FileNotFoundError(f"No PDF files were found under: {DATA_DIR}")
 
     return pdf_files
 
@@ -98,6 +90,7 @@ def get_pdf_files() -> list[Path]:
 # -------------------------------------------------------------------
 # dlt resources
 # -------------------------------------------------------------------
+
 
 @dlt.resource(
     name="reports",
@@ -195,6 +188,7 @@ def report_pages_resource() -> Iterator[dict]:
 # -------------------------------------------------------------------
 # Pipeline
 # -------------------------------------------------------------------
+
 
 def main() -> None:
     """

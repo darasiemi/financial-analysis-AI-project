@@ -11,5 +11,4 @@ class EvaluationAdapter(Protocol):
     def run(
         self,
         example: EvalExample,
-    ) -> PipelineResult:
-        ...
+    ) -> PipelineResult: ...

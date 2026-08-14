@@ -18,9 +18,7 @@ from monitoring.telemetry import (
 def _connection_string() -> str:
     load_environment()
 
-    return (
-        get_postgres_connection_string()
-    )
+    return get_postgres_connection_string()
 
 
 def ensure_monitoring_schema() -> None:
@@ -175,14 +173,10 @@ def ensure_monitoring_schema() -> None:
         ON f.response_id = i.response_id;
     """
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
-            cursor.execute(
-                sql
-            )
+            cursor.execute(sql)
 
         connection.commit()
 
@@ -206,13 +200,9 @@ def save_interaction(
     Persist the conversation and application telemetry.
     """
 
-    now = datetime.now(
-        timezone.utc
-    )
+    now = datetime.now(timezone.utc)
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 
@@ -340,13 +330,9 @@ def save_failed_interaction(
     error: str,
 ) -> None:
 
-    now = datetime.now(
-        timezone.utc
-    )
+    now = datetime.now(timezone.utc)
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 
@@ -418,13 +404,9 @@ def save_feedback(
         -1,
         1,
     }:
-        raise ValueError(
-            "Feedback must be -1 or 1."
-        )
+        raise ValueError("Feedback must be -1 or 1.")
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 
@@ -466,9 +448,7 @@ def save_judge_result(
     cost_usd: float,
 ) -> None:
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 
@@ -546,9 +526,7 @@ def mark_judge_skipped(
     response_id: str,
 ) -> None:
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 
@@ -574,9 +552,7 @@ def mark_judge_failed(
     error: str,
 ) -> None:
 
-    with psycopg.connect(
-        _connection_string()
-    ) as connection:
+    with psycopg.connect(_connection_string()) as connection:
 
         with connection.cursor() as cursor:
 

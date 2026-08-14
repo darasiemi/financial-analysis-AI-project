@@ -27,18 +27,11 @@ def precision_at_k(
     if not retrieved:
         return 0.0
 
-    relevant = set(
-        relevant_ids
-    )
+    relevant = set(relevant_ids)
 
-    hits = sum(
-        source_id in relevant
-        for source_id in retrieved
-    )
+    hits = sum(source_id in relevant for source_id in retrieved)
 
-    return hits / len(
-        retrieved
-    )
+    return hits / len(retrieved)
 
 
 def recall_at_k(
@@ -65,22 +58,13 @@ def recall_at_k(
     if not relevant_ids:
         return 0.0
 
-    relevant = set(
-        relevant_ids
-    )
+    relevant = set(relevant_ids)
 
-    retrieved = set(
-        ranked_ids[:k]
-    )
+    retrieved = set(ranked_ids[:k])
 
-    hits = len(
-        relevant
-        & retrieved
-    )
+    hits = len(relevant & retrieved)
 
-    return hits / len(
-        relevant
-    )
+    return hits / len(relevant)
 
 
 def hit_rate_at_k(
@@ -108,19 +92,11 @@ def hit_rate_at_k(
     if not relevant_ids:
         return 0.0
 
-    relevant = set(
-        relevant_ids
-    )
+    relevant = set(relevant_ids)
 
-    retrieved = set(
-        ranked_ids[:k]
-    )
+    retrieved = set(ranked_ids[:k])
 
-    return (
-        1.0
-        if relevant & retrieved
-        else 0.0
-    )
+    return 1.0 if relevant & retrieved else 0.0
 
 
 def reciprocal_rank(
@@ -147,9 +123,7 @@ def reciprocal_rank(
     if not relevant_ids:
         return 0.0
 
-    relevant = set(
-        relevant_ids
-    )
+    relevant = set(relevant_ids)
 
     for rank, source_id in enumerate(
         ranked_ids,
@@ -183,9 +157,7 @@ def ndcg_at_k(
     if not relevant_ids:
         return 0.0
 
-    relevant = set(
-        relevant_ids
-    )
+    relevant = set(relevant_ids)
 
     # ---------------------------------------------------------
     # Discounted Cumulative Gain
@@ -198,21 +170,12 @@ def ndcg_at_k(
         start=1,
     ):
 
-        relevance = (
-            1.0
-            if source_id in relevant
-            else 0.0
-        )
+        relevance = 1.0 if source_id in relevant else 0.0
 
         if relevance == 0.0:
             continue
 
-        dcg += (
-            relevance
-            / math.log2(
-                rank + 1
-            )
-        )
+        dcg += relevance / math.log2(rank + 1)
 
     # ---------------------------------------------------------
     # Ideal DCG
@@ -227,21 +190,14 @@ def ndcg_at_k(
         return 0.0
 
     idcg = sum(
-        1.0
-        / math.log2(
-            rank + 1
-        )
+        1.0 / math.log2(rank + 1)
         for rank in range(
             1,
             ideal_hits + 1,
         )
     )
 
-    return (
-        dcg / idcg
-        if idcg > 0
-        else 0.0
-    )
+    return dcg / idcg if idcg > 0 else 0.0
 
 
 def retrieval_metrics(
@@ -278,7 +234,6 @@ def retrieval_metrics(
                 k,
             )
         ),
-
         f"recall@{k}": (
             recall_at_k(
                 ranked_ids,
@@ -286,7 +241,6 @@ def retrieval_metrics(
                 k,
             )
         ),
-
         f"hit_rate@{k}": (
             hit_rate_at_k(
                 ranked_ids,
@@ -294,14 +248,12 @@ def retrieval_metrics(
                 k,
             )
         ),
-
         "mrr": (
             reciprocal_rank(
                 ranked_ids,
                 relevant_ids,
             )
         ),
-
         f"ndcg@{k}": (
             ndcg_at_k(
                 ranked_ids,

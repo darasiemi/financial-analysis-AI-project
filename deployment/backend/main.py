@@ -33,7 +33,6 @@ from deployment.backend.schemas import (
 from deployment.backend.service import (
     run_query,
 )
-
 from monitoring.database import (
     ensure_monitoring_schema,
     save_failed_interaction,
@@ -47,25 +46,19 @@ from monitoring.telemetry import (
     monitoring_context,
 )
 
-
-logger = logging.getLogger(
-    __name__
-)
+logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
     title="Financial Analysis API",
     description=(
-        "RAG and agentic financial analysis "
-        "over corporate annual reports."
+        "RAG and agentic financial analysis " "over corporate annual reports."
     ),
     version="0.2.0",
 )
 
 
-@app.on_event(
-    "startup"
-)
+@app.on_event("startup")
 def startup() -> None:
     ensure_monitoring_schema()
 
@@ -79,14 +72,10 @@ def health() -> HealthResponse:
     if not database_is_available():
         raise HTTPException(
             status_code=503,
-            detail=(
-                "Database is unavailable."
-            ),
+            detail=("Database is unavailable."),
         )
 
-    return HealthResponse(
-        status="healthy"
-    )
+    return HealthResponse(status="healthy")
 
 
 @app.get(
@@ -95,22 +84,16 @@ def health() -> HealthResponse:
 )
 def filters() -> FiltersResponse:
 
-    return FiltersResponse(
-        **get_available_filters()
-    )
+    return FiltersResponse(**get_available_filters())
 
 
 @app.get(
     "/api/v1/stats",
-    response_model=(
-        CorpusStatsResponse
-    ),
+    response_model=(CorpusStatsResponse),
 )
 def stats() -> CorpusStatsResponse:
 
-    return CorpusStatsResponse(
-        **get_corpus_stats()
-    )
+    return CorpusStatsResponse(**get_corpus_stats())
 
 
 @app.post(
@@ -122,38 +105,25 @@ def query(
     background_tasks: BackgroundTasks,
 ) -> QueryResponse:
 
-    response_id = str(
-        uuid.uuid4()
-    )
+    response_id = str(uuid.uuid4())
 
-    request_start = (
-        time.perf_counter()
-    )
+    request_start = time.perf_counter()
 
     try:
 
-        with monitoring_context(
-            response_id
-        ) as telemetry:
+        with monitoring_context(response_id) as telemetry:
 
             result = run_query(
                 request.question,
                 pipeline=request.pipeline,
-                retrieval_mode=(
-                    request.retrieval_mode
-                ),
+                retrieval_mode=(request.retrieval_mode),
                 top_k=request.top_k,
                 ticker=request.ticker,
-                report_year=(
-                    request.report_year
-                ),
+                report_year=(request.report_year),
                 model=request.model,
             )
 
-            total_latency = (
-                time.perf_counter()
-                - request_start
-            )
+            total_latency = time.perf_counter() - request_start
 
             timing = dict(
                 result.get(
@@ -162,9 +132,7 @@ def query(
                 )
             )
 
-            timing[
-                "api_total_seconds"
-            ] = total_latency
+            timing["api_total_seconds"] = total_latency
 
             answer = result.get(
                 "answer",
@@ -177,17 +145,11 @@ def query(
                 question=request.question,
                 answer=answer,
                 pipeline=request.pipeline,
-                retrieval_mode=(
-                    request.retrieval_mode
-                ),
+                retrieval_mode=(request.retrieval_mode),
                 ticker=request.ticker,
-                report_year=(
-                    request.report_year
-                ),
+                report_year=(request.report_year),
                 model=request.model,
-                total_latency_seconds=(
-                    total_latency
-                ),
+                total_latency_seconds=(total_latency),
                 latencies=timing,
                 telemetry=telemetry,
             )
@@ -229,10 +191,7 @@ def query(
                     )
                 ),
                 timing=timing,
-                estimated_cost_usd=(
-                    telemetry
-                    .estimated_cost_usd
-                ),
+                estimated_cost_usd=(telemetry.estimated_cost_usd),
             )
 
     except ValueError as exc:
@@ -244,10 +203,7 @@ def query(
 
     except Exception as exc:
 
-        total_latency = (
-            time.perf_counter()
-            - request_start
-        )
+        total_latency = time.perf_counter() - request_start
 
         try:
 
@@ -256,31 +212,20 @@ def query(
                 session_id=request.session_id,
                 question=request.question,
                 pipeline=request.pipeline,
-                retrieval_mode=(
-                    request.retrieval_mode
-                ),
+                retrieval_mode=(request.retrieval_mode),
                 model=request.model,
-                latency_seconds=(
-                    total_latency
-                ),
+                latency_seconds=(total_latency),
                 error=str(exc),
             )
 
         except Exception:
-            logger.exception(
-                "Could not persist failed interaction."
-            )
+            logger.exception("Could not persist failed interaction.")
 
-        logger.exception(
-            "Financial analysis failed."
-        )
+        logger.exception("Financial analysis failed.")
 
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Financial analysis could "
-                "not be completed."
-            ),
+            detail=("Financial analysis could " "not be completed."),
         ) from exc
 
 
@@ -295,27 +240,19 @@ def feedback(
     try:
 
         save_feedback(
-            response_id=(
-                request.response_id
-            ),
+            response_id=(request.response_id),
             rating=request.rating,
         )
 
-        return FeedbackResponse(
-            success=True
-        )
+        return FeedbackResponse(success=True)
 
     except Exception as exc:
 
-        logger.exception(
-            "Could not save feedback."
-        )
+        logger.exception("Could not save feedback.")
 
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Could not save feedback."
-            ),
+            detail=("Could not save feedback."),
         ) from exc
 
 
@@ -327,11 +264,7 @@ def download_generated_file(
 ) -> FileResponse:
 
     try:
-        file_path = (
-            get_generated_file_path(
-                filename
-            )
-        )
+        file_path = get_generated_file_path(filename)
 
     except ValueError as exc:
 
@@ -340,10 +273,7 @@ def download_generated_file(
             detail="Invalid filename.",
         ) from exc
 
-    if (
-        not file_path.exists()
-        or not file_path.is_file()
-    ):
+    if not file_path.exists() or not file_path.is_file():
         raise HTTPException(
             status_code=404,
             detail="File not found.",

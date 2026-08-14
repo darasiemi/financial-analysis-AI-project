@@ -14,7 +14,6 @@ from ingestion.processing.models import (
     RawBlock,
 )
 
-
 # ============================================================
 # Known section-heading terminology
 # ============================================================
@@ -133,9 +132,7 @@ def flatten_block_text(
         The Group delivered strong financial performance.
     """
 
-    value = normalize_text(
-        value
-    )
+    value = normalize_text(value)
 
     value = re.sub(
         r"\s*\n\s*",
@@ -175,27 +172,13 @@ def is_noise_paragraph(
 
     words = cleaned.split()
 
-    border_characters = (
-        "|+-_=—–"
-        "│┃┆┊┋┇"
-        "┌┐└┘├┤┬┴┼"
-    )
+    border_characters = "|+-_=—–" "│┃┆┊┋┇" "┌┐└┘├┤┬┴┼"
 
-    symbol_count = sum(
-        character in border_characters
-        for character in cleaned
-    )
+    symbol_count = sum(character in border_characters for character in cleaned)
 
-    symbol_ratio = (
-        symbol_count / len(cleaned)
-        if cleaned
-        else 0.0
-    )
+    symbol_ratio = symbol_count / len(cleaned) if cleaned else 0.0
 
-    alphabetic_count = sum(
-        character.isalpha()
-        for character in cleaned
-    )
+    alphabetic_count = sum(character.isalpha() for character in cleaned)
 
     # --------------------------------------------------------
     # Border-dominated fragments
@@ -218,10 +201,7 @@ def is_noise_paragraph(
     # Isolated numerical or symbol-only fragments
     # --------------------------------------------------------
 
-    if (
-        len(words) <= 2
-        and alphabetic_count == 0
-    ):
+    if len(words) <= 2 and alphabetic_count == 0:
         return True
 
     # --------------------------------------------------------
@@ -255,15 +235,11 @@ def is_decorative_block(
     and residual PDF layout fragments.
     """
 
-    text = flatten_block_text(
-        block.text
-    )
+    text = flatten_block_text(block.text)
 
     words = text.split()
 
-    if is_noise_paragraph(
-        text
-    ):
+    if is_noise_paragraph(text):
         return True
 
     # Normal text containing enough words should remain.
@@ -299,57 +275,27 @@ def detect_column_count(
     if not blocks:
         return 1
 
-    page_width = (
-        blocks[0].page_width
-    )
+    page_width = blocks[0].page_width
 
-    midpoint = (
-        page_width / 2
-    )
+    midpoint = page_width / 2
 
-    tolerance = (
-        page_width
-        * COLUMN_GAP_RATIO
-    )
+    tolerance = page_width * COLUMN_GAP_RATIO
 
-    left_blocks = [
-        block
-        for block in blocks
-        if block.x1
-        <= midpoint + tolerance
-    ]
+    left_blocks = [block for block in blocks if block.x1 <= midpoint + tolerance]
 
-    right_blocks = [
-        block
-        for block in blocks
-        if block.x0
-        >= midpoint - tolerance
-    ]
+    right_blocks = [block for block in blocks if block.x0 >= midpoint - tolerance]
 
     left_words = sum(
-        len(
-            flatten_block_text(
-                block.text
-            ).split()
-        )
-        for block in left_blocks
+        len(flatten_block_text(block.text).split()) for block in left_blocks
     )
 
     right_words = sum(
-        len(
-            flatten_block_text(
-                block.text
-            ).split()
-        )
-        for block in right_blocks
+        len(flatten_block_text(block.text).split()) for block in right_blocks
     )
 
     # Both sides need substantial narrative content before the
     # page is treated as genuinely two-column.
-    if (
-        left_words >= 40
-        and right_words >= 40
-    ):
+    if left_words >= 40 and right_words >= 40:
         return 2
 
     return 1
@@ -380,13 +326,7 @@ def order_page_blocks(
     by pdf_reader.py.
     """
 
-    usable_blocks = [
-        block
-        for block in blocks
-        if not is_decorative_block(
-            block
-        )
-    ]
+    usable_blocks = [block for block in blocks if not is_decorative_block(block)]
 
     if not usable_blocks:
         return []
@@ -395,12 +335,7 @@ def order_page_blocks(
     # One-column page
     # --------------------------------------------------------
 
-    if (
-        detect_column_count(
-            usable_blocks
-        )
-        == 1
-    ):
+    if detect_column_count(usable_blocks) == 1:
         return sorted(
             usable_blocks,
             key=lambda block: (
@@ -420,59 +355,30 @@ def order_page_blocks(
     # Two-column page
     # --------------------------------------------------------
 
-    page_width = (
-        usable_blocks[0]
-        .page_width
-    )
+    page_width = usable_blocks[0].page_width
 
-    midpoint = (
-        page_width / 2
-    )
+    midpoint = page_width / 2
 
-    full_width: list[
-        RawBlock
-    ] = []
+    full_width: list[RawBlock] = []
 
-    left_column: list[
-        RawBlock
-    ] = []
+    left_column: list[RawBlock] = []
 
-    right_column: list[
-        RawBlock
-    ] = []
+    right_column: list[RawBlock] = []
 
     for block in usable_blocks:
 
-        block_width = (
-            block.x1
-            - block.x0
-        )
+        block_width = block.x1 - block.x0
 
-        block_centre = (
-            block.x0
-            + block.x1
-        ) / 2
+        block_centre = (block.x0 + block.x1) / 2
 
-        if (
-            block_width
-            >= page_width * 0.70
-        ):
-            full_width.append(
-                block
-            )
+        if block_width >= page_width * 0.70:
+            full_width.append(block)
 
-        elif (
-            block_centre
-            < midpoint
-        ):
-            left_column.append(
-                block
-            )
+        elif block_centre < midpoint:
+            left_column.append(block)
 
         else:
-            right_column.append(
-                block
-            )
+            right_column.append(block)
 
     full_width.sort(
         key=lambda block: (
@@ -496,38 +402,14 @@ def order_page_blocks(
     )
 
     first_column_y = min(
-        [
-            block.y0
-            for block in (
-                left_column
-                + right_column
-            )
-        ]
-        or [
-            float("inf")
-        ]
+        [block.y0 for block in (left_column + right_column)] or [float("inf")]
     )
 
-    top_full_width = [
-        block
-        for block in full_width
-        if block.y0
-        <= first_column_y
-    ]
+    top_full_width = [block for block in full_width if block.y0 <= first_column_y]
 
-    lower_full_width = [
-        block
-        for block in full_width
-        if block
-        not in top_full_width
-    ]
+    lower_full_width = [block for block in full_width if block not in top_full_width]
 
-    return (
-        top_full_width
-        + left_column
-        + right_column
-        + lower_full_width
-    )
+    return top_full_width + left_column + right_column + lower_full_width
 
 
 # ============================================================
@@ -543,17 +425,11 @@ def is_likely_heading(
     Detect probable section headings using wording and typography.
     """
 
-    text = flatten_block_text(
-        block.text
-    )
+    text = flatten_block_text(block.text)
 
     words = text.split()
 
-    if not (
-        1
-        <= len(words)
-        <= 16
-    ):
+    if not 1 <= len(words <= 16):
         return False
 
     if len(text) > 160:
@@ -576,28 +452,13 @@ def is_likely_heading(
     ):
         return False
 
-    lowered = (
-        text.lower()
-    )
+    lowered = text.lower()
 
-    known_heading = any(
-        term in lowered
-        for term in COMMON_SECTION_TERMS
-    )
+    known_heading = any(term in lowered for term in COMMON_SECTION_TERMS)
 
-    large_font = (
-        body_font_size > 0
-        and block.max_font_size
-        >= body_font_size * 1.25
-    )
+    large_font = body_font_size > 0 and block.max_font_size >= body_font_size * 1.25
 
-    return (
-        known_heading
-        or (
-            block.is_bold
-            and large_font
-        )
-    )
+    return known_heading or (block.is_bold and large_font)
 
 
 # ============================================================
@@ -615,14 +476,9 @@ def is_contents_page(
     they contain many section names without substantive content.
     """
 
-    text = "\n".join(
-        block.text
-        for block in blocks
-    )
+    text = "\n".join(block.text for block in blocks)
 
-    lowered = (
-        text.lower()
-    )
+    lowered = text.lower()
 
     has_marker = any(
         marker in lowered
@@ -643,10 +499,7 @@ def is_contents_page(
         for line in text.splitlines()
     )
 
-    return (
-        has_marker
-        and isolated_numbers >= 5
-    )
+    return has_marker and isolated_numbers >= 5
 
 
 # ============================================================
@@ -676,20 +529,14 @@ def blocks_are_in_same_column(
     )
 
     narrower_width = min(
-        previous.x1
-        - previous.x0,
-        current.x1
-        - current.x0,
+        previous.x1 - previous.x0,
+        current.x1 - current.x0,
     )
 
     if narrower_width <= 0:
         return False
 
-    return (
-        overlap
-        / narrower_width
-        >= 0.45
-    )
+    return overlap / narrower_width >= 0.45
 
 
 def starts_like_new_paragraph(
@@ -707,11 +554,7 @@ def starts_like_new_paragraph(
 
     return bool(
         re.match(
-            r"^(?:"
-            r"\d+(?:\.\d+)*[.)]?"
-            r"|[A-Z][.)]"
-            r"|[-•▪‣]"
-            r")\s+",
+            r"^(?:" r"\d+(?:\.\d+)*[.)]?" r"|[A-Z][.)]" r"|[-•▪‣]" r")\s+",
             text,
         )
     )
@@ -726,17 +569,9 @@ def should_start_new_paragraph(
     narrative paragraph.
     """
 
-    current_text = (
-        flatten_block_text(
-            current.text
-        )
-    )
+    current_text = flatten_block_text(current.text)
 
-    previous_text = (
-        flatten_block_text(
-            previous.text
-        )
-    )
+    previous_text = flatten_block_text(previous.text)
 
     # Moving between columns strongly suggests a new paragraph.
     if not blocks_are_in_same_column(
@@ -745,25 +580,14 @@ def should_start_new_paragraph(
     ):
         return True
 
-    vertical_gap = (
-        current.y0
-        - previous.y1
-    )
+    vertical_gap = current.y0 - previous.y1
 
-    gap_threshold = (
-        current.page_height
-        * PARAGRAPH_GAP_RATIO
-    )
+    gap_threshold = current.page_height * PARAGRAPH_GAP_RATIO
 
-    if (
-        vertical_gap
-        > gap_threshold
-    ):
+    if vertical_gap > gap_threshold:
         return True
 
-    if starts_like_new_paragraph(
-        current_text
-    ):
+    if starts_like_new_paragraph(current_text):
         return True
 
     # Completed sentence / clause followed by another block.
@@ -795,17 +619,10 @@ def split_oversized_paragraph(
     used when sentence boundaries cannot be identified.
     """
 
-    words = (
-        paragraph.split()
-    )
+    words = paragraph.split()
 
-    if (
-        len(words)
-        <= MAX_PARAGRAPH_WORDS
-    ):
-        return [
-            paragraph
-        ]
+    if len(words) <= MAX_PARAGRAPH_WORDS:
+        return [paragraph]
 
     sentences = [
         sentence.strip()
@@ -823,13 +640,7 @@ def split_oversized_paragraph(
     if len(sentences) <= 1:
 
         return [
-            " ".join(
-                words[
-                    index:
-                    index
-                    + MAX_PARAGRAPH_WORDS
-                ]
-            )
+            " ".join(words[index : index + MAX_PARAGRAPH_WORDS])
             for index in range(
                 0,
                 len(words),
@@ -849,42 +660,23 @@ def split_oversized_paragraph(
 
     for sentence in sentences:
 
-        sentence_word_count = len(
-            sentence.split()
-        )
+        sentence_word_count = len(sentence.split())
 
-        if (
-            current
-            and current_word_count
-            + sentence_word_count
-            > MAX_PARAGRAPH_WORDS
-        ):
+        if current and current_word_count + sentence_word_count > MAX_PARAGRAPH_WORDS:
 
-            output.append(
-                " ".join(
-                    current
-                )
-            )
+            output.append(" ".join(current))
 
             current = []
 
             current_word_count = 0
 
-        current.append(
-            sentence
-        )
+        current.append(sentence)
 
-        current_word_count += (
-            sentence_word_count
-        )
+        current_word_count += sentence_word_count
 
     if current:
 
-        output.append(
-            " ".join(
-                current
-            )
-        )
+        output.append(" ".join(current))
 
     return output
 
@@ -913,10 +705,7 @@ def reconstruct_paragraphs(
 
     current_parts: list[str] = []
 
-    previous_content_block: (
-        RawBlock
-        | None
-    ) = None
+    previous_content_block: RawBlock | None = None
 
     def flush_current() -> None:
         """
@@ -928,41 +717,19 @@ def reconstruct_paragraphs(
         if not current_parts:
             return
 
-        paragraph = (
-            normalize_text(
-                " ".join(
-                    current_parts
-                )
-            )
-        )
+        paragraph = normalize_text(" ".join(current_parts))
 
-        if (
-            paragraph
-            and not is_noise_paragraph(
-                paragraph
-            )
-        ):
+        if paragraph and not is_noise_paragraph(paragraph):
 
-            paragraphs.extend(
-                split_oversized_paragraph(
-                    paragraph
-                )
-            )
+            paragraphs.extend(split_oversized_paragraph(paragraph))
 
         current_parts = []
 
     for block in ordered_blocks:
 
-        text = flatten_block_text(
-            block.text
-        )
+        text = flatten_block_text(block.text)
 
-        if (
-            not text
-            or is_noise_paragraph(
-                text
-            )
-        ):
+        if not text or is_noise_paragraph(text):
             continue
 
         # ----------------------------------------------------
@@ -976,13 +743,9 @@ def reconstruct_paragraphs(
 
             flush_current()
 
-            current_section = (
-                text
-            )
+            current_section = text
 
-            previous_content_block = (
-                None
-            )
+            previous_content_block = None
 
             continue
 
@@ -990,24 +753,16 @@ def reconstruct_paragraphs(
         # New paragraph
         # ----------------------------------------------------
 
-        if (
-            previous_content_block
-            is not None
-            and should_start_new_paragraph(
-                previous_content_block,
-                block,
-            )
+        if previous_content_block is not None and should_start_new_paragraph(
+            previous_content_block,
+            block,
         ):
 
             flush_current()
 
-        current_parts.append(
-            text
-        )
+        current_parts.append(text)
 
-        previous_content_block = (
-            block
-        )
+        previous_content_block = block
 
     flush_current()
 
@@ -1043,17 +798,13 @@ def build_page(
         )
 
     # Exclude contents/index pages from RAG.
-    if is_contents_page(
-        blocks
-    ):
+    if is_contents_page(blocks):
         return (
             None,
             current_section,
         )
 
-    ordered = order_page_blocks(
-        blocks
-    )
+    ordered = order_page_blocks(blocks)
 
     if not ordered:
         return (
@@ -1066,23 +817,10 @@ def build_page(
     # --------------------------------------------------------
 
     font_sizes = [
-        block.median_font_size
-        for block in ordered
-        if (
-            block.median_font_size
-            > 0
-        )
+        block.median_font_size for block in ordered if (block.median_font_size > 0)
     ]
 
-    body_font_size = (
-        float(
-            median(
-                font_sizes
-            )
-        )
-        if font_sizes
-        else 0.0
-    )
+    body_font_size = float(median(font_sizes)) if font_sizes else 0.0
 
     # --------------------------------------------------------
     # Reconstruct paragraphs
@@ -1093,12 +831,8 @@ def build_page(
         current_section,
     ) = reconstruct_paragraphs(
         ordered_blocks=ordered,
-        body_font_size=(
-            body_font_size
-        ),
-        current_section=(
-            current_section
-        ),
+        body_font_size=(body_font_size),
+        current_section=(current_section),
     )
 
     # --------------------------------------------------------
@@ -1108,23 +842,10 @@ def build_page(
     paragraphs = [
         paragraph
         for paragraph in paragraphs
-        if (
-            len(
-                paragraph.split()
-            )
-            >= 2
-            and not is_noise_paragraph(
-                paragraph
-            )
-        )
+        if (len(paragraph.split()) >= 2 and not is_noise_paragraph(paragraph))
     ]
 
-    total_words = sum(
-        len(
-            paragraph.split()
-        )
-        for paragraph in paragraphs
-    )
+    total_words = sum(len(paragraph.split()) for paragraph in paragraphs)
 
     # Do not create nearly empty narrative pages.
     if total_words < 10:
@@ -1143,16 +864,9 @@ def build_page(
 
     return (
         ProcessedPage(
-            page_number=(
-                ordered[0]
-                .page_number
-            ),
-            paragraphs=tuple(
-                paragraphs
-            ),
-            section_title=(
-                current_section
-            ),
+            page_number=(ordered[0].page_number),
+            paragraphs=tuple(paragraphs),
+            section_title=(current_section),
             contains_table=False,
         ),
         current_section,
@@ -1165,9 +879,7 @@ def build_page(
 
 
 def reconstruct_document_pages(
-    pages: list[
-        list[RawBlock]
-    ],
+    pages: list[list[RawBlock]],
 ) -> list[ProcessedPage]:
     """
     Reconstruct all usable narrative pages in one PDF.
@@ -1179,14 +891,9 @@ def reconstruct_document_pages(
         ProcessedPage objects ready for paragraph-aware chunking
     """
 
-    processed_pages: list[
-        ProcessedPage
-    ] = []
+    processed_pages: list[ProcessedPage] = []
 
-    current_section: (
-        str
-        | None
-    ) = None
+    current_section: str | None = None
 
     for blocks in pages:
 
@@ -1200,8 +907,6 @@ def reconstruct_document_pages(
 
         if page is not None:
 
-            processed_pages.append(
-                page
-            )
+            processed_pages.append(page)
 
     return processed_pages

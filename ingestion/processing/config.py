@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 ENV_PATH = PROJECT_ROOT / ".env"
@@ -13,7 +12,7 @@ ENV_PATH = PROJECT_ROOT / ".env"
 POSTGRES_SCHEMA = "financial_analysis"
 REPORTS_TABLE = "reports"
 REPORT_CHUNKS_TABLE = "report_chunks"
-EXTRACTED_TABLES_TABLE  = "report_tables"
+EXTRACTED_TABLES_TABLE = "report_tables"
 # EXTRACTED_TABLE_ROWS_TABLE = "report_table_rows"
 
 PIPELINE_NAME = "financial_report_chunks_pipeline"
@@ -87,8 +86,6 @@ DEBUG_DIR = PROJECT_ROOT / "debug_processing"
 
 RETRIEVAL_DOCUMENTS_TABLE = "retrieval_documents"
 
-EMBEDDING_MODEL = (
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 EMBEDDING_DIMENSION = 384

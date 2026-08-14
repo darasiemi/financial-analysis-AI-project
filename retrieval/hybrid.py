@@ -50,9 +50,7 @@ def hybrid_search(
         start=1,
     ):
 
-        document_id = (
-            result["document_id"]
-        )
+        document_id = result["document_id"]
 
         if document_id not in fused:
 
@@ -63,23 +61,9 @@ def hybrid_search(
                 "vector_rank": None,
             }
 
-        fused[
-            document_id
-        ][
-            "keyword_rank"
-        ] = rank
+        fused[document_id]["keyword_rank"] = rank
 
-        fused[
-            document_id
-        ][
-            "rrf_score"
-        ] += (
-            1.0
-            / (
-                rrf_k
-                + rank
-            )
-        )
+        fused[document_id]["rrf_score"] += 1.0 / (rrf_k + rank)
 
     # --------------------------------------------------------
     # Vector rankings
@@ -90,9 +74,7 @@ def hybrid_search(
         start=1,
     ):
 
-        document_id = (
-            result["document_id"]
-        )
+        document_id = result["document_id"]
 
         if document_id not in fused:
 
@@ -103,32 +85,14 @@ def hybrid_search(
                 "vector_rank": None,
             }
 
-        fused[
-            document_id
-        ][
-            "vector_rank"
-        ] = rank
+        fused[document_id]["vector_rank"] = rank
 
-        fused[
-            document_id
-        ][
-            "rrf_score"
-        ] += (
-            1.0
-            / (
-                rrf_k
-                + rank
-            )
-        )
+        fused[document_id]["rrf_score"] += 1.0 / (rrf_k + rank)
 
     results = sorted(
         fused.values(),
-        key=lambda item: (
-            item["rrf_score"]
-        ),
+        key=lambda item: (item["rrf_score"]),
         reverse=True,
     )
 
-    return results[
-        :top_k
-    ]
+    return results[:top_k]

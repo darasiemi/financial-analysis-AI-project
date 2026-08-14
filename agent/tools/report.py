@@ -1,11 +1,8 @@
+import re
 from pathlib import Path
 from typing import Optional
-import re
 
-
-REPORTS_DIR = Path(
-    "outputs/reports"
-)
+REPORTS_DIR = Path("outputs/reports")
 
 
 def _safe_filename(
@@ -79,18 +76,11 @@ def create_report(
         )
 
         if filename:
-            safe_name = _safe_filename(
-                Path(filename).stem
-            )
+            safe_name = _safe_filename(Path(filename).stem)
         else:
-            safe_name = _safe_filename(
-                title
-            )
+            safe_name = _safe_filename(title)
 
-        output_path = (
-            REPORTS_DIR
-            / f"{safe_name}.md"
-        )
+        output_path = REPORTS_DIR / f"{safe_name}.md"
 
         report = f"""# {title}
 
@@ -120,16 +110,12 @@ def create_report(
             "success": True,
             "title": title,
             "format": "markdown",
-            "path": str(
-                output_path
-            ),
+            "path": str(output_path),
         }
 
     except Exception as exc:
         return {
             "success": False,
-            "error_type": (
-                type(exc).__name__
-            ),
+            "error_type": (type(exc).__name__),
             "error": str(exc),
         }

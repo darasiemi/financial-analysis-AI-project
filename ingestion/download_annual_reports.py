@@ -9,7 +9,6 @@ from pathlib import Path
 import pymupdf
 import requests
 
-
 # Expected structure:
 #
 # financial-analysis/
@@ -52,7 +51,6 @@ REPORTS = [
     # ==============================================================
     # GTCO
     # ==============================================================
-
     Report(
         company="Guaranty Trust Holding Company",
         ticker="GTCO",
@@ -88,11 +86,9 @@ REPORTS = [
             "2026-04-30-093114_eecj.pdf?dm=1777541474"
         ),
     ),
-
     # ==============================================================
     # MTN Nigeria
     # ==============================================================
-
     Report(
         company="MTN Nigeria",
         ticker="MTNN",
@@ -123,11 +119,9 @@ REPORTS = [
             "2026/05/MTN-Nigeria-2025-Annual-Report.pdf"
         ),
     ),
-
     # ==============================================================
     # Seplat Energy
     # ==============================================================
-
     # Report(
     #     company="Seplat Energy",
     #     ticker="SEPLAT",
@@ -163,32 +157,24 @@ REPORTS = [
     #         "260420-compressed.pdf"
     #     ),
     # ),
-
     # ==============================================================
     # Zenith Bank
     #
     # Zenith's RNS annual filings are split into two PDF files.
     # ==============================================================
-
     Report(
         company="Zenith Bank",
         ticker="ZENITHBANK",
         year=2023,
         filename="ZENITHBANK_2023_Annual_Report_Part_1.pdf",
-        url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/7486J_1-2024-4-8.pdf"
-        ),
+        url=("https://www.rns-pdf.londonstockexchange.com/" "rns/7486J_1-2024-4-8.pdf"),
     ),
     Report(
         company="Zenith Bank",
         ticker="ZENITHBANK",
         year=2023,
         filename="ZENITHBANK_2023_Annual_Report_Part_2.pdf",
-        url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/7486J_2-2024-4-8.pdf"
-        ),
+        url=("https://www.rns-pdf.londonstockexchange.com/" "rns/7486J_2-2024-4-8.pdf"),
         # Part 2 may contain little cover-page text.
         validate_year=False,
     ),
@@ -198,8 +184,7 @@ REPORTS = [
         year=2024,
         filename="ZENITHBANK_2024_Annual_Report_Part_1.pdf",
         url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/5437C_1-2025-3-27.pdf"
+            "https://www.rns-pdf.londonstockexchange.com/" "rns/5437C_1-2025-3-27.pdf"
         ),
     ),
     Report(
@@ -208,8 +193,7 @@ REPORTS = [
         year=2024,
         filename="ZENITHBANK_2024_Annual_Report_Part_2.pdf",
         url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/5437C_2-2025-3-27.pdf"
+            "https://www.rns-pdf.londonstockexchange.com/" "rns/5437C_2-2025-3-27.pdf"
         ),
         validate_year=False,
     ),
@@ -218,20 +202,14 @@ REPORTS = [
         ticker="ZENITHBANK",
         year=2025,
         filename="ZENITHBANK_2025_Annual_Report_Part_1.pdf",
-        url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/5137Z_1-2026-4-7.pdf"
-        ),
+        url=("https://www.rns-pdf.londonstockexchange.com/" "rns/5137Z_1-2026-4-7.pdf"),
     ),
     Report(
         company="Zenith Bank",
         ticker="ZENITHBANK",
         year=2025,
         filename="ZENITHBANK_2025_Annual_Report_Part_2.pdf",
-        url=(
-            "https://www.rns-pdf.londonstockexchange.com/"
-            "rns/5137Z_2-2026-4-7.pdf"
-        ),
+        url=("https://www.rns-pdf.londonstockexchange.com/" "rns/5137Z_2-2026-4-7.pdf"),
         validate_year=False,
     ),
 ]
@@ -264,16 +242,13 @@ def validate_pdf_bytes(content: bytes, url: str) -> None:
     """
 
     if not content:
-        raise DownloadError(
-            f"Empty response received from {url}"
-        )
+        raise DownloadError(f"Empty response received from {url}")
 
     if not content.lstrip().startswith(b"%PDF"):
         preview = content[:150]
 
         raise DownloadError(
-            f"The response from {url} is not a PDF. "
-            f"First bytes: {preview!r}"
+            f"The response from {url} is not a PDF. " f"First bytes: {preview!r}"
         )
 
 
@@ -292,14 +267,11 @@ def extract_report_year(path: Path) -> int | None:
             )
 
             text = " ".join(
-                document[index].get_text("text")
-                for index in range(pages_to_read)
+                document[index].get_text("text") for index in range(pages_to_read)
             )
 
     except Exception as exc:
-        raise DownloadError(
-            f"Could not inspect {path.name}: {exc}"
-        ) from exc
+        raise DownloadError(f"Could not inspect {path.name}: {exc}") from exc
 
     normalized = normalize_text(text)
 
@@ -380,12 +352,7 @@ def download_pdf(
 ) -> Path:
     """Download and validate one annual report."""
 
-    destination = (
-        DATA_DIR
-        / report.ticker.lower()
-        / str(report.year)
-        / report.filename
-    )
+    destination = DATA_DIR / report.ticker.lower() / str(report.year) / report.filename
 
     destination.parent.mkdir(
         parents=True,
@@ -407,10 +374,7 @@ def download_pdf(
                     report.year,
                 )
 
-            print(
-                "Already downloaded and verified: "
-                f"{destination}"
-            )
+            print("Already downloaded and verified: " f"{destination}")
 
             return destination
 
@@ -426,9 +390,7 @@ def download_pdf(
     last_error: Exception | None = None
 
     for attempt in range(1, retries + 1):
-        temporary_path = destination.with_suffix(
-            destination.suffix + ".part"
-        )
+        temporary_path = destination.with_suffix(destination.suffix + ".part")
 
         temporary_path.unlink(missing_ok=True)
 
@@ -451,9 +413,7 @@ def download_pdf(
                 first_chunk = True
 
                 with temporary_path.open("wb") as file:
-                    for chunk in response.iter_content(
-                        chunk_size=1024 * 1024
-                    ):
+                    for chunk in response.iter_content(chunk_size=1024 * 1024):
                         if not chunk:
                             continue
 
@@ -468,8 +428,7 @@ def download_pdf(
 
                 if first_chunk:
                     raise DownloadError(
-                        f"No data was downloaded from "
-                        f"{response.url}"
+                        f"No data was downloaded from " f"{response.url}"
                     )
 
             temporary_path.replace(destination)
@@ -485,10 +444,7 @@ def download_pdf(
                     raise
 
             checksum = sha256_file(destination)
-            size_mb = (
-                destination.stat().st_size
-                / 1_048_576
-            )
+            size_mb = destination.stat().st_size / 1_048_576
 
             print(
                 f"Saved: {destination}\n"
@@ -507,22 +463,17 @@ def download_pdf(
 
             temporary_path.unlink(missing_ok=True)
 
-            print(
-                f"Download attempt failed: {exc}"
-            )
+            print(f"Download attempt failed: {exc}")
 
             if attempt < retries:
                 wait_seconds = 2**attempt
 
-                print(
-                    f"Retrying in {wait_seconds} seconds..."
-                )
+                print(f"Retrying in {wait_seconds} seconds...")
 
                 time.sleep(wait_seconds)
 
     raise DownloadError(
-        f"Could not download {report.company} "
-        f"{report.year}: {last_error}"
+        f"Could not download {report.company} " f"{report.year}: {last_error}"
     )
 
 
@@ -550,9 +501,7 @@ def main() -> None:
 
         except Exception as exc:
             failed.append(
-                f"{report.company} "
-                f"{report.year} "
-                f"({report.filename}): {exc}"
+                f"{report.company} " f"{report.year} " f"({report.filename}): {exc}"
             )
 
     print("\nDownload summary")
@@ -564,23 +513,13 @@ def main() -> None:
     for failure in failed:
         print(f"FAILED: {failure}")
 
-    print(
-        f"\nSuccessful downloads: {len(successful)}"
-    )
-    print(
-        f"Failed downloads: {len(failed)}"
-    )
+    print(f"\nSuccessful downloads: {len(successful)}")
+    print(f"Failed downloads: {len(failed)}")
 
     if failed:
-        raise SystemExit(
-            "\nSome downloads failed. "
-            "Successful downloads were kept."
-        )
+        raise SystemExit("\nSome downloads failed. " "Successful downloads were kept.")
 
-    print(
-        "\nAll reports were downloaded into: "
-        f"{DATA_DIR.resolve()}"
-    )
+    print("\nAll reports were downloaded into: " f"{DATA_DIR.resolve()}")
 
 
 if __name__ == "__main__":

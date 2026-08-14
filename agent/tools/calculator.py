@@ -1,8 +1,6 @@
 import ast
 import math
 import operator
-from typing import Any
-
 
 _BINARY_OPERATORS = {
     ast.Add: operator.add,
@@ -35,9 +33,7 @@ def _evaluate_node(
         node,
         ast.Expression,
     ):
-        return _evaluate_node(
-            node.body
-        )
+        return _evaluate_node(node.body)
 
     if isinstance(
         node,
@@ -49,45 +45,25 @@ def _evaluate_node(
         ):
             return node.value
 
-        raise ValueError(
-            "Only numeric constants are allowed."
-        )
+        raise ValueError("Only numeric constants are allowed.")
 
     if isinstance(
         node,
         ast.BinOp,
     ):
-        operator_type = type(
-            node.op
-        )
+        operator_type = type(node.op)
 
-        if (
-            operator_type
-            not in _BINARY_OPERATORS
-        ):
-            raise ValueError(
-                "Unsupported arithmetic operator."
-            )
+        if operator_type not in _BINARY_OPERATORS:
+            raise ValueError("Unsupported arithmetic operator.")
 
-        left = _evaluate_node(
-            node.left
-        )
+        left = _evaluate_node(node.left)
 
-        right = _evaluate_node(
-            node.right
-        )
+        right = _evaluate_node(node.right)
 
-        if (
-            operator_type is ast.Pow
-            and abs(right) > 20
-        ):
-            raise ValueError(
-                "Exponent is too large."
-            )
+        if operator_type is ast.Pow and abs(right) > 20:
+            raise ValueError("Exponent is too large.")
 
-        return _BINARY_OPERATORS[
-            operator_type
-        ](
+        return _BINARY_OPERATORS[operator_type](
             left,
             right,
         )
@@ -96,25 +72,12 @@ def _evaluate_node(
         node,
         ast.UnaryOp,
     ):
-        operator_type = type(
-            node.op
-        )
+        operator_type = type(node.op)
 
-        if (
-            operator_type
-            not in _UNARY_OPERATORS
-        ):
-            raise ValueError(
-                "Unsupported unary operator."
-            )
+        if operator_type not in _UNARY_OPERATORS:
+            raise ValueError("Unsupported unary operator.")
 
-        return _UNARY_OPERATORS[
-            operator_type
-        ](
-            _evaluate_node(
-                node.operand
-            )
-        )
+        return _UNARY_OPERATORS[operator_type](_evaluate_node(node.operand))
 
     if isinstance(
         node,
@@ -124,37 +87,18 @@ def _evaluate_node(
             node.func,
             ast.Name,
         ):
-            raise ValueError(
-                "Unsupported function call."
-            )
+            raise ValueError("Unsupported function call.")
 
-        function_name = (
-            node.func.id
-        )
+        function_name = node.func.id
 
-        if (
-            function_name
-            not in _ALLOWED_FUNCTIONS
-        ):
-            raise ValueError(
-                f"Function '{function_name}' "
-                "is not allowed."
-            )
+        if function_name not in _ALLOWED_FUNCTIONS:
+            raise ValueError(f"Function '{function_name}' " "is not allowed.")
 
-        arguments = [
-            _evaluate_node(argument)
-            for argument in node.args
-        ]
+        arguments = [_evaluate_node(argument) for argument in node.args]
 
-        return _ALLOWED_FUNCTIONS[
-            function_name
-        ](
-            *arguments
-        )
+        return _ALLOWED_FUNCTIONS[function_name](*arguments)
 
-    raise ValueError(
-        "Unsupported expression."
-    )
+    raise ValueError("Unsupported expression.")
 
 
 def calculate(
@@ -178,9 +122,7 @@ def calculate(
             mode="eval",
         )
 
-        result = _evaluate_node(
-            tree
-        )
+        result = _evaluate_node(tree)
 
         return {
             "success": True,
@@ -198,8 +140,6 @@ def calculate(
         return {
             "success": False,
             "expression": expression,
-            "error_type": (
-                type(exc).__name__
-            ),
+            "error_type": (type(exc).__name__),
             "error": str(exc),
         }

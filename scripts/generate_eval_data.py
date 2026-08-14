@@ -15,10 +15,7 @@ from ingestion.processing.database import (
 def main() -> None:
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Generate a difficult, validated "
-            "financial-analysis benchmark."
-        )
+        description=("Generate a difficult, validated " "financial-analysis benchmark.")
     )
 
     parser.add_argument(
@@ -29,10 +26,7 @@ def main() -> None:
 
     parser.add_argument(
         "--output",
-        default=(
-            "data/evaluation/"
-            "benchmark.jsonl"
-        ),
+        default=("data/evaluation/" "benchmark.jsonl"),
     )
 
     parser.add_argument(
@@ -81,54 +75,30 @@ def main() -> None:
         default=10,
     )
 
-    args = (
-        parser.parse_args()
-    )
+    args = parser.parse_args()
 
     load_environment()
 
-    generation_model = (
-        args.model
-        or os.environ.get(
-            "GEMINI_EVAL_GENERATOR_MODEL",
-            "gemini-2.5-flash",
-        )
+    generation_model = args.model or os.environ.get(
+        "GEMINI_EVAL_GENERATOR_MODEL",
+        "gemini-2.5-flash",
     )
 
-    validation_model = (
-        args.validation_model
-        or os.environ.get(
-            "GEMINI_EVAL_VALIDATOR_MODEL",
-            generation_model,
-        )
+    validation_model = args.validation_model or os.environ.get(
+        "GEMINI_EVAL_VALIDATOR_MODEL",
+        generation_model,
     )
 
-    examples = (
-        generate_dataset(
-            n=args.n,
-            model=(
-                generation_model
-            ),
-            validation_model=(
-                validation_model
-            ),
-            seed=args.seed,
-            pool_size=(
-                args.pool_size
-            ),
-            minimum_quality=(
-                args.minimum_quality
-            ),
-            minimum_difficulty=(
-                args.minimum_difficulty
-            ),
-            minimum_financial_relevance=(
-                args.minimum_financial_relevance
-            ),
-            max_attempt_multiplier=(
-                args.max_attempt_multiplier
-            ),
-        )
+    examples = generate_dataset(
+        n=args.n,
+        model=(generation_model),
+        validation_model=(validation_model),
+        seed=args.seed,
+        pool_size=(args.pool_size),
+        minimum_quality=(args.minimum_quality),
+        minimum_difficulty=(args.minimum_difficulty),
+        minimum_financial_relevance=(args.minimum_financial_relevance),
+        max_attempt_multiplier=(args.max_attempt_multiplier),
     )
 
     save_dataset(
@@ -137,48 +107,23 @@ def main() -> None:
     )
 
     print()
-    print(
-        "=" * 80
-    )
-    print(
-        "BENCHMARK SAVED"
-    )
-    print(
-        "=" * 80
-    )
+    print("=" * 80)
+    print("BENCHMARK SAVED")
+    print("=" * 80)
 
-    print(
-        f"Examples: {len(examples)}"
-    )
+    print(f"Examples: {len(examples)}")
 
-    print(
-        "Generation model: "
-        f"{generation_model}"
-    )
+    print("Generation model: " f"{generation_model}")
 
-    print(
-        "Validation model: "
-        f"{validation_model}"
-    )
+    print("Validation model: " f"{validation_model}")
 
-    print(
-        "Minimum quality: "
-        f"{args.minimum_quality}"
-    )
+    print("Minimum quality: " f"{args.minimum_quality}")
 
-    print(
-        "Minimum difficulty: "
-        f"{args.minimum_difficulty}"
-    )
+    print("Minimum difficulty: " f"{args.minimum_difficulty}")
 
-    print(
-        "Minimum financial relevance: "
-        f"{args.minimum_financial_relevance}"
-    )
+    print("Minimum financial relevance: " f"{args.minimum_financial_relevance}")
 
-    print(
-        f"Output: {args.output}"
-    )
+    print(f"Output: {args.output}")
 
 
 if __name__ == "__main__":

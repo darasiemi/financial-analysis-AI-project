@@ -10,7 +10,6 @@ import pymupdf
 
 from ingestion.processing.models import ReportRecord
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -62,10 +61,7 @@ def clean_matrix(
     cleaned: list[list[str]] = []
 
     for row in matrix:
-        cleaned_row = [
-            clean_cell(cell)
-            for cell in row
-        ]
+        cleaned_row = [clean_cell(cell) for cell in row]
 
         if any(cleaned_row):
             cleaned.append(cleaned_row)
@@ -83,19 +79,9 @@ def normalize_matrix_width(
     if not matrix:
         return []
 
-    column_count = max(
-        len(row)
-        for row in matrix
-    )
+    column_count = max(len(row) for row in matrix)
 
-    return [
-        row
-        + [""] * (
-            column_count
-            - len(row)
-        )
-        for row in matrix
-    ]
+    return [row + [""] * (column_count - len(row)) for row in matrix]
 
 
 # ============================================================
@@ -168,77 +154,43 @@ def repair_collapsed_row(
     if expected_columns <= 1:
         return row
 
-    normalized = (
-        row[:expected_columns]
-        + [""] * max(
-            0,
-            expected_columns
-            - len(row),
-        )
+    normalized = row[:expected_columns] + [""] * max(
+        0,
+        expected_columns - len(row),
     )
 
-    first_cell = (
-        normalized[0].strip()
-    )
+    first_cell = normalized[0].strip()
 
     if not first_cell:
         return normalized
 
     # Only repair rows where every other cell is empty.
-    if any(
-        cell.strip()
-        for cell in normalized[1:]
-    ):
+    if any(cell.strip() for cell in normalized[1:]):
         return normalized
 
-    expected_values = (
-        expected_columns - 1
-    )
+    expected_values = expected_columns - 1
 
-    matches = list(
-        VALUE_PATTERN.finditer(
-            first_cell
-        )
-    )
+    matches = list(VALUE_PATTERN.finditer(first_cell))
 
     if len(matches) < expected_values:
         return normalized
 
     # Use the last N values because the left side is expected
     # to contain the row label.
-    value_matches = matches[
-        -expected_values:
-    ]
+    value_matches = matches[-expected_values:]
 
-    first_value_start = (
-        value_matches[0].start()
-    )
+    first_value_start = value_matches[0].start()
 
-    label = (
-        first_cell[
-            :first_value_start
-        ]
-        .strip()
-    )
+    label = first_cell[:first_value_start].strip()
 
     if not label:
         return normalized
 
-    trailing_text = (
-        first_cell[
-            first_value_start:
-        ]
-        .strip()
-    )
+    trailing_text = first_cell[first_value_start:].strip()
 
-    values = [
-        match.group(1).strip()
-        for match in value_matches
-    ]
+    values = [match.group(1).strip() for match in value_matches]
 
-    reconstructed_values = (
-        " ".join(values)
-    )
+    reconstructed_values = " ".join(values)
 
     normalized_trailing = re.sub(
         r"\s+",
@@ -254,10 +206,7 @@ def repair_collapsed_row(
 
     # Only repair when the trailing portion consists exactly
     # of the expected value tokens.
-    if (
-        normalized_trailing
-        != normalized_reconstructed
-    ):
+    if normalized_trailing != normalized_reconstructed:
         return normalized
 
     return [
@@ -276,22 +225,15 @@ def repair_table_rows(
     if not matrix:
         return []
 
-    expected_columns = max(
-        len(row)
-        for row in matrix
-    )
+    expected_columns = max(len(row) for row in matrix)
 
-    repaired: list[
-        list[str]
-    ] = []
+    repaired: list[list[str]] = []
 
     for row in matrix:
         repaired.append(
             repair_collapsed_row(
                 row=row,
-                expected_columns=(
-                    expected_columns
-                ),
+                expected_columns=(expected_columns),
             )
         )
 
@@ -317,29 +259,18 @@ def make_unique_headers(
         headers,
         start=1,
     ):
-        header = clean_cell(
-            raw_header
-        )
+        header = clean_cell(raw_header)
 
-        base = (
-            header
-            if header
-            else f"column_{index}"
-        )
+        base = header if header else f"column_{index}"
 
-        counts[base] = (
-            counts.get(base, 0)
-            + 1
-        )
+        counts[base] = counts.get(base, 0) + 1
 
         occurrence = counts[base]
 
         if occurrence == 1:
             result.append(base)
         else:
-            result.append(
-                f"{base}_{occurrence}"
-            )
+            result.append(f"{base}_{occurrence}")
 
     return result
 
@@ -356,28 +287,15 @@ def get_table_headers(
     detected_headers: list[str] = []
 
     try:
-        detected_headers = [
-            clean_cell(value)
-            for value in (
-                table.header.names
-                or []
-            )
-        ]
+        detected_headers = [clean_cell(value) for value in (table.header.names or [])]
     except Exception:
         detected_headers = []
 
-    if (
-        detected_headers
-        and any(detected_headers)
-    ):
-        return make_unique_headers(
-            detected_headers
-        )
+    if detected_headers and any(detected_headers):
+        return make_unique_headers(detected_headers)
 
     if matrix:
-        return make_unique_headers(
-            matrix[0]
-        )
+        return make_unique_headers(matrix[0])
 
     return []
 
@@ -396,10 +314,7 @@ def remove_repeated_header_row(
 
     first_row = matrix[0]
 
-    if (
-        len(first_row)
-        != len(headers)
-    ):
+    if len(first_row) != len(headers):
         return matrix
 
     matches = 0
@@ -423,27 +338,15 @@ def remove_repeated_header_row(
 
         # Ignore generated names such as column_1 when
         # determining whether a header is duplicated.
-        if (
-            header_normalized.startswith(
-                "column_"
-            )
-            and not cell_normalized
-        ):
+        if header_normalized.startswith("column_") and not cell_normalized:
             continue
 
         comparable += 1
 
-        if (
-            cell_normalized
-            == header_normalized
-        ):
+        if cell_normalized == header_normalized:
             matches += 1
 
-    if (
-        comparable > 0
-        and matches / comparable
-        >= 0.80
-    ):
+    if comparable > 0 and matches / comparable >= 0.80:
         return matrix[1:]
 
     return matrix
@@ -462,12 +365,7 @@ def make_semantic_first_header(
         Total assets
     """
 
-    if (
-        headers
-        and headers[0].startswith(
-            "column_"
-        )
-    ):
+    if headers and headers[0].startswith("column_"):
         headers = list(headers)
         headers[0] = "Metric"
 
@@ -487,21 +385,13 @@ def get_nearby_table_title(
     Find a probable title immediately above the table.
     """
 
-    table_x0 = float(
-        table_bbox[0]
-    )
+    table_x0 = float(table_bbox[0])
 
-    table_y0 = float(
-        table_bbox[1]
-    )
+    table_y0 = float(table_bbox[1])
 
-    table_x1 = float(
-        table_bbox[2]
-    )
+    table_x1 = float(table_bbox[2])
 
-    candidates: list[
-        tuple[float, str]
-    ] = []
+    candidates: list[tuple[float, str]] = []
 
     for block in page.get_text(
         "blocks",
@@ -511,9 +401,7 @@ def get_nearby_table_title(
         x1 = float(block[2])
         y1 = float(block[3])
 
-        text = clean_cell(
-            block[4]
-        )
+        text = clean_cell(block[4])
 
         if not text:
             continue
@@ -521,9 +409,7 @@ def get_nearby_table_title(
         if y1 > table_y0:
             continue
 
-        distance = (
-            table_y0 - y1
-        )
+        distance = table_y0 - y1
 
         if distance > 120:
             continue
@@ -543,9 +429,7 @@ def get_nearby_table_title(
         if overlap <= 0:
             continue
 
-        if len(
-            text.split()
-        ) > 20:
+        if len(text.split()) > 20:
             continue
 
         candidates.append(
@@ -558,9 +442,7 @@ def get_nearby_table_title(
     if not candidates:
         return None
 
-    candidates.sort(
-        key=lambda item: item[0]
-    )
+    candidates.sort(key=lambda item: item[0])
 
     return candidates[0][1]
 
@@ -589,27 +471,16 @@ def infer_title_from_rows(
     )
 
     for row in matrix[:12]:
-        non_empty = [
-            cell
-            for cell in row
-            if cell
-        ]
+        non_empty = [cell for cell in row if cell]
 
         if len(non_empty) != 1:
             continue
 
-        candidate = (
-            non_empty[0]
-        )
+        candidate = non_empty[0]
 
-        lowered = (
-            candidate.lower()
-        )
+        lowered = candidate.lower()
 
-        if any(
-            keyword in lowered
-            for keyword in keywords
-        ):
+        if any(keyword in lowered for keyword in keywords):
             return candidate
 
     return None
@@ -623,11 +494,7 @@ def infer_title_from_rows(
 def count_non_empty_cells(
     matrix: list[list[str]],
 ) -> int:
-    return sum(
-        bool(cell)
-        for row in matrix
-        for cell in row
-    )
+    return sum(bool(cell) for row in matrix for cell in row)
 
 
 def is_useful_table(
@@ -640,20 +507,12 @@ def is_useful_table(
     if len(matrix) < 2:
         return False
 
-    column_count = max(
-        len(row)
-        for row in matrix
-    )
+    column_count = max(len(row) for row in matrix)
 
     if column_count < 2:
         return False
 
-    if (
-        count_non_empty_cells(
-            matrix
-        )
-        < 4
-    ):
+    if count_non_empty_cells(matrix) < 4:
         return False
 
     return True
@@ -685,9 +544,7 @@ def matrix_to_json_structure(
     }
     """
 
-    rows: list[
-        dict[str, str]
-    ] = []
+    rows: list[dict[str, str]] = []
 
     for matrix_row in matrix:
         row_object: dict[
@@ -695,24 +552,16 @@ def matrix_to_json_structure(
             str,
         ] = {}
 
-        for index, value in enumerate(
-            matrix_row
-        ):
+        for index, value in enumerate(matrix_row):
             if index < len(headers):
                 key = headers[index]
             else:
-                key = (
-                    f"column_{index + 1}"
-                )
+                key = f"column_{index + 1}"
 
             row_object[key] = value
 
-        if any(
-            row_object.values()
-        ):
-            rows.append(
-                row_object
-            )
+        if any(row_object.values()):
+            rows.append(row_object)
 
     return {
         "headers": headers,
@@ -746,9 +595,7 @@ def matrix_to_rag_text(
     ]
 
     if title:
-        output.append(
-            f"Table: {title}"
-        )
+        output.append(f"Table: {title}")
 
     output.append("")
 
@@ -756,52 +603,31 @@ def matrix_to_rag_text(
         if not any(row):
             continue
 
-        row_label = (
-            row[0].strip()
-            if row
-            else ""
-        )
+        row_label = row[0].strip() if row else ""
 
         if row_label:
-            output.append(
-                f"Metric: {row_label}"
-            )
+            output.append(f"Metric: {row_label}")
         else:
-            output.append(
-                "Table row:"
-            )
+            output.append("Table row:")
 
-        for index, value in enumerate(
-            row
-        ):
+        for index, value in enumerate(row):
             if not value:
                 continue
 
             # First cell has already been used as the metric.
-            if (
-                index == 0
-                and row_label
-            ):
+            if index == 0 and row_label:
                 continue
 
             if index < len(headers):
-                column_name = (
-                    headers[index]
-                )
+                column_name = headers[index]
             else:
-                column_name = (
-                    f"column_{index + 1}"
-                )
+                column_name = f"column_{index + 1}"
 
-            output.append(
-                f"{column_name}: {value}"
-            )
+            output.append(f"{column_name}: {value}")
 
         output.append("")
 
-    return "\n".join(
-        output
-    ).strip()
+    return "\n".join(output).strip()
 
 
 # ============================================================
@@ -827,21 +653,13 @@ def make_table_id(
     )
 
     digest = hashlib.sha256(
-        (
-            f"{report_id}|"
-            f"{page_number}|"
-            f"{table_index}|"
-            f"{serialized}"
-        ).encode(
+        (f"{report_id}|" f"{page_number}|" f"{table_index}|" f"{serialized}").encode(
             "utf-8"
         )
     ).hexdigest()[:16]
 
     return (
-        f"{report_id}_"
-        f"p{page_number:04d}_"
-        f"table_{table_index:02d}_"
-        f"{digest}"
+        f"{report_id}_" f"p{page_number:04d}_" f"table_{table_index:02d}_" f"{digest}"
     )
 
 
@@ -862,14 +680,11 @@ def detect_page_tables(
             strategy="lines",
         )
 
-        return list(
-            finder.tables
-        )
+        return list(finder.tables)
 
     except Exception as exc:
         logger.warning(
-            "Table detection failed "
-            "on page %d: %s",
+            "Table detection failed " "on page %d: %s",
             page.number + 1,
             exc,
         )
@@ -889,9 +704,7 @@ def extract_tables_from_report(
     Extract structured tables from one annual-report PDF.
     """
 
-    extracted_tables: list[
-        dict
-    ] = []
+    extracted_tables: list[dict] = []
 
     logger.info(
         "Processing tables: %s %d (%s)",
@@ -900,19 +713,11 @@ def extract_tables_from_report(
         report.file_path.name,
     )
 
-    with pymupdf.open(
-        report.file_path
-    ) as document:
-        total_pages = len(
-            document
-        )
+    with pymupdf.open(report.file_path) as document:
+        total_pages = len(document)
 
-        for page_index, page in enumerate(
-            document
-        ):
-            page_number = (
-                page_index + 1
-            )
+        for page_index, page in enumerate(document):
+            page_number = page_index + 1
 
             logger.info(
                 "%s %d | page %d/%d",
@@ -922,11 +727,7 @@ def extract_tables_from_report(
                 total_pages,
             )
 
-            detected_tables = (
-                detect_page_tables(
-                    page
-                )
-            )
+            detected_tables = detect_page_tables(page)
 
             if detected_tables:
                 logger.info(
@@ -942,14 +743,11 @@ def extract_tables_from_report(
                 start=1,
             ):
                 try:
-                    raw_matrix = (
-                        table.extract()
-                    )
+                    raw_matrix = table.extract()
 
                 except Exception as exc:
                     logger.warning(
-                        "Could not extract table %d "
-                        "on page %d: %s",
+                        "Could not extract table %d " "on page %d: %s",
                         table_index,
                         page_number,
                         exc,
@@ -960,15 +758,9 @@ def extract_tables_from_report(
                 # 1. Basic cleaning
                 # --------------------------------------------
 
-                matrix = clean_matrix(
-                    raw_matrix
-                )
+                matrix = clean_matrix(raw_matrix)
 
-                matrix = (
-                    normalize_matrix_width(
-                        matrix
-                    )
-                )
+                matrix = normalize_matrix_width(matrix)
 
                 if not matrix:
                     continue
@@ -977,37 +769,23 @@ def extract_tables_from_report(
                 # 2. Repair collapsed rows
                 # --------------------------------------------
 
-                matrix = (
-                    repair_table_rows(
-                        matrix
-                    )
-                )
+                matrix = repair_table_rows(matrix)
 
-                if not is_useful_table(
-                    matrix
-                ):
+                if not is_useful_table(matrix):
                     continue
 
-                column_count = max(
-                    len(row)
-                    for row in matrix
-                )
+                column_count = max(len(row) for row in matrix)
 
                 # --------------------------------------------
                 # 3. Headers
                 # --------------------------------------------
 
-                headers = (
-                    get_table_headers(
-                        table,
-                        matrix,
-                    )
+                headers = get_table_headers(
+                    table,
+                    matrix,
                 )
 
-                if (
-                    len(headers)
-                    < column_count
-                ):
+                if len(headers) < column_count:
                     headers.extend(
                         [
                             f"column_{index}"
@@ -1018,31 +796,18 @@ def extract_tables_from_report(
                         ]
                     )
 
-                elif (
-                    len(headers)
-                    > column_count
-                ):
-                    headers = (
-                        headers[
-                            :column_count
-                        ]
-                    )
+                elif len(headers) > column_count:
+                    headers = headers[:column_count]
 
-                headers = (
-                    make_semantic_first_header(
-                        headers
-                    )
-                )
+                headers = make_semantic_first_header(headers)
 
                 # --------------------------------------------
                 # 4. Remove duplicated header row
                 # --------------------------------------------
 
-                matrix = (
-                    remove_repeated_header_row(
-                        matrix,
-                        headers,
-                    )
+                matrix = remove_repeated_header_row(
+                    matrix,
+                    headers,
                 )
 
                 if not matrix:
@@ -1052,65 +817,42 @@ def extract_tables_from_report(
                 # 5. Table title
                 # --------------------------------------------
 
-                title = (
-                    infer_title_from_rows(
-                        matrix
-                    )
-                    or get_nearby_table_title(
-                        page,
-                        table.bbox,
-                    )
+                title = infer_title_from_rows(matrix) or get_nearby_table_title(
+                    page,
+                    table.bbox,
                 )
 
                 # --------------------------------------------
                 # 6. Structured JSON
                 # --------------------------------------------
 
-                table_data = (
-                    matrix_to_json_structure(
-                        headers=headers,
-                        matrix=matrix,
-                    )
+                table_data = matrix_to_json_structure(
+                    headers=headers,
+                    matrix=matrix,
                 )
 
                 # --------------------------------------------
                 # 7. RAG-friendly text
                 # --------------------------------------------
 
-                rag_text = (
-                    matrix_to_rag_text(
-                        title=title,
-                        headers=headers,
-                        matrix=matrix,
-                        ticker=(
-                            report.ticker
-                        ),
-                        report_year=(
-                            report.report_year
-                        ),
-                        page_number=(
-                            page_number
-                        ),
-                    )
+                rag_text = matrix_to_rag_text(
+                    title=title,
+                    headers=headers,
+                    matrix=matrix,
+                    ticker=(report.ticker),
+                    report_year=(report.report_year),
+                    page_number=(page_number),
                 )
 
                 # --------------------------------------------
                 # 8. Stable ID
                 # --------------------------------------------
 
-                table_id = (
-                    make_table_id(
-                        report_id=(
-                            report.report_id
-                        ),
-                        page_number=(
-                            page_number
-                        ),
-                        table_index=(
-                            table_index
-                        ),
-                        matrix=matrix,
-                    )
+                table_id = make_table_id(
+                    report_id=(report.report_id),
+                    page_number=(page_number),
+                    table_index=(table_index),
+                    matrix=matrix,
                 )
 
                 # --------------------------------------------
@@ -1119,68 +861,30 @@ def extract_tables_from_report(
 
                 extracted_tables.append(
                     {
-                        "table_id": (
-                            table_id
-                        ),
-                        "report_id": (
-                            report.report_id
-                        ),
-                        "ticker": (
-                            report.ticker
-                        ),
-                        "report_year": (
-                            report.report_year
-                        ),
-                        "pdf_page_number": (
-                            page_number
-                        ),
-                        "table_index": (
-                            table_index
-                        ),
-                        "table_title": (
-                            title
-                        ),
-                        "row_count": (
-                            len(matrix)
-                        ),
-                        "column_count": (
-                            column_count
-                        ),
-
+                        "table_id": (table_id),
+                        "report_id": (report.report_id),
+                        "ticker": (report.ticker),
+                        "report_year": (report.report_year),
+                        "pdf_page_number": (page_number),
+                        "table_index": (table_index),
+                        "table_title": (title),
+                        "row_count": (len(matrix)),
+                        "column_count": (column_count),
                         # Native dict.
                         # dlt stores this as JSON.
-                        "table_data": (
-                            table_data
-                        ),
-
+                        "table_data": (table_data),
                         # For embeddings / semantic retrieval.
-                        "rag_text": (
-                            rag_text
-                        ),
-
-                        "character_count": (
-                            len(rag_text)
-                        ),
-
-                        "word_count": (
-                            len(
-                                rag_text.split()
-                            )
-                        ),
-
+                        "rag_text": (rag_text),
+                        "character_count": (len(rag_text)),
+                        "word_count": (len(rag_text.split())),
                         "text_sha256": (
-                            hashlib.sha256(
-                                rag_text.encode(
-                                    "utf-8"
-                                )
-                            ).hexdigest()
+                            hashlib.sha256(rag_text.encode("utf-8")).hexdigest()
                         ),
                     }
                 )
 
     logger.info(
-        "Completed %s %d: "
-        "%d extracted table(s).",
+        "Completed %s %d: " "%d extracted table(s).",
         report.ticker,
         report.report_year,
         len(extracted_tables),
@@ -1201,13 +905,9 @@ def extract_tables_from_all_reports(
     Extract tables from all annual-report PDFs.
     """
 
-    all_tables: list[
-        dict
-    ] = []
+    all_tables: list[dict] = []
 
-    total_reports = len(
-        reports
-    )
+    total_reports = len(reports)
 
     for (
         report_index,
@@ -1222,19 +922,12 @@ def extract_tables_from_all_reports(
             total_reports,
         )
 
-        tables = (
-            extract_tables_from_report(
-                report
-            )
-        )
+        tables = extract_tables_from_report(report)
 
-        all_tables.extend(
-            tables
-        )
+        all_tables.extend(tables)
 
     logger.info(
-        "Finished all reports: "
-        "%d extracted table(s).",
+        "Finished all reports: " "%d extracted table(s).",
         len(all_tables),
     )
 

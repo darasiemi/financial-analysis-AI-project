@@ -39,15 +39,9 @@ def make_chunk_id(
 ) -> str:
     """Create a stable chunk identifier."""
 
-    content_hash = hashlib.sha256(
-        text.encode("utf-8")
-    ).hexdigest()[:16]
+    content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
-    return (
-        f"{report_id}_chunk_"
-        f"{chunk_index:05d}_"
-        f"{content_hash}"
-    )
+    return f"{report_id}_chunk_" f"{chunk_index:05d}_" f"{content_hash}"
 
 
 def split_long_paragraph(
@@ -74,12 +68,7 @@ def split_long_paragraph(
     if len(sentences) <= 1:
         return [
             ParagraphUnit(
-                text=" ".join(
-                    words[
-                        index:
-                        index + TARGET_WORDS
-                    ]
-                ),
+                text=" ".join(words[index : index + TARGET_WORDS]),
                 page_number=paragraph.page_number,
                 section_title=paragraph.section_title,
                 contains_table=paragraph.contains_table,
@@ -96,21 +85,12 @@ def split_long_paragraph(
     current_words = 0
 
     for sentence in sentences:
-        sentence_words = len(
-            sentence.split()
-        )
+        sentence_words = len(sentence.split())
 
-        if (
-            current_sentences
-            and current_words
-            + sentence_words
-            > TARGET_WORDS
-        ):
+        if current_sentences and current_words + sentence_words > TARGET_WORDS:
             output.append(
                 ParagraphUnit(
-                    text=" ".join(
-                        current_sentences
-                    ),
+                    text=" ".join(current_sentences),
                     page_number=paragraph.page_number,
                     section_title=paragraph.section_title,
                     contains_table=paragraph.contains_table,
@@ -126,9 +106,7 @@ def split_long_paragraph(
     if current_sentences:
         output.append(
             ParagraphUnit(
-                text=" ".join(
-                    current_sentences
-                ),
+                text=" ".join(current_sentences),
                 page_number=paragraph.page_number,
                 section_title=paragraph.section_title,
                 contains_table=paragraph.contains_table,
@@ -154,9 +132,7 @@ def pages_to_paragraph_units(
                 contains_table=page.contains_table,
             )
 
-            units.extend(
-                split_long_paragraph(unit)
-            )
+            units.extend(split_long_paragraph(unit))
 
     return units
 
@@ -172,9 +148,7 @@ def make_chunk_record(
     """Build one database-ready chunk record."""
 
     text = "\n\n".join(
-        paragraph.text.strip()
-        for paragraph in paragraphs
-        if paragraph.text.strip()
+        paragraph.text.strip() for paragraph in paragraphs if paragraph.text.strip()
     ).strip()
 
     word_count = len(text.split())
@@ -185,23 +159,14 @@ def make_chunk_record(
         if paragraph.contains_table
     )
 
-    table_word_ratio = (
-        table_words / word_count
-        if word_count
-        else 0.0
-    )
+    table_word_ratio = table_words / word_count if word_count else 0.0
 
-    pages = [
-        paragraph.page_number
-        for paragraph in paragraphs
-    ]
+    pages = [paragraph.page_number for paragraph in paragraphs]
 
     section_title = next(
         (
             paragraph.section_title
-            for paragraph in reversed(
-                paragraphs
-            )
+            for paragraph in reversed(paragraphs)
             if paragraph.section_title
         ),
         None,
@@ -220,9 +185,7 @@ def make_chunk_record(
         "section_title": section_title,
         "pdf_page_start": min(pages),
         "pdf_page_end": max(pages),
-        "contains_table": (
-            table_word_ratio >= 0.40
-        ),
+        "contains_table": (table_word_ratio >= 0.40),
         "table_word_ratio": round(
             table_word_ratio,
             4,
@@ -230,15 +193,9 @@ def make_chunk_record(
         "text": text,
         "character_count": len(text),
         "word_count": word_count,
-        "estimated_token_count": (
-            estimate_token_count(text)
-        ),
-        "paragraph_count": len(
-            paragraphs
-        ),
-        "text_sha256": hashlib.sha256(
-            text.encode("utf-8")
-        ).hexdigest(),
+        "estimated_token_count": (estimate_token_count(text)),
+        "paragraph_count": len(paragraphs),
+        "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
     }
 
 
@@ -253,9 +210,7 @@ def select_overlap_paragraphs(
     for paragraph in reversed(paragraphs):
         selected.insert(0, paragraph)
 
-        selected_words += len(
-            paragraph.text.split()
-        )
+        selected_words += len(paragraph.text.split())
 
         if selected_words >= OVERLAP_WORDS:
             break
@@ -287,10 +242,7 @@ def chunk_document_pages(
         if not current:
             return
 
-        total_words = sum(
-            len(paragraph.text.split())
-            for paragraph in current
-        )
+        total_words = sum(len(paragraph.text.split()) for paragraph in current)
 
         if total_words < MIN_CHUNK_WORDS:
             return
@@ -306,16 +258,12 @@ def chunk_document_pages(
         )
 
     for unit in units:
-        unit_word_count = len(
-            unit.text.split()
-        )
+        unit_word_count = len(unit.text.split())
 
         current_section = next(
             (
                 paragraph.section_title
-                for paragraph in reversed(
-                    current
-                )
+                for paragraph in reversed(current)
                 if paragraph.section_title
             ),
             None,
@@ -325,54 +273,34 @@ def chunk_document_pages(
             bool(current)
             and current_section is not None
             and unit.section_title is not None
-            and unit.section_title
-            != current_section
+            and unit.section_title != current_section
         )
 
         would_exceed_target = (
-            bool(current)
-            and current_word_count
-            + unit_word_count
-            > TARGET_WORDS
+            bool(current) and current_word_count + unit_word_count > TARGET_WORDS
         )
 
-        if (
-            section_changed
-            or would_exceed_target
-        ):
+        if section_changed or would_exceed_target:
             previous = list(current)
 
             flush_current()
 
-            current = select_overlap_paragraphs(
-                previous
-            )
+            current = select_overlap_paragraphs(previous)
 
             current_word_count = sum(
-                len(paragraph.text.split())
-                for paragraph in current
+                len(paragraph.text.split()) for paragraph in current
             )
 
-            while (
-                current
-                and current_word_count
-                + unit_word_count
-                > TARGET_WORDS
-            ):
+            while current and current_word_count + unit_word_count > TARGET_WORDS:
                 removed = current.pop(0)
 
-                current_word_count -= len(
-                    removed.text.split()
-                )
+                current_word_count -= len(removed.text.split())
 
         current.append(unit)
         current_word_count += unit_word_count
 
     if current:
-        total_words = sum(
-            len(paragraph.text.split())
-            for paragraph in current
-        )
+        total_words = sum(len(paragraph.text.split()) for paragraph in current)
 
         if total_words >= MIN_CHUNK_WORDS:
             flush_current()
@@ -382,17 +310,9 @@ def chunk_document_pages(
 
             previous_unit = ParagraphUnit(
                 text=previous_chunk["text"],
-                page_number=previous_chunk[
-                    "pdf_page_start"
-                ],
-                section_title=previous_chunk[
-                    "section_title"
-                ],
-                contains_table=bool(
-                    previous_chunk[
-                        "contains_table"
-                    ]
-                ),
+                page_number=previous_chunk["pdf_page_start"],
+                section_title=previous_chunk["section_title"],
+                contains_table=bool(previous_chunk["contains_table"]),
             )
 
             chunks.append(
@@ -400,9 +320,7 @@ def chunk_document_pages(
                     report_id=report_id,
                     ticker=ticker,
                     report_year=report_year,
-                    chunk_index=previous_chunk[
-                        "chunk_index"
-                    ],
+                    chunk_index=previous_chunk["chunk_index"],
                     paragraphs=[
                         previous_unit,
                         *current,

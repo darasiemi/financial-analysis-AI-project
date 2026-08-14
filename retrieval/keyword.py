@@ -25,39 +25,27 @@ def keyword_search(
 
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
-    filters: list[str] = [
-        """
+    filters: list[str] = ["""
         search_vector
         @@ websearch_to_tsquery(
             'english',
             %s
         )
-        """
-    ]
+        """]
 
     parameters: list = [
         query,
     ]
 
     if ticker is not None:
-        filters.append(
-            "ticker = %s"
-        )
-        parameters.append(
-            ticker
-        )
+        filters.append("ticker = %s")
+        parameters.append(ticker)
 
     if report_year is not None:
-        filters.append(
-            "report_year = %s"
-        )
-        parameters.append(
-            report_year
-        )
+        filters.append("report_year = %s")
+        parameters.append(report_year)
 
     parameters.extend(
         [
@@ -66,9 +54,7 @@ def keyword_search(
         ]
     )
 
-    where_clause = (
-        " AND ".join(filters)
-    )
+    where_clause = " AND ".join(filters)
 
     sql = f"""
         SELECT
@@ -113,9 +99,7 @@ def keyword_search(
         top_k,
     ]
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
 
         with connection.cursor() as cursor:
 
@@ -124,11 +108,7 @@ def keyword_search(
                 final_parameters,
             )
 
-            columns = [
-                description.name
-                for description
-                in cursor.description
-            ]
+            columns = [description.name for description in cursor.description]
 
             return [
                 dict(
@@ -137,6 +117,5 @@ def keyword_search(
                         row,
                     )
                 )
-                for row
-                in cursor.fetchall()
+                for row in cursor.fetchall()
             ]

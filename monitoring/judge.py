@@ -21,7 +21,6 @@ from monitoring.pricing import (
     estimate_cost_usd,
 )
 
-
 # =============================================================
 # Logging
 # =============================================================
@@ -33,9 +32,8 @@ logger = logging.getLogger(__name__)
 # Structured judge response
 # =============================================================
 
-class RelevanceJudgement(
-    BaseModel
-):
+
+class RelevanceJudgement(BaseModel):
     """
     Structured response returned by the
     relevance judge.
@@ -52,6 +50,7 @@ class RelevanceJudgement(
 # =============================================================
 # Sampling
 # =============================================================
+
 
 def _should_sample(
     response_id: str,
@@ -85,11 +84,7 @@ def _should_sample(
         ),
     )
 
-    digest = hashlib.sha256(
-        response_id.encode(
-            "utf-8"
-        )
-    ).hexdigest()
+    digest = hashlib.sha256(response_id.encode("utf-8")).hexdigest()
 
     value = (
         int(
@@ -99,10 +94,7 @@ def _should_sample(
         / 0xFFFFFFFF
     )
 
-    should_sample = (
-        value
-        < sample_rate
-    )
+    should_sample = value < sample_rate
 
     logger.info(
         (
@@ -124,6 +116,7 @@ def _should_sample(
 # =============================================================
 # Background relevance judge
 # =============================================================
+
 
 def judge_relevance_background(
     *,
@@ -155,25 +148,18 @@ def judge_relevance_background(
     # Sampling
     # ---------------------------------------------------------
 
-    if not _should_sample(
-        response_id
-    ):
+    if not _should_sample(response_id):
         logger.info(
             "Relevance judge skipped for response_id=%s",
             response_id,
         )
 
         try:
-            mark_judge_skipped(
-                response_id
-            )
+            mark_judge_skipped(response_id)
 
         except Exception:
             logger.exception(
-                (
-                    "Failed to mark relevance judge as "
-                    "skipped for response_id=%s"
-                ),
+                ("Failed to mark relevance judge as " "skipped for response_id=%s"),
                 response_id,
             )
 
@@ -188,20 +174,13 @@ def judge_relevance_background(
         "gemini-2.5-flash-lite",
     )
 
-    api_key = os.getenv(
-        "GEMINI_API_KEY"
-    )
+    api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
-        error_message = (
-            "GEMINI_API_KEY is not configured."
-        )
+        error_message = "GEMINI_API_KEY is not configured."
 
         logger.error(
-            (
-                "Relevance judge configuration error "
-                "for response_id=%s: %s"
-            ),
+            ("Relevance judge configuration error " "for response_id=%s: %s"),
             response_id,
             error_message,
         )
@@ -214,20 +193,14 @@ def judge_relevance_background(
 
         except Exception:
             logger.exception(
-                (
-                    "Failed to record judge configuration "
-                    "failure for response_id=%s"
-                ),
+                ("Failed to record judge configuration " "failure for response_id=%s"),
                 response_id,
             )
 
         return
 
     logger.info(
-        (
-            "Starting relevance judge: "
-            "response_id=%s model=%s"
-        ),
+        ("Starting relevance judge: " "response_id=%s model=%s"),
         response_id,
         model,
     )
@@ -269,39 +242,24 @@ reason explaining the score.
 
     try:
 
-        client = genai.Client(
-            api_key=api_key
-        )
+        client = genai.Client(api_key=api_key)
 
         start = time.perf_counter()
 
-        response = (
-            client.models.generate_content(
-                model=model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.0,
-                    response_mime_type=(
-                        "application/json"
-                    ),
-                    response_schema=(
-                        RelevanceJudgement
-                    ),
-                ),
-            )
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.0,
+                response_mime_type=("application/json"),
+                response_schema=(RelevanceJudgement),
+            ),
         )
 
-        latency = (
-            time.perf_counter()
-            - start
-        )
+        latency = time.perf_counter() - start
 
         logger.info(
-            (
-                "Gemini relevance judge returned: "
-                "response_id=%s "
-                "latency=%.3fs"
-            ),
+            ("Gemini relevance judge returned: " "response_id=%s " "latency=%.3fs"),
             response_id,
             latency,
         )
@@ -310,17 +268,9 @@ reason explaining the score.
         # Parse structured response
         # -----------------------------------------------------
 
-        response_text = (
-            response.text
-            or "{}"
-        )
+        response_text = response.text or "{}"
 
-        judgement = (
-            RelevanceJudgement
-            .model_validate_json(
-                response_text
-            )
-        )
+        judgement = RelevanceJudgement.model_validate_json(response_text)
 
         logger.info(
             (
@@ -375,11 +325,7 @@ reason explaining the score.
             getattr(
                 usage,
                 "total_token_count",
-                (
-                    input_tokens
-                    + output_tokens
-                    + thinking_tokens
-                ),
+                (input_tokens + output_tokens + thinking_tokens),
             )
             or 0
         )
@@ -451,10 +397,7 @@ reason explaining the score.
     except Exception as exc:
 
         logger.exception(
-            (
-                "Relevance judge failed for "
-                "response_id=%s"
-            ),
+            ("Relevance judge failed for " "response_id=%s"),
             response_id,
         )
 

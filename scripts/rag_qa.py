@@ -12,11 +12,9 @@ from rag.pipeline import run_rag
 
 def main() -> None:
     load_environment()
-    
+
     parser = argparse.ArgumentParser(
-        description=(
-            "Test the financial-report RAG pipeline."
-        )
+        description=("Test the financial-report RAG pipeline.")
     )
 
     parser.add_argument(
@@ -80,10 +78,7 @@ def main() -> None:
         report_year=args.year,
     )
 
-    elapsed = (
-        time.perf_counter()
-        - start
-    )
+    elapsed = time.perf_counter() - start
 
     if args.show_context:
         print()
@@ -99,10 +94,7 @@ def main() -> None:
     print(result["answer"])
 
     print()
-    print(
-        f"Total RAG time: "
-        f"{elapsed:.4f} seconds"
-    )
+    print(f"Total RAG time: " f"{elapsed:.4f} seconds")
 
 
 if __name__ == "__main__":

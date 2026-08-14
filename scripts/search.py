@@ -111,22 +111,14 @@ def main() -> None:
         print(f"Type: {result['content_type']}")
         print(f"Ticker: {result['ticker']}")
         print(f"Year: {result['report_year']}")
-        print(
-            f"Pages: {result['page_start']}-{result['page_end']}"
-        )
-        print(
-            f"Section: {result['section_title']}"
-        )
+        print(f"Pages: {result['page_start']}-{result['page_end']}")
+        print(f"Section: {result['section_title']}")
 
         if "score" in result:
-            print(
-                f"Score: {result['score']:.4f}"
-            )
+            print(f"Score: {result['score']:.4f}")
 
         if "rrf_score" in result:
-            print(
-                f"RRF Score: {result['rrf_score']:.4f}"
-            )
+            print(f"RRF Score: {result['rrf_score']:.4f}")
 
         print()
         print(result["text"][:1500])

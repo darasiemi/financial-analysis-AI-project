@@ -35,15 +35,11 @@ def print_value(
         )
 
         for line in formatted.splitlines():
-            print(
-                f"{prefix}{line}"
-            )
+            print(f"{prefix}{line}")
 
         return
 
-    print(
-        f"{prefix}{value}"
-    )
+    print(f"{prefix}{value}")
 
 
 def print_arguments(
@@ -54,9 +50,7 @@ def print_arguments(
     """
 
     if not arguments:
-        print(
-            "  None"
-        )
+        print("  None")
         return
 
     for key, value in arguments.items():
@@ -67,9 +61,7 @@ def print_arguments(
                 list,
             ),
         ):
-            print(
-                f"  {key}:"
-            )
+            print(f"  {key}:")
 
             print_value(
                 value,
@@ -77,9 +69,7 @@ def print_arguments(
             )
 
         else:
-            print(
-                f"  {key}: {value}"
-            )
+            print(f"  {key}: {value}")
 
 
 def unwrap_tool_response(
@@ -106,16 +96,11 @@ def unwrap_tool_response(
     ):
         return response
 
-    if (
-        "result" in response
-        and isinstance(
-            response["result"],
-            dict,
-        )
+    if "result" in response and isinstance(
+        response["result"],
+        dict,
     ):
-        return response[
-            "result"
-        ]
+        return response["result"]
 
     return response
 
@@ -128,14 +113,10 @@ def print_tool_response(
     """
 
     if response is None:
-        print(
-            "  No tool response captured."
-        )
+        print("  No tool response captured.")
         return
 
-    response = unwrap_tool_response(
-        response
-    )
+    response = unwrap_tool_response(response)
 
     if not isinstance(
         response,
@@ -151,18 +132,10 @@ def print_tool_response(
     # SDK-level error
     # =========================================================
 
-    if (
-        "error" in response
-        and "success" not in response
-    ):
-        print(
-            "  Status: FAILED"
-        )
+    if "error" in response and "success" not in response:
+        print("  Status: FAILED")
 
-        print(
-            "  Error: "
-            f"{response['error']}"
-        )
+        print("  Error: " f"{response['error']}")
 
         return
 
@@ -170,126 +143,74 @@ def print_tool_response(
     # Application-level result
     # =========================================================
 
-    success = response.get(
-        "success"
-    )
+    success = response.get("success")
 
     if success is False:
-        print(
-            "  Status: FAILED"
-        )
+        print("  Status: FAILED")
 
-        error_type = response.get(
-            "error_type"
-        )
+        error_type = response.get("error_type")
 
         if error_type:
-            print(
-                "  Error type: "
-                f"{error_type}"
-            )
+            print("  Error type: " f"{error_type}")
 
-        error = response.get(
-            "error"
-        )
+        error = response.get("error")
 
         if error:
-            print(
-                "  Error: "
-                f"{error}"
-            )
+            print("  Error: " f"{error}")
 
         return
 
-    print(
-        "  Status: SUCCESS"
-    )
+    print("  Status: SUCCESS")
 
     # =========================================================
     # Retrieval result
     # =========================================================
 
-    count = response.get(
-        "count"
-    )
+    count = response.get("count")
 
     if count is not None:
-        print(
-            "  Results returned: "
-            f"{count}"
-        )
+        print("  Results returned: " f"{count}")
 
     # =========================================================
     # Calculator result
     # =========================================================
 
-    if (
-        "result" in response
-        and not isinstance(
-            response["result"],
-            dict,
-        )
+    if "result" in response and not isinstance(
+        response["result"],
+        dict,
     ):
-        print(
-            "  Result: "
-            f"{response['result']}"
-        )
+        print("  Result: " f"{response['result']}")
 
     # =========================================================
     # Table result
     # =========================================================
 
-    if response.get(
-        "found"
-    ) is True:
-        table_id = response.get(
-            "table_id"
-        )
+    if response.get("found") is True:
+        table_id = response.get("table_id")
 
         if table_id:
-            print(
-                "  Table ID: "
-                f"{table_id}"
-            )
+            print("  Table ID: " f"{table_id}")
 
-        page_number = response.get(
-            "pdf_page_number"
-        )
+        page_number = response.get("pdf_page_number")
 
         if page_number is not None:
-            print(
-                "  PDF page: "
-                f"{page_number}"
-            )
+            print("  PDF page: " f"{page_number}")
 
     # =========================================================
     # Web search result
     # =========================================================
 
-    if response.get(
-        "answer"
-    ):
-        answer = str(
-            response["answer"]
-        )
+    if response.get("answer"):
+        answer = str(response["answer"])
 
         preview_length = 500
 
         if len(answer) > preview_length:
-            answer = (
-                answer[
-                    :preview_length
-                ]
-                + "..."
-            )
+            answer = answer[:preview_length] + "..."
 
-        print(
-            "  Web response preview:"
-        )
+        print("  Web response preview:")
 
-        print(
-            f"    {answer}"
-        )
+        print(f"    {answer}")
 
         sources = response.get(
             "sources",
@@ -297,9 +218,7 @@ def print_tool_response(
         )
 
         if sources:
-            print(
-                "  Web sources:"
-            )
+            print("  Web sources:")
 
             for source in sources:
                 title = source.get(
@@ -312,54 +231,37 @@ def print_tool_response(
                     "",
                 )
 
-                print(
-                    f"    - {title}: {url}"
-                )
+                print(f"    - {title}: {url}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description=(
-            "Test the two-stage "
-            "financial-analysis agent."
-        )
+        description=("Test the two-stage " "financial-analysis agent.")
     )
 
     parser.add_argument(
         "question",
-        help=(
-            "Financial-analysis question "
-            "to ask."
-        ),
+        help=("Financial-analysis question " "to ask."),
     )
 
     parser.add_argument(
         "--ticker",
         default=None,
-        help=(
-            "Optional ticker filter for "
-            "initial annual-report retrieval."
-        ),
+        help=("Optional ticker filter for " "initial annual-report retrieval."),
     )
 
     parser.add_argument(
         "--year",
         type=int,
         default=None,
-        help=(
-            "Optional report-year filter "
-            "for initial retrieval."
-        ),
+        help=("Optional report-year filter " "for initial retrieval."),
     )
 
     parser.add_argument(
         "--top-k",
         type=int,
         default=8,
-        help=(
-            "Number of documents returned "
-            "by initial hybrid retrieval."
-        ),
+        help=("Number of documents returned " "by initial hybrid retrieval."),
     )
 
     parser.add_argument(
@@ -372,28 +274,19 @@ def main() -> None:
         "--max-tool-calls",
         type=int,
         default=8,
-        help=(
-            "Maximum number of additional "
-            "automatic tool calls."
-        ),
+        help=("Maximum number of additional " "automatic tool calls."),
     )
 
     parser.add_argument(
         "--show-context",
         action="store_true",
-        help=(
-            "Print the initial retrieved "
-            "annual-report context."
-        ),
+        help=("Print the initial retrieved " "annual-report context."),
     )
 
     parser.add_argument(
         "--show-raw-tools",
         action="store_true",
-        help=(
-            "Print raw Gemini tool responses "
-            "for debugging."
-        ),
+        help=("Print raw Gemini tool responses " "for debugging."),
     )
 
     args = parser.parse_args()
@@ -410,9 +303,7 @@ def main() -> None:
 
     agent = GeminiFinancialAgent(
         model=args.model,
-        max_tool_calls=(
-            args.max_tool_calls
-        ),
+        max_tool_calls=(args.max_tool_calls),
     )
 
     # =========================================================
@@ -436,44 +327,23 @@ def main() -> None:
     print("QUERY")
     print("=" * 80)
 
-    print(
-        "Original user query:"
-    )
+    print("Original user query:")
 
-    print(
-        result["question"]
-    )
+    print(result["question"])
 
     print()
 
-    print(
-        "Initial retrieval query:"
-    )
+    print("Initial retrieval query:")
 
-    print(
-        result[
-            "initial_retrieval_query"
-        ]
-    )
+    print(result["initial_retrieval_query"])
 
     print()
 
-    rewritten = (
-        result["question"]
-        != result[
-            "initial_retrieval_query"
-        ]
-    )
+    rewritten = result["question"] != result["initial_retrieval_query"]
 
-    print(
-        "Initial query rewritten:"
-    )
+    print("Initial query rewritten:")
 
-    print(
-        "Yes"
-        if rewritten
-        else "No"
-    )
+    print("Yes" if rewritten else "No")
 
     # =========================================================
     # Initial context
@@ -482,16 +352,10 @@ def main() -> None:
     if args.show_context:
         print()
         print("=" * 80)
-        print(
-            "INITIAL ANNUAL-REPORT CONTEXT"
-        )
+        print("INITIAL ANNUAL-REPORT CONTEXT")
         print("=" * 80)
 
-        print(
-            result[
-                "initial_context"
-            ]
-        )
+        print(result["initial_context"])
 
     # =========================================================
     # Tools
@@ -506,76 +370,40 @@ def main() -> None:
     # Pipeline-controlled initial retrieval
     # ---------------------------------------------------------
 
-    print(
-        "Initial pipeline tool:"
-    )
+    print("Initial pipeline tool:")
 
-    print(
-        "  Tool: search_hybrid"
-    )
+    print("  Tool: search_hybrid")
 
-    print(
-        "  Query: "
-        f"{result['initial_retrieval_query']}"
-    )
+    print("  Query: " f"{result['initial_retrieval_query']}")
 
-    if result.get(
-        "ticker"
-    ) is not None:
-        print(
-            "  Ticker: "
-            f"{result['ticker']}"
-        )
+    if result.get("ticker") is not None:
+        print("  Ticker: " f"{result['ticker']}")
 
-    if result.get(
-        "report_year"
-    ) is not None:
-        print(
-            "  Report year: "
-            f"{result['report_year']}"
-        )
+    if result.get("report_year") is not None:
+        print("  Report year: " f"{result['report_year']}")
 
     initial_retrieval = result.get(
         "initial_retrieval",
         {},
     )
 
-    if initial_retrieval.get(
-        "success"
-    ) is False:
-        print(
-            "  Status: FAILED"
-        )
+    if initial_retrieval.get("success") is False:
+        print("  Status: FAILED")
 
-        error_type = initial_retrieval.get(
-            "error_type"
-        )
+        error_type = initial_retrieval.get("error_type")
 
         if error_type:
-            print(
-                "  Error type: "
-                f"{error_type}"
-            )
+            print("  Error type: " f"{error_type}")
 
-        print(
-            "  Error: "
-            f"{initial_retrieval.get('error')}"
-        )
+        print("  Error: " f"{initial_retrieval.get('error')}")
 
     else:
-        print(
-            "  Status: SUCCESS"
-        )
+        print("  Status: SUCCESS")
 
-        count = initial_retrieval.get(
-            "count"
-        )
+        count = initial_retrieval.get("count")
 
         if count is not None:
-            print(
-                "  Results returned: "
-                f"{count}"
-            )
+            print("  Results returned: " f"{count}")
 
     # ---------------------------------------------------------
     # Gemini-selected tools
@@ -588,35 +416,21 @@ def main() -> None:
 
     print()
 
-    print(
-        "Additional tools selected by Gemini:"
-    )
+    print("Additional tools selected by Gemini:")
 
     if not tool_calls:
-        print(
-            "  None"
-        )
+        print("  None")
 
     else:
         for call in tool_calls:
             print()
-            print(
-                "-" * 80
-            )
+            print("-" * 80)
 
-            print(
-                "Tool call "
-                f"{call['call_number']}"
-            )
+            print("Tool call " f"{call['call_number']}")
 
-            print(
-                "Tool: "
-                f"{call['tool']}"
-            )
+            print("Tool: " f"{call['tool']}")
 
-            print(
-                "Arguments:"
-            )
+            print("Arguments:")
 
             print_arguments(
                 call.get(
@@ -626,26 +440,16 @@ def main() -> None:
             )
 
             if args.show_raw_tools:
-                print(
-                    "Raw tool response:"
-                )
+                print("Raw tool response:")
 
                 print_value(
-                    call.get(
-                        "response"
-                    ),
+                    call.get("response"),
                     indent=2,
                 )
 
-            print(
-                "Tool response:"
-            )
+            print("Tool response:")
 
-            print_tool_response(
-                call.get(
-                    "response"
-                )
-            )
+            print_tool_response(call.get("response"))
 
     # =========================================================
     # Answer
@@ -656,37 +460,24 @@ def main() -> None:
     print("ANSWER")
     print("=" * 80)
 
-    print(
-        result["answer"]
-    )
+    print(result["answer"])
 
     # =========================================================
     # Timing
     # =========================================================
 
-    timing = result[
-        "timing"
-    ]
+    timing = result["timing"]
 
     print()
     print("=" * 80)
     print("TIMING")
     print("=" * 80)
 
-    print(
-        "Initial retrieval: "
-        f"{timing['initial_retrieval_seconds']:.4f} s"
-    )
+    print("Initial retrieval: " f"{timing['initial_retrieval_seconds']:.4f} s")
 
-    print(
-        "Agent stage:       "
-        f"{timing['agent_seconds']:.4f} s"
-    )
+    print("Agent stage:       " f"{timing['agent_seconds']:.4f} s")
 
-    print(
-        "Total:             "
-        f"{timing['total_seconds']:.4f} s"
-    )
+    print("Total:             " f"{timing['total_seconds']:.4f} s")
 
 
 if __name__ == "__main__":

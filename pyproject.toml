@@ -33,3 +33,76 @@ dev = [
     "playwright>=1.62.0",
     "pymupdf>=1.28.0",
 ]
+quality = [
+    "black>=26.5.1",
+    "isort>=8.0.1",
+    "pre-commit>=4.6.2",
+    "pylint>=4.0.7",
+]
+test = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = [
+    "agent",
+    "deployment",
+    "evaluation",
+    "ingestion",
+    "monitoring",
+    "rag",
+    "retrieval",
+    "scripts",
+]
+
+
+[tool.pylint.main]
+py-version = "3.11"
+jobs = 0
+ignore = [
+    ".venv",
+]
+
+
+[tool.pylint.format]
+max-line-length = 100
+
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "duplicate-code",
+
+    # Architectural complexity
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-locals",
+    "too-many-return-statements",
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-nested-blocks",
+
+    # Intentional application patterns
+    "broad-exception-caught",
+    "redefined-outer-name",
+    "implicit-str-concat",
+
+    # Repository/package naming
+    "invalid-name",
+
+    # Intentional implementation patterns
+    "consider-using-enumerate",
+]

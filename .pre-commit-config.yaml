@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        entry: uv run --group quality isort
+        language: system
+        types: [python]
+
+      - id: black
+        name: black
+        entry: uv run --group quality black
+        language: system
+        types: [python]
+
+      - id: pylint
+        name: pylint
+        entry: uv run --group quality pylint
+        language: system
+        types: [python]

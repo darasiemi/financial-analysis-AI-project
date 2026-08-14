@@ -4,11 +4,9 @@ import os
 
 from google import genai
 
-from rag.generator import AnswerGenerator
 from monitoring.telemetry import (
     record_gemini_response,
 )
-
 
 SYSTEM_PROMPT = """
 You are a financial-report question-answering assistant.
@@ -39,9 +37,7 @@ class GeminiGenerator:
     ) -> None:
         self.model = model
 
-        self.client = genai.Client(
-            api_key=os.environ["GEMINI_API_KEY"]
-        )
+        self.client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     def generate(
         self,
@@ -59,11 +55,9 @@ Retrieved context:
 {context}
 """.strip()
 
-        response = (
-            self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-            )
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
         )
 
         record_gemini_response(
@@ -73,8 +67,6 @@ Retrieved context:
         )
 
         if response.text is None:
-            raise RuntimeError(
-                "Gemini returned no text response."
-            )
+            raise RuntimeError("Gemini returned no text response.")
 
         return response.text

@@ -1,6 +1,6 @@
+import re
 from pathlib import Path
 from typing import Optional
-import re
 
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
@@ -10,18 +10,14 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
-
 # =============================================================
 # Configuration
 # =============================================================
 
-OUTPUT_DIR = Path(
-    "outputs/generated_reports"
-)
+OUTPUT_DIR = Path("outputs/generated_reports")
 
 POWERPOINT_MIME_TYPE = (
-    "application/vnd.openxmlformats-officedocument."
-    "presentationml.presentation"
+    "application/vnd.openxmlformats-officedocument." "presentationml.presentation"
 )
 
 # Presentation theme
@@ -63,10 +59,7 @@ def _safe_filename(
 
     value = value.strip("_")
 
-    return (
-        value
-        or "financial_analysis"
-    )
+    return value or "financial_analysis"
 
 
 def _blank_slide(
@@ -76,9 +69,7 @@ def _blank_slide(
     Add and return a blank slide.
     """
 
-    return presentation.slides.add_slide(
-        presentation.slide_layouts[6]
-    )
+    return presentation.slides.add_slide(presentation.slide_layouts[6])
 
 
 def _add_background(
@@ -99,9 +90,7 @@ def _add_background(
 
     background.fill.solid()
 
-    background.fill.fore_color.rgb = (
-        color
-    )
+    background.fill.fore_color.rgb = color
 
     background.line.fill.background()
 
@@ -124,47 +113,29 @@ def _add_header(
         Inches(0.65),
     )
 
-    paragraph = (
-        title_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = title_box.text_frame.paragraphs[0]
 
     paragraph.text = title
 
-    paragraph.font.size = Pt(
-        26
-    )
+    paragraph.font.size = Pt(26)
 
     paragraph.font.bold = True
 
-    paragraph.font.color.rgb = (
-        WHITE
-        if dark_background
-        else NAVY
-    )
+    paragraph.font.color.rgb = WHITE if dark_background else NAVY
 
     if subtitle:
-        subtitle_box = (
-            slide.shapes.add_textbox(
-                Inches(0.68),
-                Inches(0.98),
-                Inches(11.4),
-                Inches(0.35),
-            )
+        subtitle_box = slide.shapes.add_textbox(
+            Inches(0.68),
+            Inches(0.98),
+            Inches(11.4),
+            Inches(0.35),
         )
 
-        paragraph = (
-            subtitle_box
-            .text_frame
-            .paragraphs[0]
-        )
+        paragraph = subtitle_box.text_frame.paragraphs[0]
 
         paragraph.text = subtitle
 
-        paragraph.font.size = Pt(
-            12
-        )
+        paragraph.font.size = Pt(12)
 
         paragraph.font.color.rgb = (
             RGBColor(
@@ -209,19 +180,11 @@ def _add_footer(
         Inches(0.22),
     )
 
-    paragraph = (
-        source_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = source_box.text_frame.paragraphs[0]
 
-    paragraph.text = (
-        f"Source: {source}"
-    )
+    paragraph.text = f"Source: {source}"
 
-    paragraph.font.size = Pt(
-        8.5
-    )
+    paragraph.font.size = Pt(8.5)
 
     paragraph.font.color.rgb = (
         RGBColor(
@@ -248,9 +211,7 @@ def _add_title_slide(
     Add the main title slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -277,49 +238,33 @@ def _add_title_slide(
         Inches(1.35),
     )
 
-    paragraph = (
-        title_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = title_box.text_frame.paragraphs[0]
 
     paragraph.text = title
 
-    paragraph.font.size = Pt(
-        40
-    )
+    paragraph.font.size = Pt(40)
 
     paragraph.font.bold = True
     paragraph.font.color.rgb = WHITE
 
     if subtitle:
-        subtitle_box = (
-            slide.shapes.add_textbox(
-                Inches(0.9),
-                Inches(3.65),
-                Inches(10.8),
-                Inches(0.75),
-            )
+        subtitle_box = slide.shapes.add_textbox(
+            Inches(0.9),
+            Inches(3.65),
+            Inches(10.8),
+            Inches(0.75),
         )
 
-        paragraph = (
-            subtitle_box
-            .text_frame
-            .paragraphs[0]
-        )
+        paragraph = subtitle_box.text_frame.paragraphs[0]
 
         paragraph.text = subtitle
 
-        paragraph.font.size = Pt(
-            18
-        )
+        paragraph.font.size = Pt(18)
 
-        paragraph.font.color.rgb = (
-            RGBColor(
-                220,
-                230,
-                242,
-            )
+        paragraph.font.color.rgb = RGBColor(
+            220,
+            230,
+            242,
         )
 
 
@@ -338,9 +283,7 @@ def _add_bullet_slide(
     Add a clean executive-style bullet slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -371,48 +314,26 @@ def _add_bullet_slide(
         Inches(5.1),
     )
 
-    text_frame = (
-        text_box.text_frame
-    )
+    text_frame = text_box.text_frame
 
     text_frame.word_wrap = True
 
-    safe_bullets = (
-        bullets
-        if bullets
-        else [
-            "No additional information provided."
-        ]
-    )
+    safe_bullets = bullets if bullets else ["No additional information provided."]
 
-    for index, bullet in enumerate(
-        safe_bullets
-    ):
+    for index, bullet in enumerate(safe_bullets):
         if index == 0:
-            paragraph = (
-                text_frame.paragraphs[0]
-            )
+            paragraph = text_frame.paragraphs[0]
 
         else:
-            paragraph = (
-                text_frame.add_paragraph()
-            )
+            paragraph = text_frame.add_paragraph()
 
-        paragraph.text = str(
-            bullet
-        )
+        paragraph.text = str(bullet)
 
-        paragraph.font.size = Pt(
-            19
-        )
+        paragraph.font.size = Pt(19)
 
-        paragraph.font.color.rgb = (
-            DARK_TEXT
-        )
+        paragraph.font.color.rgb = DARK_TEXT
 
-        paragraph.space_after = Pt(
-            12
-        )
+        paragraph.space_after = Pt(12)
 
         paragraph.level = 0
 
@@ -453,12 +374,10 @@ def _add_metric_card(
 
     shadow.fill.solid()
 
-    shadow.fill.fore_color.rgb = (
-        RGBColor(
-            230,
-            233,
-            238,
-        )
+    shadow.fill.fore_color.rgb = RGBColor(
+        230,
+        233,
+        238,
     )
 
     shadow.line.fill.background()
@@ -486,9 +405,7 @@ def _add_metric_card(
 
     accent.fill.solid()
 
-    accent.fill.fore_color.rgb = (
-        accent_color
-    )
+    accent.fill.fore_color.rgb = accent_color
 
     accent.line.fill.background()
 
@@ -499,23 +416,15 @@ def _add_metric_card(
         Inches(0.35),
     )
 
-    paragraph = (
-        label_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = label_box.text_frame.paragraphs[0]
 
     paragraph.text = label.upper()
 
-    paragraph.font.size = Pt(
-        11
-    )
+    paragraph.font.size = Pt(11)
 
     paragraph.font.bold = True
 
-    paragraph.font.color.rgb = (
-        MUTED_TEXT
-    )
+    paragraph.font.color.rgb = MUTED_TEXT
 
     value_box = slide.shapes.add_textbox(
         Inches(x + 0.3),
@@ -524,49 +433,31 @@ def _add_metric_card(
         Inches(0.7),
     )
 
-    paragraph = (
-        value_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = value_box.text_frame.paragraphs[0]
 
     paragraph.text = value
 
-    paragraph.font.size = Pt(
-        25
-    )
+    paragraph.font.size = Pt(25)
 
     paragraph.font.bold = True
 
-    paragraph.font.color.rgb = (
-        accent_color
-    )
+    paragraph.font.color.rgb = accent_color
 
     if note:
-        note_box = (
-            slide.shapes.add_textbox(
-                Inches(x + 0.3),
-                Inches(y + 1.55),
-                Inches(width - 0.55),
-                Inches(0.4),
-            )
+        note_box = slide.shapes.add_textbox(
+            Inches(x + 0.3),
+            Inches(y + 1.55),
+            Inches(width - 0.55),
+            Inches(0.4),
         )
 
-        paragraph = (
-            note_box
-            .text_frame
-            .paragraphs[0]
-        )
+        paragraph = note_box.text_frame.paragraphs[0]
 
         paragraph.text = note
 
-        paragraph.font.size = Pt(
-            10
-        )
+        paragraph.font.size = Pt(10)
 
-        paragraph.font.color.rgb = (
-            MUTED_TEXT
-        )
+        paragraph.font.color.rgb = MUTED_TEXT
 
 
 def _add_metrics_slide(
@@ -579,9 +470,7 @@ def _add_metrics_slide(
     Add a KPI / financial metrics slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -623,23 +512,10 @@ def _add_metrics_slide(
 
     gap = 0.35
 
-    for index, metric in enumerate(
-        metrics
-    ):
-        x = (
-            start_x
-            + index
-            * (
-                width
-                + gap
-            )
-        )
+    for index, metric in enumerate(metrics):
+        x = start_x + index * (width + gap)
 
-        accent_color = (
-            GOLD
-            if index == count - 1
-            else BLUE
-        )
+        accent_color = GOLD if index == count - 1 else BLUE
 
         _add_metric_card(
             slide,
@@ -659,12 +535,8 @@ def _add_metrics_slide(
                     "",
                 )
             ),
-            note=metric.get(
-                "note"
-            ),
-            accent_color=(
-                accent_color
-            ),
+            note=metric.get("note"),
+            accent_color=(accent_color),
         )
 
     _add_footer(
@@ -689,9 +561,7 @@ def _add_highlight_slide(
     Add a large-number highlight slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -704,65 +574,41 @@ def _add_highlight_slide(
         dark_background=True,
     )
 
-    headline_box = (
-        slide.shapes.add_textbox(
-            Inches(0.8),
-            Inches(2.2),
-            Inches(11.75),
-            Inches(1.5),
-        )
+    headline_box = slide.shapes.add_textbox(
+        Inches(0.8),
+        Inches(2.2),
+        Inches(11.75),
+        Inches(1.5),
     )
 
-    paragraph = (
-        headline_box
-        .text_frame
-        .paragraphs[0]
-    )
+    paragraph = headline_box.text_frame.paragraphs[0]
 
-    paragraph.text = str(
-        headline
-    )
+    paragraph.text = str(headline)
 
-    paragraph.font.size = Pt(
-        58
-    )
+    paragraph.font.size = Pt(58)
 
     paragraph.font.bold = True
     paragraph.font.color.rgb = GOLD
 
-    paragraph.alignment = (
-        PP_ALIGN.CENTER
-    )
+    paragraph.alignment = PP_ALIGN.CENTER
 
     if subtitle:
-        subtitle_box = (
-            slide.shapes.add_textbox(
-                Inches(1.4),
-                Inches(3.85),
-                Inches(10.5),
-                Inches(0.9),
-            )
+        subtitle_box = slide.shapes.add_textbox(
+            Inches(1.4),
+            Inches(3.85),
+            Inches(10.5),
+            Inches(0.9),
         )
 
-        paragraph = (
-            subtitle_box
-            .text_frame
-            .paragraphs[0]
-        )
+        paragraph = subtitle_box.text_frame.paragraphs[0]
 
-        paragraph.text = str(
-            subtitle
-        )
+        paragraph.text = str(subtitle)
 
-        paragraph.font.size = Pt(
-            21
-        )
+        paragraph.font.size = Pt(21)
 
         paragraph.font.color.rgb = WHITE
 
-        paragraph.alignment = (
-            PP_ALIGN.CENTER
-        )
+        paragraph.alignment = PP_ALIGN.CENTER
 
     _add_footer(
         slide,
@@ -788,9 +634,7 @@ def _add_comparison_slide(
     Add a before-vs-after / year-vs-year comparison slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -820,9 +664,7 @@ def _add_comparison_slide(
                 "",
             )
         ),
-        note=left.get(
-            "note"
-        ),
+        note=left.get("note"),
         accent_color=BLUE,
     )
 
@@ -844,9 +686,7 @@ def _add_comparison_slide(
                 "",
             )
         ),
-        note=right.get(
-            "note"
-        ),
+        note=right.get("note"),
         accent_color=GOLD,
     )
 
@@ -860,42 +700,28 @@ def _add_comparison_slide(
 
     arrow.fill.solid()
 
-    arrow.fill.fore_color.rgb = (
-        MUTED_TEXT
-    )
+    arrow.fill.fore_color.rgb = MUTED_TEXT
 
     arrow.line.fill.background()
 
     if conclusion:
-        conclusion_box = (
-            slide.shapes.add_textbox(
-                Inches(1.0),
-                Inches(5.05),
-                Inches(11.3),
-                Inches(0.95),
-            )
+        conclusion_box = slide.shapes.add_textbox(
+            Inches(1.0),
+            Inches(5.05),
+            Inches(11.3),
+            Inches(0.95),
         )
 
-        paragraph = (
-            conclusion_box
-            .text_frame
-            .paragraphs[0]
-        )
+        paragraph = conclusion_box.text_frame.paragraphs[0]
 
-        paragraph.text = str(
-            conclusion
-        )
+        paragraph.text = str(conclusion)
 
-        paragraph.font.size = Pt(
-            21
-        )
+        paragraph.font.size = Pt(21)
 
         paragraph.font.bold = True
         paragraph.font.color.rgb = NAVY
 
-        paragraph.alignment = (
-            PP_ALIGN.CENTER
-        )
+        paragraph.alignment = PP_ALIGN.CENTER
 
     _add_footer(
         slide,
@@ -920,18 +746,12 @@ def _add_chart_slide(
     """
 
     if not categories:
-        raise ValueError(
-            "Chart requires at least one category."
-        )
+        raise ValueError("Chart requires at least one category.")
 
     if len(categories) != len(values):
-        raise ValueError(
-            "Chart categories and values must have equal lengths."
-        )
+        raise ValueError("Chart categories and values must have equal lengths.")
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -943,59 +763,41 @@ def _add_chart_slide(
         title,
     )
 
-    chart_data = (
-        CategoryChartData()
-    )
+    chart_data = CategoryChartData()
 
-    chart_data.categories = [
-        str(category)
-        for category in categories
-    ]
+    chart_data.categories = [str(category) for category in categories]
 
-    numeric_values = [
-        float(value)
-        for value in values
-    ]
+    numeric_values = [float(value) for value in values]
 
     chart_data.add_series(
         "Value",
         numeric_values,
     )
 
-    chart_shape = (
-        slide.shapes.add_chart(
-            XL_CHART_TYPE.COLUMN_CLUSTERED,
-            Inches(1.0),
-            Inches(1.55),
-            Inches(11.4),
-            Inches(4.95),
-            chart_data,
-        )
+    chart_shape = slide.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED,
+        Inches(1.0),
+        Inches(1.55),
+        Inches(11.4),
+        Inches(4.95),
+        chart_data,
     )
 
     chart = chart_shape.chart
 
     chart.has_legend = False
 
-    chart.value_axis.has_major_gridlines = (
-        True
-    )
+    chart.value_axis.has_major_gridlines = True
 
-    chart.category_axis.tick_labels.font.size = (
-        Pt(11)
-    )
+    chart.category_axis.tick_labels.font.size = Pt(11)
 
-    chart.value_axis.tick_labels.font.size = (
-        Pt(10)
-    )
+    chart.value_axis.tick_labels.font.size = Pt(10)
 
     series = chart.series[0]
 
     series.format.fill.solid()
 
-    series.format.fill.fore_color.rgb = (
-        BLUE
-    )
+    series.format.fill.fore_color.rgb = BLUE
 
     _add_footer(
         slide,
@@ -1017,9 +819,7 @@ def _add_sources_slide(
     Add a dedicated references slide.
     """
 
-    slide = _blank_slide(
-        presentation
-    )
+    slide = _blank_slide(presentation)
 
     _add_background(
         slide,
@@ -1038,52 +838,28 @@ def _add_sources_slide(
         Inches(5.5),
     )
 
-    text_frame = (
-        text_box.text_frame
-    )
+    text_frame = text_box.text_frame
 
     text_frame.word_wrap = True
 
-    safe_sources = (
-        sources
-        if sources
-        else [
-            "No sources supplied."
-        ]
-    )
+    safe_sources = sources if sources else ["No sources supplied."]
 
-    for index, source in enumerate(
-        safe_sources
-    ):
+    for index, source in enumerate(safe_sources):
         if index == 0:
-            paragraph = (
-                text_frame.paragraphs[0]
-            )
+            paragraph = text_frame.paragraphs[0]
 
         else:
-            paragraph = (
-                text_frame.add_paragraph()
-            )
+            paragraph = text_frame.add_paragraph()
 
-        paragraph.text = str(
-            source
-        )
+        paragraph.text = str(source)
 
-        paragraph.font.size = Pt(
-            14
-        )
+        paragraph.font.size = Pt(14)
 
-        paragraph.font.color.rgb = (
-            DARK_TEXT
-        )
+        paragraph.font.color.rgb = DARK_TEXT
 
-        paragraph.space_after = Pt(
-            9
-        )
+        paragraph.space_after = Pt(9)
 
-    _add_footer(
-        slide
-    )
+    _add_footer(slide)
 
 
 # =============================================================
@@ -1208,13 +984,8 @@ def create_powerpoint(
         if not slides:
             return {
                 "success": False,
-                "error_type": (
-                    "ValueError"
-                ),
-                "error": (
-                    "At least one content "
-                    "slide is required."
-                ),
+                "error_type": ("ValueError"),
+                "error": ("At least one content " "slide is required."),
             }
 
         OUTPUT_DIR.mkdir(
@@ -1222,31 +993,18 @@ def create_powerpoint(
             exist_ok=True,
         )
 
-        raw_name = (
-            Path(filename).stem
-            if filename
-            else title
-        )
+        raw_name = Path(filename).stem if filename else title
 
-        safe_name = _safe_filename(
-            raw_name
-        )
+        safe_name = _safe_filename(raw_name)
 
-        output_path = (
-            OUTPUT_DIR
-            / f"{safe_name}.pptx"
-        )
+        output_path = OUTPUT_DIR / f"{safe_name}.pptx"
 
         presentation = Presentation()
 
         # 16:9 widescreen
-        presentation.slide_width = (
-            Inches(13.333)
-        )
+        presentation.slide_width = Inches(13.333)
 
-        presentation.slide_height = (
-            Inches(7.5)
-        )
+        presentation.slide_height = Inches(7.5)
 
         # =====================================================
         # Title slide
@@ -1283,9 +1041,7 @@ def create_powerpoint(
                 )
             )
 
-            source = slide_data.get(
-                "source"
-            )
+            source = slide_data.get("source")
 
             if slide_type == "metrics":
                 _add_metrics_slide(
@@ -1308,9 +1064,7 @@ def create_powerpoint(
                             "",
                         )
                     ),
-                    slide_data.get(
-                        "subtitle"
-                    ),
+                    slide_data.get("subtitle"),
                     source,
                 )
 
@@ -1326,9 +1080,7 @@ def create_powerpoint(
                         "right",
                         {},
                     ),
-                    slide_data.get(
-                        "conclusion"
-                    ),
+                    slide_data.get("conclusion"),
                     source,
                 )
 
@@ -1372,9 +1124,7 @@ def create_powerpoint(
         # Save
         # =====================================================
 
-        presentation.save(
-            output_path
-        )
+        presentation.save(output_path)
 
         return {
             "success": True,
@@ -1384,19 +1134,13 @@ def create_powerpoint(
             "filename": output_path.name,
             "path": str(output_path),
             "mime_type": POWERPOINT_MIME_TYPE,
-            "size_bytes": (
-                output_path.stat().st_size
-            ),
-            "slides_created": len(
-                presentation.slides
-            ),
+            "size_bytes": (output_path.stat().st_size),
+            "slides_created": len(presentation.slides),
         }
 
     except Exception as exc:
         return {
             "success": False,
-            "error_type": (
-                type(exc).__name__
-            ),
+            "error_type": (type(exc).__name__),
             "error": str(exc),
         }

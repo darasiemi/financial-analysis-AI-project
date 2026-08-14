@@ -18,18 +18,13 @@ from ingestion.processing.database import (
     load_environment,
 )
 
-
 # ============================================================
 # Logging
 # ============================================================
 
 logging.basicConfig(
     level=logging.INFO,
-    format=(
-        "%(asctime)s | "
-        "%(levelname)s | "
-        "%(message)s"
-    ),
+    format=("%(asctime)s | " "%(levelname)s | " "%(message)s"),
 )
 
 logger = logging.getLogger(__name__)
@@ -50,16 +45,12 @@ def ensure_vector_extension(
     still requires CREATE EXTENSION inside each database.
     """
 
-    logger.info(
-        "Ensuring pgvector extension is enabled."
-    )
+    logger.info("Ensuring pgvector extension is enabled.")
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE EXTENSION IF NOT EXISTS vector;
-            """
-        )
+            """)
 
     connection.commit()
 
@@ -80,13 +71,10 @@ def create_retrieval_table(
     same corpus.
     """
 
-    logger.info(
-        "Ensuring retrieval table exists."
-    )
+    logger.info("Ensuring retrieval table exists.")
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS
             {POSTGRES_SCHEMA}.{RETRIEVAL_DOCUMENTS_TABLE}
             (
@@ -128,8 +116,7 @@ def create_retrieval_table(
                     {EMBEDDING_DIMENSION}
                 )
             );
-            """
-        )
+            """)
 
     connection.commit()
 
@@ -146,9 +133,7 @@ def create_indexes(
     Create indexes used by keyword, metadata, and vector search.
     """
 
-    logger.info(
-        "Creating retrieval indexes."
-    )
+    logger.info("Creating retrieval indexes.")
 
     with connection.cursor() as cursor:
 
@@ -156,8 +141,7 @@ def create_indexes(
         # Full-text search
         # ----------------------------------------------------
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             CREATE INDEX IF NOT EXISTS
             retrieval_documents_fts_idx
             ON
@@ -165,15 +149,13 @@ def create_indexes(
             USING GIN (
                 search_vector
             );
-            """
-        )
+            """)
 
         # ----------------------------------------------------
         # Metadata filtering
         # ----------------------------------------------------
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             CREATE INDEX IF NOT EXISTS
             retrieval_documents_ticker_year_idx
             ON
@@ -182,11 +164,9 @@ def create_indexes(
                 ticker,
                 report_year
             );
-            """
-        )
+            """)
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             CREATE INDEX IF NOT EXISTS
             retrieval_documents_content_type_idx
             ON
@@ -194,8 +174,7 @@ def create_indexes(
             (
                 content_type
             );
-            """
-        )
+            """)
 
     connection.commit()
 
@@ -212,17 +191,12 @@ def load_narrative_documents(
     Convert report_chunks rows into retrieval documents.
     """
 
-    logger.info(
-        "Loading narrative chunks."
-    )
+    logger.info("Loading narrative chunks.")
 
-    documents: list[
-        dict[str, Any]
-    ] = []
+    documents: list[dict[str, Any]] = []
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             SELECT
                 chunk_id,
                 report_id,
@@ -240,8 +214,7 @@ def load_narrative_documents(
             ORDER BY
                 report_id,
                 chunk_index;
-            """
-        )
+            """)
 
         for row in cursor.fetchall():
 
@@ -258,27 +231,15 @@ def load_narrative_documents(
 
             documents.append(
                 {
-                    "document_id": (
-                        f"narrative:{chunk_id}"
-                    ),
+                    "document_id": (f"narrative:{chunk_id}"),
                     "source_id": chunk_id,
-                    "content_type": (
-                        "narrative"
-                    ),
+                    "content_type": ("narrative"),
                     "report_id": report_id,
                     "ticker": ticker,
-                    "report_year": (
-                        report_year
-                    ),
-                    "page_start": (
-                        page_start
-                    ),
-                    "page_end": (
-                        page_end
-                    ),
-                    "section_title": (
-                        section_title
-                    ),
+                    "report_year": (report_year),
+                    "page_start": (page_start),
+                    "page_end": (page_end),
+                    "section_title": (section_title),
                     "text": text,
                 }
             )
@@ -302,17 +263,12 @@ def load_table_documents(
     is selected by retrieval.
     """
 
-    logger.info(
-        "Loading table documents."
-    )
+    logger.info("Loading table documents.")
 
-    documents: list[
-        dict[str, Any]
-    ] = []
+    documents: list[dict[str, Any]] = []
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             SELECT
                 table_id,
                 report_id,
@@ -330,8 +286,7 @@ def load_table_documents(
                 report_id,
                 pdf_page_number,
                 table_index;
-            """
-        )
+            """)
 
         for row in cursor.fetchall():
 
@@ -347,36 +302,16 @@ def load_table_documents(
 
             documents.append(
                 {
-                    "document_id": (
-                        f"table:{table_id}"
-                    ),
-                    "source_id": (
-                        table_id
-                    ),
-                    "content_type": (
-                        "table"
-                    ),
-                    "report_id": (
-                        report_id
-                    ),
-                    "ticker": (
-                        ticker
-                    ),
-                    "report_year": (
-                        report_year
-                    ),
-                    "page_start": (
-                        page_number
-                    ),
-                    "page_end": (
-                        page_number
-                    ),
-                    "section_title": (
-                        table_title
-                    ),
-                    "text": (
-                        rag_text
-                    ),
+                    "document_id": (f"table:{table_id}"),
+                    "source_id": (table_id),
+                    "content_type": ("table"),
+                    "report_id": (report_id),
+                    "ticker": (ticker),
+                    "report_year": (report_year),
+                    "page_start": (page_number),
+                    "page_end": (page_number),
+                    "section_title": (table_title),
+                    "text": (rag_text),
                 }
             )
 
@@ -395,28 +330,14 @@ def load_source_documents(
     Load all content that should participate in retrieval.
     """
 
-    narrative_documents = (
-        load_narrative_documents(
-            connection
-        )
-    )
+    narrative_documents = load_narrative_documents(connection)
 
-    table_documents = (
-        load_table_documents(
-            connection
-        )
-    )
+    table_documents = load_table_documents(connection)
 
-    documents = (
-        narrative_documents
-        + table_documents
-    )
+    documents = narrative_documents + table_documents
 
     logger.info(
-        (
-            "Loaded %d total retrieval document(s): "
-            "%d narrative, %d tables."
-        ),
+        ("Loaded %d total retrieval document(s): " "%d narrative, %d tables."),
         len(documents),
         len(narrative_documents),
         len(table_documents),
@@ -440,13 +361,9 @@ def load_embedding_model() -> SentenceTransformer:
         EMBEDDING_MODEL,
     )
 
-    model = SentenceTransformer(
-        EMBEDDING_MODEL
-    )
+    model = SentenceTransformer(EMBEDDING_MODEL)
 
-    logger.info(
-        "Embedding model loaded."
-    )
+    logger.info("Embedding model loaded.")
 
     return model
 
@@ -460,14 +377,9 @@ def embed_documents(
     """
 
     if not documents:
-        raise ValueError(
-            "No documents available for embedding."
-        )
+        raise ValueError("No documents available for embedding.")
 
-    texts = [
-        document["text"]
-        for document in documents
-    ]
+    texts = [document["text"] for document in documents]
 
     logger.info(
         "Embedding %d document(s).",
@@ -481,16 +393,8 @@ def embed_documents(
         normalize_embeddings=True,
     )
 
-    if (
-        len(embeddings)
-        != len(documents)
-    ):
-        raise RuntimeError(
-            (
-                "Embedding count does not match "
-                "document count."
-            )
-        )
+    if len(embeddings) != len(documents):
+        raise RuntimeError(("Embedding count does not match " "document count."))
 
     logger.info(
         "Generated %d embedding(s).",
@@ -515,18 +419,14 @@ def replace_retrieval_documents(
     documents and embeddings.
     """
 
-    logger.info(
-        "Replacing retrieval documents."
-    )
+    logger.info("Replacing retrieval documents.")
 
     with connection.cursor() as cursor:
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             TRUNCATE TABLE
                 {POSTGRES_SCHEMA}.{RETRIEVAL_DOCUMENTS_TABLE};
-            """
-        )
+            """)
 
         for (
             document,
@@ -569,45 +469,23 @@ def replace_retrieval_documents(
                 );
                 """,
                 (
-                    document[
-                        "document_id"
-                    ],
-                    document[
-                        "source_id"
-                    ],
-                    document[
-                        "content_type"
-                    ],
-                    document[
-                        "report_id"
-                    ],
-                    document[
-                        "ticker"
-                    ],
-                    document[
-                        "report_year"
-                    ],
-                    document[
-                        "page_start"
-                    ],
-                    document[
-                        "page_end"
-                    ],
-                    document[
-                        "section_title"
-                    ],
-                    document[
-                        "text"
-                    ],
+                    document["document_id"],
+                    document["source_id"],
+                    document["content_type"],
+                    document["report_id"],
+                    document["ticker"],
+                    document["report_year"],
+                    document["page_start"],
+                    document["page_end"],
+                    document["section_title"],
+                    document["text"],
                     embedding,
                 ),
             )
 
     connection.commit()
 
-    logger.info(
-        "Retrieval documents loaded."
-    )
+    logger.info("Retrieval documents loaded.")
 
 
 # ============================================================
@@ -624,8 +502,7 @@ def validate_index(
 
     with connection.cursor() as cursor:
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             SELECT
                 content_type,
                 COUNT(*)
@@ -635,14 +512,11 @@ def validate_index(
                 content_type
             ORDER BY
                 content_type;
-            """
-        )
+            """)
 
         rows = cursor.fetchall()
 
-        logger.info(
-            "Indexed document counts:"
-        )
+        logger.info("Indexed document counts:")
 
         for (
             content_type,
@@ -655,42 +529,31 @@ def validate_index(
                 count,
             )
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             SELECT
                 COUNT(*)
             FROM
                 {POSTGRES_SCHEMA}.{RETRIEVAL_DOCUMENTS_TABLE}
             WHERE
                 embedding IS NULL;
-            """
-        )
+            """)
 
-        missing_embeddings = (
-            cursor.fetchone()[0]
-        )
+        missing_embeddings = cursor.fetchone()[0]
 
         if missing_embeddings:
 
             raise RuntimeError(
-                (
-                    f"{missing_embeddings} retrieval "
-                    "document(s) have NULL embeddings."
-                )
+                (f"{missing_embeddings} retrieval " "document(s) have NULL embeddings.")
             )
 
-        cursor.execute(
-            f"""
+        cursor.execute(f"""
             SELECT
                 COUNT(*)
             FROM
                 {POSTGRES_SCHEMA}.{RETRIEVAL_DOCUMENTS_TABLE};
-            """
-        )
+            """)
 
-        total_documents = (
-            cursor.fetchone()[0]
-        )
+        total_documents = cursor.fetchone()[0]
 
         logger.info(
             "Total indexed documents: %d",
@@ -723,17 +586,11 @@ def main() -> None:
 
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
-    logger.info(
-        "Connecting to PostgreSQL."
-    )
+    logger.info("Connecting to PostgreSQL.")
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
 
         # ----------------------------------------------------
         # Critical ordering:
@@ -742,35 +599,23 @@ def main() -> None:
         # pgvector's psycopg adapter can register it.
         # ----------------------------------------------------
 
-        ensure_vector_extension(
-            connection
-        )
+        ensure_vector_extension(connection)
 
-        register_vector(
-            connection
-        )
+        register_vector(connection)
 
-        logger.info(
-            "pgvector registered with psycopg."
-        )
+        logger.info("pgvector registered with psycopg.")
 
         # ----------------------------------------------------
         # Database schema
         # ----------------------------------------------------
 
-        create_retrieval_table(
-            connection
-        )
+        create_retrieval_table(connection)
 
         # ----------------------------------------------------
         # Load retrieval corpus
         # ----------------------------------------------------
 
-        documents = (
-            load_source_documents(
-                connection
-            )
-        )
+        documents = load_source_documents(connection)
 
         if not documents:
             raise RuntimeError(
@@ -784,15 +629,11 @@ def main() -> None:
         # Embeddings
         # ----------------------------------------------------
 
-        model = (
-            load_embedding_model()
-        )
+        model = load_embedding_model()
 
-        embeddings = (
-            embed_documents(
-                documents,
-                model,
-            )
+        embeddings = embed_documents(
+            documents,
+            model,
         )
 
         # ----------------------------------------------------
@@ -809,21 +650,15 @@ def main() -> None:
         # Search indexes
         # ----------------------------------------------------
 
-        create_indexes(
-            connection
-        )
+        create_indexes(connection)
 
         # ----------------------------------------------------
         # Validation
         # ----------------------------------------------------
 
-        validate_index(
-            connection
-        )
+        validate_index(connection)
 
-    logger.info(
-        "Retrieval index successfully built."
-    )
+    logger.info("Retrieval index successfully built.")
 
 
 if __name__ == "__main__":

@@ -21,21 +21,13 @@ def build_context(
             f"Type: {result['content_type']}",
             f"Ticker: {result['ticker']}",
             f"Report year: {result['report_year']}",
-            (
-                "Pages: "
-                f"{result['page_start']}-"
-                f"{result['page_end']}"
-            ),
+            ("Pages: " f"{result['page_start']}-" f"{result['page_end']}"),
         ]
 
-        section_title = result.get(
-            "section_title"
-        )
+        section_title = result.get("section_title")
 
         if section_title:
-            lines.append(
-                f"Section: {section_title}"
-            )
+            lines.append(f"Section: {section_title}")
 
         lines.extend(
             [
@@ -44,8 +36,6 @@ def build_context(
             ]
         )
 
-        blocks.append(
-            "\n".join(lines)
-        )
+        blocks.append("\n".join(lines))
 
     return "\n\n".join(blocks)

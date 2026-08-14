@@ -45,9 +45,7 @@ def retrieve_documents(
             report_year=report_year,
         )
 
-    raise ValueError(
-        f"Unsupported retrieval mode: {mode}"
-    )
+    raise ValueError(f"Unsupported retrieval mode: {mode}")
 
 
 def run_rag(
@@ -77,14 +75,10 @@ def run_rag(
             "mode": mode,
             "results": [],
             "context": "",
-            "answer": (
-                "No relevant documents were retrieved."
-            ),
+            "answer": ("No relevant documents were retrieved."),
         }
 
-    context = build_context(
-        results
-    )
+    context = build_context(results)
 
     answer = generator.generate(
         query=query,

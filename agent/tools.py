@@ -32,9 +32,7 @@ def _compact_results(
                 "report_year": result["report_year"],
                 "page_start": result["page_start"],
                 "page_end": result["page_end"],
-                "section_title": result.get(
-                    "section_title"
-                ),
+                "section_title": result.get("section_title"),
                 "text": result["text"],
             }
         )
@@ -82,9 +80,7 @@ def search_keyword(
         report_year=report_year,
     )
 
-    return _compact_results(
-        results
-    )
+    return _compact_results(results)
 
 
 def search_semantic(
@@ -123,9 +119,7 @@ def search_semantic(
         report_year=report_year,
     )
 
-    return _compact_results(
-        results
-    )
+    return _compact_results(results)
 
 
 def search_hybrid(
@@ -165,9 +159,7 @@ def search_hybrid(
         report_year=report_year,
     )
 
-    return _compact_results(
-        results
-    )
+    return _compact_results(results)
 
 
 def get_table(
@@ -191,13 +183,9 @@ def get_table(
 
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
 
         with connection.cursor() as cursor:
             cursor.execute(
@@ -219,11 +207,7 @@ def get_table(
             row = cursor.fetchone()
 
     if row is None:
-        return {
-            "error": (
-                f"Table '{table_id}' was not found."
-            )
-        }
+        return {"error": (f"Table '{table_id}' was not found.")}
 
     (
         table_id,

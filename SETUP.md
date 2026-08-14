@@ -1042,3 +1042,24 @@ These files are mounted into the Grafana container through Docker Compose. As a 
 
 The grafana can be viewed locally in
 `http://localhost:3000`
+
+To send some synthetic payloads
+```bash
+make synthetic_test REQUESTS=20
+```
+
+```bash
+uv add --group quality black isort pylint pre-commit
+```
+```bash
+uv add --group test pytest httpx
+```
+To install the git hook
+```bash
+uv run --group quality pre-commit install
+```
+
+Test everything once
+```bash
+uv run --group quality pre-commit run --all-files
+```

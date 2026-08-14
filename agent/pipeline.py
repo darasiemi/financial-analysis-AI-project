@@ -23,8 +23,7 @@ class FinancialAgent(Protocol):
         *,
         question: str,
         initial_context: str,
-    ) -> dict[str, Any]:
-        ...
+    ) -> dict[str, Any]: ...
 
 
 def initial_retrieval(
@@ -73,90 +72,51 @@ def run_agent(
         Complete observable execution information.
     """
 
-    total_start = (
-        time.perf_counter()
-    )
+    total_start = time.perf_counter()
 
     # =========================================================
     # Stage 1: initial local retrieval
     # =========================================================
 
-    initial_retrieval_query = (
-        question
+    initial_retrieval_query = question
+
+    retrieval_start = time.perf_counter()
+
+    retrieval_result = initial_retrieval(
+        initial_retrieval_query,
+        ticker=ticker,
+        report_year=report_year,
+        top_k=top_k,
     )
 
-    retrieval_start = (
-        time.perf_counter()
-    )
+    retrieval_seconds = time.perf_counter() - retrieval_start
 
-    retrieval_result = (
-        initial_retrieval(
-            initial_retrieval_query,
-            ticker=ticker,
-            report_year=report_year,
-            top_k=top_k,
-        )
-    )
-
-    retrieval_seconds = (
-        time.perf_counter()
-        - retrieval_start
-    )
-
-    initial_context = (
-        build_initial_context(
-            retrieval_result
-        )
-    )
+    initial_context = build_initial_context(retrieval_result)
 
     # =========================================================
     # Stage 2: Gemini + additional tools
     # =========================================================
 
-    agent_start = (
-        time.perf_counter()
-    )
+    agent_start = time.perf_counter()
 
     agent_result = agent.ask(
         question=question,
-        initial_context=(
-            initial_context
-        ),
+        initial_context=(initial_context),
     )
 
-    agent_seconds = (
-        time.perf_counter()
-        - agent_start
-    )
+    agent_seconds = time.perf_counter() - agent_start
 
-    total_seconds = (
-        time.perf_counter()
-        - total_start
-    )
+    total_seconds = time.perf_counter() - total_start
 
     return {
         "question": question,
-
         # Currently identical to the user question because
         # Stage 1 performs no rewriting.
-        "initial_retrieval_query": (
-            initial_retrieval_query
-        ),
-
+        "initial_retrieval_query": (initial_retrieval_query),
         "ticker": ticker,
-
-        "report_year": (
-            report_year
-        ),
-
-        "initial_retrieval": (
-            retrieval_result
-        ),
-
-        "initial_context": (
-            initial_context
-        ),
-
+        "report_year": (report_year),
+        "initial_retrieval": (retrieval_result),
+        "initial_context": (initial_context),
         # Only additional calls selected by Gemini.
         "tool_calls": (
             agent_result.get(
@@ -164,20 +124,10 @@ def run_agent(
                 [],
             )
         ),
-
-        "answer": (
-            agent_result["answer"]
-        ),
-
+        "answer": (agent_result["answer"]),
         "timing": {
-            "initial_retrieval_seconds": (
-                retrieval_seconds
-            ),
-            "agent_seconds": (
-                agent_seconds
-            ),
-            "total_seconds": (
-                total_seconds
-            ),
+            "initial_retrieval_seconds": (retrieval_seconds),
+            "agent_seconds": (agent_seconds),
+            "total_seconds": (total_seconds),
         },
     }

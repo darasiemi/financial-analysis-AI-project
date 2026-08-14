@@ -13,5 +13,4 @@ class AnswerGenerator(Protocol):
         *,
         query: str,
         context: str,
-    ) -> str:
-        ...
+    ) -> str: ...

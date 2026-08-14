@@ -21,8 +21,7 @@ def build_initial_context(
 
     if not documents:
         return (
-            "No relevant evidence was found in the initial "
-            "annual-report retrieval."
+            "No relevant evidence was found in the initial " "annual-report retrieval."
         )
 
     blocks: list[str] = []
@@ -33,37 +32,17 @@ def build_initial_context(
     ):
         lines = [
             f"[INITIAL SOURCE {index}]",
-            (
-                "Content type: "
-                f"{document['content_type']}"
-            ),
-            (
-                "Source ID: "
-                f"{document['source_id']}"
-            ),
-            (
-                "Ticker: "
-                f"{document['ticker']}"
-            ),
-            (
-                "Report year: "
-                f"{document['report_year']}"
-            ),
-            (
-                "Pages: "
-                f"{document['page_start']}-"
-                f"{document['page_end']}"
-            ),
+            ("Content type: " f"{document['content_type']}"),
+            ("Source ID: " f"{document['source_id']}"),
+            ("Ticker: " f"{document['ticker']}"),
+            ("Report year: " f"{document['report_year']}"),
+            ("Pages: " f"{document['page_start']}-" f"{document['page_end']}"),
         ]
 
-        section_title = document.get(
-            "section_title"
-        )
+        section_title = document.get("section_title")
 
         if section_title:
-            lines.append(
-                f"Section: {section_title}"
-            )
+            lines.append(f"Section: {section_title}")
 
         lines.extend(
             [
@@ -72,8 +51,6 @@ def build_initial_context(
             ]
         )
 
-        blocks.append(
-            "\n".join(lines)
-        )
+        blocks.append("\n".join(lines))
 
     return "\n\n".join(blocks)

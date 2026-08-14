@@ -10,7 +10,6 @@ from agent.tools.retrieval import (
 from agent.tools.tables import get_table
 from agent.tools.web_search import web_search
 
-
 __all__ = [
     "calculate",
     "create_powerpoint",

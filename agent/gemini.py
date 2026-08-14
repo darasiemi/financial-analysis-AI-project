@@ -4,10 +4,6 @@ from typing import Any
 from google import genai
 from google.genai import types
 
-from monitoring.telemetry import (
-    record_gemini_response,
-)
-
 from agent.tools import (
     calculate,
     create_powerpoint,
@@ -17,7 +13,9 @@ from agent.tools import (
     search_semantic,
     web_search,
 )
-
+from monitoring.telemetry import (
+    record_gemini_response,
+)
 
 SYSTEM_INSTRUCTION = """
 You are a financial-analysis research agent.
@@ -214,45 +212,33 @@ class GeminiFinancialAgent:
         max_tool_calls: int = 12,
     ) -> None:
 
-        api_key = os.environ.get(
-            "GEMINI_API_KEY"
-        )
+        api_key = os.environ.get("GEMINI_API_KEY")
 
         if not api_key:
-            raise RuntimeError(
-                "GEMINI_API_KEY is not configured."
-            )
+            raise RuntimeError("GEMINI_API_KEY is not configured.")
 
         self.model = model
 
-        self.client = genai.Client(
-            api_key=api_key
-        )
+        self.client = genai.Client(api_key=api_key)
 
-        self.config = (
-            types.GenerateContentConfig(
-                system_instruction=(
-                    SYSTEM_INSTRUCTION
-                ),
-                tools=[
-                    search_keyword,
-                    search_semantic,
-                    search_hybrid,
-                    get_table,
-                    calculate,
-                    web_search,
-                    create_powerpoint,
-                ],
-                automatic_function_calling=(
-                    types.AutomaticFunctionCallingConfig(
-                        maximum_remote_calls=(
-                            max_tool_calls + 1
-                        ),
-                        ignore_call_history=False,
-                    )
-                ),
-                temperature=0.1,
-            )
+        self.config = types.GenerateContentConfig(
+            system_instruction=(SYSTEM_INSTRUCTION),
+            tools=[
+                search_keyword,
+                search_semantic,
+                search_hybrid,
+                get_table,
+                calculate,
+                web_search,
+                create_powerpoint,
+            ],
+            automatic_function_calling=(
+                types.AutomaticFunctionCallingConfig(
+                    maximum_remote_calls=(max_tool_calls + 1),
+                    ignore_call_history=False,
+                )
+            ),
+            temperature=0.1,
         )
 
     @staticmethod
@@ -283,10 +269,7 @@ class GeminiFinancialAgent:
             dict,
         ):
             return {
-                str(key): (
-                    GeminiFinancialAgent
-                    ._normalise_value(item)
-                )
+                str(key): (GeminiFinancialAgent._normalise_value(item))
                 for key, item in value.items()
             }
 
@@ -297,23 +280,14 @@ class GeminiFinancialAgent:
                 tuple,
             ),
         ):
-            return [
-                GeminiFinancialAgent
-                ._normalise_value(item)
-                for item in value
-            ]
+            return [GeminiFinancialAgent._normalise_value(item) for item in value]
 
         if hasattr(
             value,
             "model_dump",
         ):
             try:
-                return (
-                    GeminiFinancialAgent
-                    ._normalise_value(
-                        value.model_dump()
-                    )
-                )
+                return GeminiFinancialAgent._normalise_value(value.model_dump())
             except Exception:
                 pass
 
@@ -341,16 +315,11 @@ class GeminiFinancialAgent:
         ):
             return response
 
-        if (
-            "result" in response
-            and isinstance(
-                response["result"],
-                dict,
-            )
+        if "result" in response and isinstance(
+            response["result"],
+            dict,
         ):
-            return response[
-                "result"
-            ]
+            return response["result"]
 
         return response
 
@@ -376,13 +345,9 @@ class GeminiFinancialAgent:
         if not history:
             return []
 
-        trace: list[
-            dict[str, Any]
-        ] = []
+        trace: list[dict[str, Any]] = []
 
-        unresolved_calls: list[
-            dict[str, Any]
-        ] = []
+        unresolved_calls: list[dict[str, Any]] = []
 
         call_number = 0
 
@@ -419,12 +384,7 @@ class GeminiFinancialAgent:
                         None,
                     )
 
-                    arguments = (
-                        cls._normalise_value(
-                            arguments
-                        )
-                        or {}
-                    )
+                    arguments = cls._normalise_value(arguments) or {}
 
                     call_id = getattr(
                         function_call,
@@ -433,30 +393,20 @@ class GeminiFinancialAgent:
                     )
 
                     entry = {
-                        "call_number": (
-                            call_number
-                        ),
-                        "call_id": (
-                            call_id
-                        ),
+                        "call_number": (call_number),
+                        "call_id": (call_id),
                         "tool": getattr(
                             function_call,
                             "name",
                             None,
                         ),
-                        "arguments": (
-                            arguments
-                        ),
+                        "arguments": (arguments),
                         "response": None,
                     }
 
-                    trace.append(
-                        entry
-                    )
+                    trace.append(entry)
 
-                    unresolved_calls.append(
-                        entry
-                    )
+                    unresolved_calls.append(entry)
 
                     continue
 
@@ -485,11 +435,7 @@ class GeminiFinancialAgent:
                     None,
                 )
 
-                response_data = (
-                    cls._normalise_value(
-                        response_data
-                    )
-                )
+                response_data = cls._normalise_value(response_data)
 
                 response_id = getattr(
                     function_response,
@@ -505,16 +451,10 @@ class GeminiFinancialAgent:
                     for entry in unresolved_calls:
 
                         if (
-                            entry["call_id"]
-                            == response_id
-                            and entry[
-                                "response"
-                            ]
-                            is None
+                            entry["call_id"] == response_id
+                            and entry["response"] is None
                         ):
-                            matched_entry = (
-                                entry
-                            )
+                            matched_entry = entry
                             break
 
                 # Fallback: match by tool name.
@@ -522,24 +462,13 @@ class GeminiFinancialAgent:
 
                     for entry in unresolved_calls:
 
-                        if (
-                            entry["tool"]
-                            == response_name
-                            and entry[
-                                "response"
-                            ]
-                            is None
-                        ):
-                            matched_entry = (
-                                entry
-                            )
+                        if entry["tool"] == response_name and entry["response"] is None:
+                            matched_entry = entry
                             break
 
                 if matched_entry is not None:
 
-                    matched_entry[
-                        "response"
-                    ] = response_data
+                    matched_entry["response"] = response_data
 
         return trace
 
@@ -554,19 +483,10 @@ class GeminiFinancialAgent:
 
         for call in tool_trace:
 
-            if (
-                call.get("tool")
-                != "create_powerpoint"
-            ):
+            if call.get("tool") != "create_powerpoint":
                 continue
 
-            response = (
-                cls._unwrap_tool_response(
-                    call.get(
-                        "response"
-                    )
-                )
-            )
+            response = cls._unwrap_tool_response(call.get("response"))
 
             if not isinstance(
                 response,
@@ -574,12 +494,7 @@ class GeminiFinancialAgent:
             ):
                 continue
 
-            if (
-                response.get(
-                    "success"
-                )
-                is True
-            ):
+            if response.get("success") is True:
                 return response
 
         return None
@@ -597,13 +512,7 @@ class GeminiFinancialAgent:
 
         for call in tool_trace:
 
-            response = (
-                cls._unwrap_tool_response(
-                    call.get(
-                        "response"
-                    )
-                )
-            )
+            response = cls._unwrap_tool_response(call.get("response"))
 
             if not isinstance(
                 response,
@@ -611,20 +520,11 @@ class GeminiFinancialAgent:
             ):
                 continue
 
-            if (
-                response.get(
-                    "success"
-                )
-                is True
-            ):
-                tool_name = call.get(
-                    "tool"
-                )
+            if response.get("success") is True:
+                tool_name = call.get("tool")
 
                 if tool_name:
-                    successful_tools.append(
-                        str(tool_name)
-                    )
+                    successful_tools.append(str(tool_name))
 
         return successful_tools
 
@@ -688,12 +588,10 @@ slides, or slide deck:
    stating where the PowerPoint was saved.
 """.strip()
 
-        response = (
-            self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=self.config,
-            )
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=self.config,
         )
 
         record_gemini_response(
@@ -706,11 +604,7 @@ slides, or slide deck:
         # Extract tool history first
         # =====================================================
 
-        tool_trace = (
-            self._extract_tool_trace(
-                response
-            )
-        )
+        tool_trace = self._extract_tool_trace(response)
 
         # =====================================================
         # Normal case: Gemini returned final text
@@ -719,12 +613,8 @@ slides, or slide deck:
         if response.text:
 
             return {
-                "answer": (
-                    response.text
-                ),
-                "tool_calls": (
-                    tool_trace
-                ),
+                "answer": (response.text),
+                "tool_calls": (tool_trace),
             }
 
         # =====================================================
@@ -732,71 +622,39 @@ slides, or slide deck:
         # check whether PowerPoint creation succeeded
         # =====================================================
 
-        successful_powerpoint = (
-            self._find_successful_powerpoint(
-                tool_trace
-            )
-        )
+        successful_powerpoint = self._find_successful_powerpoint(tool_trace)
 
         if successful_powerpoint:
 
-            output_path = (
-                successful_powerpoint.get(
-                    "path",
-                    "outputs/",
-                )
+            output_path = successful_powerpoint.get(
+                "path",
+                "outputs/",
             )
 
-            slides_created = (
-                successful_powerpoint.get(
-                    "slides_created"
-                )
-            )
+            slides_created = successful_powerpoint.get("slides_created")
 
-            title = (
-                successful_powerpoint.get(
-                    "title"
-                )
-            )
+            title = successful_powerpoint.get("title")
 
-            answer_parts = [
-                "PowerPoint presentation "
-                "created successfully."
-            ]
+            answer_parts = ["PowerPoint presentation " "created successfully."]
 
             if title:
-                answer_parts.append(
-                    f"Title: {title}."
-                )
+                answer_parts.append(f"Title: {title}.")
 
             if slides_created is not None:
-                answer_parts.append(
-                    "Slides created: "
-                    f"{slides_created}."
-                )
+                answer_parts.append("Slides created: " f"{slides_created}.")
 
-            answer_parts.append(
-                f"Saved to: {output_path}"
-            )
+            answer_parts.append(f"Saved to: {output_path}")
 
             return {
-                "answer": " ".join(
-                    answer_parts
-                ),
-                "tool_calls": (
-                    tool_trace
-                ),
+                "answer": " ".join(answer_parts),
+                "tool_calls": (tool_trace),
             }
 
         # =====================================================
         # Other tools succeeded but no final text
         # =====================================================
 
-        successful_tools = (
-            self._find_successful_tools(
-                tool_trace
-            )
-        )
+        successful_tools = self._find_successful_tools(tool_trace)
 
         if successful_tools:
 
@@ -804,14 +662,9 @@ slides, or slide deck:
                 "answer": (
                     "The agent completed tool execution, "
                     "but Gemini returned no final text response. "
-                    "Successful tools: "
-                    + ", ".join(
-                        successful_tools
-                    )
+                    "Successful tools: " + ", ".join(successful_tools)
                 ),
-                "tool_calls": (
-                    tool_trace
-                ),
+                "tool_calls": (tool_trace),
             }
 
         # =====================================================

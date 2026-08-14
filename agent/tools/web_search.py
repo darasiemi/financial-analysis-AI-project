@@ -4,7 +4,6 @@ from google import genai
 from google.genai import types
 
 from ingestion.processing.database import load_environment
-
 from monitoring.telemetry import (
     record_gemini_response,
 )
@@ -88,16 +87,11 @@ def _extract_sources(
         if url in seen_urls:
             continue
 
-        seen_urls.add(
-            url
-        )
+        seen_urls.add(url)
 
         sources.append(
             {
-                "title": (
-                    title
-                    or "Web source"
-                ),
+                "title": (title or "Web source"),
                 "url": url,
             }
         )
@@ -132,46 +126,32 @@ def web_search(
     try:
         load_environment()
 
-        api_key = os.environ.get(
-            "GEMINI_API_KEY"
-        )
+        api_key = os.environ.get("GEMINI_API_KEY")
 
         if not api_key:
             return {
                 "success": False,
                 "query": query,
-                "error_type": (
-                    "ConfigurationError"
-                ),
-                "error": (
-                    "GEMINI_API_KEY is not configured."
-                ),
+                "error_type": ("ConfigurationError"),
+                "error": ("GEMINI_API_KEY is not configured."),
             }
 
-        client = genai.Client(
-            api_key=api_key
-        )
+        client = genai.Client(api_key=api_key)
 
         model = os.environ.get(
             "GEMINI_WEB_MODEL",
             "gemini-2.5-flash",
         )
 
-        google_search_tool = types.Tool(
-            google_search=types.GoogleSearch()
-        )
+        google_search_tool = types.Tool(google_search=types.GoogleSearch())
 
-        response = (
-            client.models.generate_content(
-                model=model,
-                contents=query,
-                config=types.GenerateContentConfig(
-                    tools=[
-                        google_search_tool
-                    ],
-                    temperature=0.1,
-                ),
-            )
+        response = client.models.generate_content(
+            model=model,
+            contents=query,
+            config=types.GenerateContentConfig(
+                tools=[google_search_tool],
+                temperature=0.1,
+            ),
         )
 
         record_gemini_response(
@@ -180,14 +160,9 @@ def web_search(
             purpose="web_search",
         )
 
-        answer = (
-            response.text
-            or ""
-        )
+        answer = response.text or ""
 
-        sources = _extract_sources(
-            response
-        )
+        sources = _extract_sources(response)
 
         return {
             "success": True,
@@ -200,8 +175,6 @@ def web_search(
         return {
             "success": False,
             "query": query,
-            "error_type": (
-                type(exc).__name__
-            ),
+            "error_type": (type(exc).__name__),
             "error": str(exc),
         }

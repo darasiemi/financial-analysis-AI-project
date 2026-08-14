@@ -8,65 +8,38 @@ import uuid
 
 import requests
 
-
 QUESTIONS = [
     # ---------------------------------------------------------
     # GTCO
     # ---------------------------------------------------------
-
     "What was GTCO's profit before tax in 2025?",
-
     "How did GTCO's profit after tax change from 2024 to 2025?",
-
     "What were GTCO's total assets in 2025?",
-
     "Who was the Group Chief Executive Officer of GTCO in 2025?",
-
     "Who was the Chairman of GTCO in 2025?",
-
-
     # ---------------------------------------------------------
     # Zenith Bank
     # ---------------------------------------------------------
-
     "What was Zenith Bank's profit before tax in 2025?",
-
     "How did Zenith Bank's total assets change from 2024 to 2025?",
-
     "What was Zenith Bank's gross earnings in 2025?",
-
     "Who was the Group Managing Director and CEO of Zenith Bank in 2025?",
-
     "Who was the Chairman of Zenith Bank in 2025?",
-
-
     # ---------------------------------------------------------
     # MTN Nigeria
     # ---------------------------------------------------------
-
     "What was MTN Nigeria's revenue in 2025?",
-
     "How did MTN Nigeria's revenue change from 2024 to 2025?",
-
     "What was MTN Nigeria's profit after tax in 2025?",
-
     "Who was the Chief Executive Officer of MTN Nigeria in 2025?",
-
     "Who was the Chairman of MTN Nigeria in 2025?",
-
-
     # ---------------------------------------------------------
     # Cross-company comparisons
     # ---------------------------------------------------------
-
     "Compare the total assets of GTCO and Zenith Bank in 2025.",
-
     "Compare the profit after tax of GTCO and Zenith Bank in 2025.",
-
     "Which of GTCO, Zenith Bank, and MTN Nigeria reported the highest revenue in 2025?",
-
     "Compare the revenue growth of GTCO, Zenith Bank, and MTN Nigeria from 2024 to 2025.",
-
     "Who were the chief executives of GTCO, Zenith Bank, and MTN Nigeria in 2025?",
 ]
 
@@ -76,15 +49,11 @@ def send_request(
     pipeline: str,
 ) -> None:
 
-    question = random.choice(
-        QUESTIONS
-    )
+    question = random.choice(QUESTIONS)
 
     payload = {
         "question": question,
-        "session_id": (
-            f"synthetic-{uuid.uuid4()}"
-        ),
+        "session_id": str(uuid.uuid4()),
         "pipeline": pipeline,
         "retrieval_mode": "hybrid",
         "top_k": 8,
@@ -103,31 +72,19 @@ def send_request(
             timeout=180,
         )
 
-        elapsed = (
-            time.perf_counter()
-            - started
-        )
+        elapsed = time.perf_counter() - started
 
         if response.ok:
 
             result = response.json()
 
-            print(
-                f"✓ {pipeline.upper():5} | "
-                f"{elapsed:6.2f}s | "
-                f"{question}"
-            )
+            print(f"✓ {pipeline.upper():5} | " f"{elapsed:6.2f}s | " f"{question}")
 
-            response_id = result.get(
-                "response_id"
-            )
+            response_id = result.get("response_id")
 
             if response_id:
 
-                print(
-                    f"  response_id="
-                    f"{response_id}"
-                )
+                print(f"  response_id=" f"{response_id}")
 
         else:
 
@@ -139,10 +96,7 @@ def send_request(
 
     except requests.RequestException as exc:
 
-        print(
-            f"✗ {pipeline.upper():5} | "
-            f"{exc}"
-        )
+        print(f"✗ {pipeline.upper():5} | " f"{exc}")
 
 
 def main() -> None:
@@ -180,14 +134,9 @@ def main() -> None:
         "http://localhost:8000",
     ).rstrip("/")
 
-    print(
-        f"\nSending {args.requests} "
-        f"synthetic requests to {base_url}\n"
-    )
+    print(f"\nSending {args.requests} " f"synthetic requests to {base_url}\n")
 
-    for index in range(
-        args.requests
-    ):
+    for index in range(args.requests):
 
         if args.pipeline == "mixed":
 
@@ -212,13 +161,8 @@ def main() -> None:
             pipeline=pipeline,
         )
 
-        if (
-            index
-            < args.requests - 1
-        ):
-            time.sleep(
-                args.delay
-            )
+        if index < args.requests - 1:
+            time.sleep(args.delay)
 
 
 if __name__ == "__main__":

@@ -22,10 +22,7 @@ def main() -> None:
     """
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Evaluate the financial-analysis "
-            "RAG or agent pipeline."
-        )
+        description=("Evaluate the financial-analysis " "RAG or agent pipeline.")
     )
 
     parser.add_argument(
@@ -35,19 +32,13 @@ def main() -> None:
             "agent",
         ],
         required=True,
-        help=(
-            "Pipeline to evaluate."
-        ),
+        help=("Pipeline to evaluate."),
     )
 
     parser.add_argument(
         "--dataset",
-        default=(
-            "data/evaluation/benchmark.jsonl"
-        ),
-        help=(
-            "Path to the evaluation benchmark."
-        ),
+        default=("data/evaluation/benchmark.jsonl"),
+        help=("Path to the evaluation benchmark."),
     )
 
     parser.add_argument(
@@ -58,59 +49,39 @@ def main() -> None:
             "hybrid",
         ],
         default="hybrid",
-        help=(
-            "Retrieval mode used for "
-            "RAG evaluation."
-        ),
+        help=("Retrieval mode used for " "RAG evaluation."),
     )
 
     parser.add_argument(
         "--top-k",
         type=int,
         default=8,
-        help=(
-            "Number of ranked retrieval "
-            "results used for evaluation."
-        ),
+        help=("Number of ranked retrieval " "results used for evaluation."),
     )
 
     parser.add_argument(
         "--limit",
         type=int,
         default=None,
-        help=(
-            "Optional maximum number of "
-            "benchmark examples to evaluate."
-        ),
+        help=("Optional maximum number of " "benchmark examples to evaluate."),
     )
 
     parser.add_argument(
         "--model",
         default=None,
-        help=(
-            "Optional Gemini model override "
-            "for the evaluated pipeline."
-        ),
+        help=("Optional Gemini model override " "for the evaluated pipeline."),
     )
 
     parser.add_argument(
         "--judge-model",
         default=None,
-        help=(
-            "Optional Gemini model override "
-            "for LLM-as-a-judge evaluation."
-        ),
+        help=("Optional Gemini model override " "for LLM-as-a-judge evaluation."),
     )
 
     parser.add_argument(
         "--output-dir",
-        default=(
-            "outputs/evaluation"
-        ),
-        help=(
-            "Directory where Excel evaluation "
-            "results are written."
-        ),
+        default=("outputs/evaluation"),
+        help=("Directory where Excel evaluation " "results are written."),
     )
 
     args = parser.parse_args()
@@ -145,63 +116,36 @@ def main() -> None:
     print("EVALUATION SUMMARY")
     print("=" * 80)
 
-    print(
-        f"Pipeline: {result['pipeline']}"
-    )
+    print(f"Pipeline: {result['pipeline']}")
 
-    if (
-        result["retrieval_mode"]
-        is not None
-    ):
-        print(
-            "Retrieval mode: "
-            f"{result['retrieval_mode']}"
-        )
+    if result["retrieval_mode"] is not None:
+        print("Retrieval mode: " f"{result['retrieval_mode']}")
 
-    print(
-        f"Dataset: {args.dataset}"
-    )
+    print(f"Dataset: {args.dataset}")
 
-    print(
-        f"Examples: {result['examples']}"
-    )
+    print(f"Examples: {result['examples']}")
 
-    print(
-        "Successful: "
-        f"{result['successful_examples']}"
-    )
+    print("Successful: " f"{result['successful_examples']}")
 
-    print(
-        "Failed: "
-        f"{result['failed_examples']}"
-    )
+    print("Failed: " f"{result['failed_examples']}")
 
     print()
     print("METRICS")
     print("-" * 80)
 
-    for metric, score in (
-        result["summary"].items()
-    ):
+    for metric, score in result["summary"].items():
         if isinstance(
             score,
             float,
         ):
-            print(
-                f"{metric}: {score:.4f}"
-            )
+            print(f"{metric}: {score:.4f}")
         else:
-            print(
-                f"{metric}: {score}"
-            )
+            print(f"{metric}: {score}")
 
     print()
     print("=" * 80)
 
-    print(
-        "Excel results: "
-        f"{result['excel_file']}"
-    )
+    print("Excel results: " f"{result['excel_file']}")
 
     print("=" * 80)
 

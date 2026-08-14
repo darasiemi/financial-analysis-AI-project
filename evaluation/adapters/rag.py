@@ -14,7 +14,6 @@ from evaluation.schemas import (
     PipelineResult,
 )
 
-
 SEARCH_FUNCTIONS = {
     "keyword": search_keyword,
     "vector": search_semantic,
@@ -33,19 +32,14 @@ class RAGAdapter:
     ) -> None:
 
         if mode not in SEARCH_FUNCTIONS:
-            raise ValueError(
-                f"Unsupported retrieval mode: {mode}"
-            )
+            raise ValueError(f"Unsupported retrieval mode: {mode}")
 
         self.mode = mode
         self.top_k = top_k
 
-        self.model = (
-            model
-            or os.environ.get(
-                "GEMINI_RAG_MODEL",
-                "gemini-2.5-flash",
-            )
+        self.model = model or os.environ.get(
+            "GEMINI_RAG_MODEL",
+            "gemini-2.5-flash",
         )
 
         self.client = genai.Client()
@@ -57,22 +51,16 @@ class RAGAdapter:
 
         start = time.perf_counter()
 
-        search = SEARCH_FUNCTIONS[
-            self.mode
-        ]
+        search = SEARCH_FUNCTIONS[self.mode]
 
         retrieval = search(
             query=example.question,
             ticker=example.ticker,
-            report_year=(
-                example.report_year
-            ),
+            report_year=(example.report_year),
             top_k=self.top_k,
         )
 
-        if not retrieval.get(
-            "success"
-        ):
+        if not retrieval.get("success"):
             raise RuntimeError(
                 retrieval.get(
                     "error",
@@ -85,23 +73,13 @@ class RAGAdapter:
             [],
         )
 
-        source_ids = [
-            document["source_id"]
-            for document in documents
-        ]
+        source_ids = [document["source_id"] for document in documents]
 
-        contexts = [
-            document["text"]
-            for document in documents
-        ]
+        contexts = [document["text"] for document in documents]
 
         context_text = "\n\n".join(
-            (
-                f"[SOURCE {index}]\n"
-                f"{document['text']}"
-            )
-            for index, document
-            in enumerate(
+            (f"[SOURCE {index}]\n" f"{document['text']}")
+            for index, document in enumerate(
                 documents,
                 start=1,
             )
@@ -122,40 +100,26 @@ CONTEXT
 {context_text}
 """.strip()
 
-        response = (
-            self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.1,
-                ),
-            )
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+            ),
         )
 
-        answer = (
-            response.text
-            or ""
-        )
+        answer = response.text or ""
 
-        elapsed = (
-            time.perf_counter()
-            - start
-        )
+        elapsed = time.perf_counter() - start
 
         return PipelineResult(
             answer=answer,
-            initial_retrieved_source_ids=(
-                source_ids
-            ),
-            retrieved_source_ids=(
-                source_ids
-            ),
+            initial_retrieved_source_ids=(source_ids),
+            retrieved_source_ids=(source_ids),
             contexts=contexts,
             latency_seconds=elapsed,
             metadata={
                 "pipeline": "rag",
-                "retrieval_mode": (
-                    self.mode
-                ),
+                "retrieval_mode": (self.mode),
             },
         )

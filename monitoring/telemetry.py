@@ -27,53 +27,32 @@ class LLMCall:
 class RequestTelemetry:
     response_id: str
 
-    llm_calls: list[
-        LLMCall
-    ] = field(
-        default_factory=list
-    )
+    llm_calls: list[LLMCall] = field(default_factory=list)
 
     @property
     def input_tokens(self) -> int:
-        return sum(
-            call.input_tokens
-            for call in self.llm_calls
-        )
+        return sum(call.input_tokens for call in self.llm_calls)
 
     @property
     def output_tokens(self) -> int:
-        return sum(
-            call.output_tokens
-            for call in self.llm_calls
-        )
+        return sum(call.output_tokens for call in self.llm_calls)
 
     @property
     def thinking_tokens(self) -> int:
-        return sum(
-            call.thinking_tokens
-            for call in self.llm_calls
-        )
+        return sum(call.thinking_tokens for call in self.llm_calls)
 
     @property
     def total_tokens(self) -> int:
-        return sum(
-            call.total_tokens
-            for call in self.llm_calls
-        )
+        return sum(call.total_tokens for call in self.llm_calls)
 
     @property
     def estimated_cost_usd(
         self,
     ) -> float:
-        return sum(
-            call.estimated_cost_usd
-            for call in self.llm_calls
-        )
+        return sum(call.estimated_cost_usd for call in self.llm_calls)
 
 
-_current_telemetry: ContextVar[
-    RequestTelemetry | None
-] = ContextVar(
+_current_telemetry: ContextVar[RequestTelemetry | None] = ContextVar(
     "current_monitoring_telemetry",
     default=None,
 )
@@ -88,23 +67,15 @@ def monitoring_context(
     request execution context.
     """
 
-    telemetry = RequestTelemetry(
-        response_id=response_id
-    )
+    telemetry = RequestTelemetry(response_id=response_id)
 
-    token = (
-        _current_telemetry.set(
-            telemetry
-        )
-    )
+    token = _current_telemetry.set(telemetry)
 
     try:
         yield telemetry
 
     finally:
-        _current_telemetry.reset(
-            token
-        )
+        _current_telemetry.reset(token)
 
 
 def record_gemini_response(
@@ -117,9 +88,7 @@ def record_gemini_response(
     Record token usage from a Gemini GenerateContentResponse.
     """
 
-    telemetry = (
-        _current_telemetry.get()
-    )
+    telemetry = _current_telemetry.get()
 
     if telemetry is None:
         return
@@ -164,11 +133,7 @@ def record_gemini_response(
         getattr(
             usage,
             "total_token_count",
-            (
-                input_tokens
-                + output_tokens
-                + thinking_tokens
-            ),
+            (input_tokens + output_tokens + thinking_tokens),
         )
         or 0
     )

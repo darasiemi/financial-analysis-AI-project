@@ -45,10 +45,6 @@ def load_dataset(
             if not line:
                 continue
 
-            examples.append(
-                EvalExample.from_dict(
-                    json.loads(line)
-                )
-            )
+            examples.append(EvalExample.from_dict(json.loads(line)))
 
     return examples

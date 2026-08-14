@@ -5,7 +5,6 @@ from typing import Any
 
 import requests
 
-
 # =============================================================
 # Configuration
 # =============================================================
@@ -26,15 +25,11 @@ DOWNLOAD_TIMEOUT = 120
 # =============================================================
 
 
-class APIError(
-    RuntimeError
-):
+class APIError(RuntimeError):
     """
     Error communicating with the
     FastAPI backend.
     """
-
-    pass
 
 
 # =============================================================
@@ -51,9 +46,7 @@ def _error_detail(
     """
 
     try:
-        payload = (
-            response.json()
-        )
+        payload = response.json()
 
         if isinstance(
             payload,
@@ -69,11 +62,7 @@ def _error_detail(
     except ValueError:
         pass
 
-    return (
-        response.text
-        or response.reason
-        or "Unknown backend error."
-    )
+    return response.text or response.reason or "Unknown backend error."
 
 
 def _handle_json_response(
@@ -87,31 +76,19 @@ def _handle_json_response(
         response.raise_for_status()
 
     except requests.HTTPError as exc:
-        raise APIError(
-            _error_detail(
-                response
-            )
-        ) from exc
+        raise APIError(_error_detail(response)) from exc
 
     try:
-        payload = (
-            response.json()
-        )
+        payload = response.json()
 
     except ValueError as exc:
-        raise APIError(
-            "Backend returned an "
-            "invalid JSON response."
-        ) from exc
+        raise APIError("Backend returned an " "invalid JSON response.") from exc
 
     if not isinstance(
         payload,
         dict,
     ):
-        raise APIError(
-            "Backend returned an "
-            "unexpected response."
-        )
+        raise APIError("Backend returned an " "unexpected response.")
 
     return payload
 
@@ -128,22 +105,14 @@ def get_health() -> dict[str, Any]:
 
     try:
         response = requests.get(
-            (
-                f"{API_BASE_URL}"
-                "/health"
-            ),
+            (f"{API_BASE_URL}" "/health"),
             timeout=10,
         )
 
     except requests.RequestException as exc:
-        raise APIError(
-            "FastAPI backend is "
-            "unavailable."
-        ) from exc
+        raise APIError("FastAPI backend is " "unavailable.") from exc
 
-    return _handle_json_response(
-        response
-    )
+    return _handle_json_response(response)
 
 
 # =============================================================
@@ -158,22 +127,14 @@ def get_filters() -> dict[str, Any]:
 
     try:
         response = requests.get(
-            (
-                f"{API_BASE_URL}"
-                "/api/v1/filters"
-            ),
+            (f"{API_BASE_URL}" "/api/v1/filters"),
             timeout=30,
         )
 
     except requests.RequestException as exc:
-        raise APIError(
-            "Unable to reach "
-            "the backend."
-        ) from exc
+        raise APIError("Unable to reach " "the backend.") from exc
 
-    return _handle_json_response(
-        response
-    )
+    return _handle_json_response(response)
 
 
 def get_stats() -> dict[str, Any]:
@@ -183,22 +144,14 @@ def get_stats() -> dict[str, Any]:
 
     try:
         response = requests.get(
-            (
-                f"{API_BASE_URL}"
-                "/api/v1/stats"
-            ),
+            (f"{API_BASE_URL}" "/api/v1/stats"),
             timeout=30,
         )
 
     except requests.RequestException as exc:
-        raise APIError(
-            "Unable to reach "
-            "the backend."
-        ) from exc
+        raise APIError("Unable to reach " "the backend.") from exc
 
-    return _handle_json_response(
-        response
-    )
+    return _handle_json_response(response)
 
 
 # =============================================================
@@ -222,43 +175,30 @@ def run_analysis(
         "question": question,
         "session_id": session_id,
         "pipeline": pipeline,
-        "retrieval_mode": (
-            retrieval_mode
-        ),
+        "retrieval_mode": (retrieval_mode),
         "top_k": top_k,
         "ticker": ticker,
-        "report_year": (
-            report_year
-        ),
+        "report_year": (report_year),
         "model": model,
     }
 
     try:
 
         response = requests.post(
-            (
-                f"{API_BASE_URL}"
-                "/api/v1/query"
-            ),
+            (f"{API_BASE_URL}" "/api/v1/query"),
             json=payload,
             timeout=QUERY_TIMEOUT,
         )
 
     except requests.Timeout as exc:
 
-        raise APIError(
-            "The analysis request timed out."
-        ) from exc
+        raise APIError("The analysis request timed out.") from exc
 
     except requests.RequestException as exc:
 
-        raise APIError(
-            "The connection to the backend was lost."
-        ) from exc
+        raise APIError("The connection to the backend was lost.") from exc
 
-    return _handle_json_response(
-        response
-    )
+    return _handle_json_response(response)
 
 
 def submit_feedback(
@@ -270,10 +210,7 @@ def submit_feedback(
     try:
 
         response = requests.post(
-            (
-                f"{API_BASE_URL}"
-                "/api/v1/feedback"
-            ),
+            (f"{API_BASE_URL}" "/api/v1/feedback"),
             json={
                 "response_id": response_id,
                 "rating": rating,
@@ -283,13 +220,10 @@ def submit_feedback(
 
     except requests.RequestException as exc:
 
-        raise APIError(
-            "Unable to save feedback."
-        ) from exc
+        raise APIError("Unable to save feedback.") from exc
 
-    return _handle_json_response(
-        response
-    )
+    return _handle_json_response(response)
+
 
 # =============================================================
 # Generated files
@@ -306,27 +240,16 @@ def download_generated_file(
 
     try:
         response = requests.get(
-            (
-                f"{API_BASE_URL}"
-                f"/api/v1/files/"
-                f"{filename}"
-            ),
+            (f"{API_BASE_URL}" f"/api/v1/files/" f"{filename}"),
             timeout=DOWNLOAD_TIMEOUT,
         )
 
         response.raise_for_status()
 
     except requests.HTTPError as exc:
-        raise APIError(
-            _error_detail(
-                response
-            )
-        ) from exc
+        raise APIError(_error_detail(response)) from exc
 
     except requests.RequestException as exc:
-        raise APIError(
-            "Unable to download "
-            f"{filename}."
-        ) from exc
+        raise APIError("Unable to download " f"{filename}.") from exc
 
     return response.content

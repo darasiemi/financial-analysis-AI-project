@@ -13,9 +13,7 @@ from ingestion.processing.database import (
 def get_available_filters() -> dict[str, list[Any]]:
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
     query = """
         SELECT DISTINCT
@@ -30,9 +28,7 @@ def get_available_filters() -> dict[str, list[Any]]:
     tickers: set[str] = set()
     years: set[int] = set()
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
         with connection.cursor() as cursor:
             cursor.execute(query)
 
@@ -41,9 +37,7 @@ def get_available_filters() -> dict[str, list[Any]]:
                     tickers.add(str(ticker))
 
                 if report_year is not None:
-                    years.add(
-                        int(report_year)
-                    )
+                    years.add(int(report_year))
 
     return {
         "tickers": sorted(tickers),
@@ -54,9 +48,7 @@ def get_available_filters() -> dict[str, list[Any]]:
 def get_corpus_stats() -> dict[str, int]:
     load_environment()
 
-    connection_string = (
-        get_postgres_connection_string()
-    )
+    connection_string = get_postgres_connection_string()
 
     query = """
         SELECT
@@ -72,9 +64,7 @@ def get_corpus_stats() -> dict[str, int]:
         FROM financial_analysis.retrieval_documents
     """
 
-    with psycopg.connect(
-        connection_string
-    ) as connection:
+    with psycopg.connect(connection_string) as connection:
         with connection.cursor() as cursor:
             cursor.execute(query)
             row = cursor.fetchone()
@@ -101,18 +91,14 @@ def database_is_available() -> bool:
     try:
         load_environment()
 
-        connection_string = (
-            get_postgres_connection_string()
-        )
+        connection_string = get_postgres_connection_string()
 
         with psycopg.connect(
             connection_string,
             connect_timeout=3,
         ) as connection:
             with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT 1"
-                )
+                cursor.execute("SELECT 1")
                 cursor.fetchone()
 
         return True
