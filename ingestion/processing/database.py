@@ -16,12 +16,13 @@ from ingestion.processing.models import ReportRecord
 
 
 def load_environment() -> None:
-    """Load environment variables from ingestion/.env."""
+    """Load local environment variables when a .env file exists."""
 
-    if not ENV_PATH.exists():
-        raise FileNotFoundError(f"Environment file not found: {ENV_PATH}")
-
-    load_dotenv(ENV_PATH)
+    if ENV_PATH.exists():
+        load_dotenv(
+            ENV_PATH,
+            override=False,
+        )
 
 
 def get_postgres_connection_string() -> str:

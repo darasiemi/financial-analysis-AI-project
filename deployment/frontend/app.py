@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import sys
 import uuid
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,16 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from deployment.frontend.api_client import (
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(
+        0,
+        str(PROJECT_ROOT),
+    )
+
+
+from deployment.frontend.api_client import (  # pylint: disable=wrong-import-position
     APIError,
     download_generated_file,
     get_filters,
