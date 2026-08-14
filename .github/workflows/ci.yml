@@ -4,10 +4,15 @@ on:
   push:
   pull_request:
 
+
 jobs:
   quality:
     name: Code quality
+
     runs-on: ubuntu-latest
+
+    env:
+      PYTHONPATH: ${{ github.workspace }}
 
     steps:
       - name: Checkout repository
@@ -55,6 +60,7 @@ jobs:
 
   integration:
     name: Fast integration tests
+
     runs-on: ubuntu-latest
 
     services:
@@ -77,6 +83,8 @@ jobs:
           --health-retries 10
 
     env:
+      PYTHONPATH: ${{ github.workspace }}
+
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
       POSTGRES_DB: financial_analysis
@@ -103,7 +111,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      - name: Run integration tests
+      - name: Run smoke and integration tests
         run: |
           uv run --group test pytest \
             tests/smoke \
@@ -128,13 +136,17 @@ jobs:
               --silent \
               http://localhost:8000/health
             then
+              echo "FastAPI started successfully."
               exit 0
             fi
 
             sleep 1
           done
 
+          echo "FastAPI failed to start."
+
           cat /tmp/backend.log
+
           exit 1
 
       - name: Start Streamlit and verify startup

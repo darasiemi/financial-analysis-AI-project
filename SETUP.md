@@ -1069,3 +1069,129 @@ Run
 ```bash
 chmod +x scripts/check_streamlit.sh
 ```
+
+### Run Fast Integration Tests
+
+Run the smoke and integration test suite:
+
+```bash
+make test_fast
+```
+
+This target executes:
+
+```bash
+uv run --group test pytest \
+    tests/smoke \
+    tests/integration \
+    -v
+```
+
+The test suite includes:
+
+- **Import checks** — verifies that the main application modules can be imported successfully.
+- **PostgreSQL connectivity** — verifies that the application can connect to the PostgreSQL database.
+- **Monitoring schema creation** — verifies that the monitoring database schema can be created successfully.
+- **FastAPI startup** — verifies that the FastAPI application starts without errors.
+- **RAG integration test** — sends a mocked RAG request through the FastAPI endpoint and verifies that a valid response is returned.
+- **Agent integration test** — sends a mocked Agent request through the FastAPI endpoint and verifies that a valid response is returned.
+
+The RAG and Agent calls are mocked so that the fast integration tests do not make real LLM API calls. This keeps the test suite fast, deterministic, and suitable for running on every push and pull request.
+
+To run the tests:
+
+```bash
+make test_fast
+```
+
+A successful run should report all tests as passed:
+
+```text
+tests/smoke/...
+tests/integration/...
+
+================= passed =================
+```
+
+## Code Quality and Testing
+
+The project provides Makefile targets for code formatting, linting, pre-commit checks, and automated testing.
+
+### Format Code
+
+Automatically format Python code with Black and sort imports with isort:
+
+```bash
+make format
+```
+
+### Check Formatting
+
+Check whether the code follows Black formatting and isort import-ordering rules without modifying any files:
+
+```bash
+make format_check
+```
+
+### Run Linting
+
+Run Pylint to check the codebase for code-quality issues:
+
+```bash
+make lint
+```
+
+### Run All Code Quality Checks
+
+Run formatting, import-ordering, and Pylint checks together:
+
+```bash
+make quality
+```
+
+### Run Pre-commit Checks
+
+Run all configured pre-commit hooks across the repository:
+
+```bash
+make precommit
+```
+
+Once the pre-commit hooks are installed, they also run automatically when committing changes.
+
+### Run Fast Tests
+
+Run the smoke and integration test suite:
+
+```bash
+make test_fast
+```
+
+The fast test suite checks:
+
+- Python module imports
+- PostgreSQL connectivity
+- Monitoring schema creation
+- FastAPI startup
+- Mocked RAG requests
+- Mocked Agent requests
+
+### Recommended Development Workflow
+
+Before committing changes, format the code and run the quality and test suites:
+
+```bash
+make format
+make quality
+make test_fast
+```
+
+Then commit and push the changes:
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+GitHub Actions automatically runs the configured code-quality and integration checks on pushes and pull requests.
