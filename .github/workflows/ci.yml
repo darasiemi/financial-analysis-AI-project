@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    name: Code quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Check Python syntax
+        run: |
+          uv run python -m compileall -q \
+            agent \
+            deployment \
+            ingestion \
+            monitoring \
+            rag \
+            retrieval \
+            scripts
+
+      - name: Check formatting
+        run: |
+          uv run --group quality black --check .
+
+      - name: Check import ordering
+        run: |
+          uv run --group quality isort --check-only .
+
+      - name: Run Pylint
+        run: |
+          uv run --group quality pylint \
+            agent \
+            deployment \
+            ingestion \
+            monitoring \
+            rag \
+            retrieval \
+            scripts
+
+
+  integration:
+    name: Fast integration tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+
+        env:
+          POSTGRES_DB: financial_analysis
+          POSTGRES_USER: usr
+          POSTGRES_PASSWORD: password
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd
+          "pg_isready -U usr -d financial_analysis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: financial_analysis
+      POSTGRES_USER: usr
+      POSTGRES_PASSWORD: password
+
+      DESTINATION__POSTGRES__CREDENTIALS: >-
+        postgresql://usr:password@localhost:5432/financial_analysis
+
+      MONITORING_JUDGE_SAMPLE_RATE: "0"
+
+      FASTAPI_BASE_URL: http://localhost:8000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run integration tests
+        run: |
+          uv run --group test pytest \
+            tests/smoke \
+            tests/integration \
+            -v
+
+      - name: Start FastAPI
+        run: |
+          uv run --group backend uvicorn \
+            deployment.backend.main:app \
+            --host 0.0.0.0 \
+            --port 8000 \
+            > /tmp/backend.log 2>&1 &
+
+          echo $! > /tmp/backend.pid
+
+      - name: Wait for FastAPI
+        run: |
+          for i in {1..30}; do
+            if curl \
+              --fail \
+              --silent \
+              http://localhost:8000/health
+            then
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          cat /tmp/backend.log
+          exit 1
+
+      - name: Start Streamlit and verify startup
+        run: |
+          chmod +x scripts/check_streamlit.sh
+          ./scripts/check_streamlit.sh
+
+      - name: Show backend logs on failure
+        if: failure()
+        run: |
+          cat /tmp/backend.log || true

@@ -1,0 +1,16 @@
+from fastapi.testclient import (
+    TestClient,
+)
+
+from deployment.backend.main import (
+    app,
+)
+
+
+def test_fastapi_starts() -> None:
+    with TestClient(app) as client:
+        response = client.get("/health")
+
+        assert response.status_code == 200
+
+        assert response.json()["status"] == "healthy"

@@ -1063,3 +1063,9 @@ Test everything once
 ```bash
 uv run --group quality pre-commit run --all-files
 ```
+
+To make `check_streamlit.sh` executable
+Run
+```bash
+chmod +x scripts/check_streamlit.sh
+```

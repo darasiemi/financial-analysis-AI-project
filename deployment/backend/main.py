@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import (
     BackgroundTasks,
@@ -49,18 +50,27 @@ from monitoring.telemetry import (
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(
+    _app: FastAPI,
+):
+    """
+    Initialise application resources at startup.
+    """
+
+    ensure_monitoring_schema()
+
+    yield
+
+
 app = FastAPI(
     title="Financial Analysis API",
     description=(
         "RAG and agentic financial analysis " "over corporate annual reports."
     ),
     version="0.2.0",
+    lifespan=lifespan,
 )
-
-
-@app.on_event("startup")
-def startup() -> None:
-    ensure_monitoring_schema()
 
 
 @app.get(

@@ -157,3 +157,38 @@ synthetic_test:
 		--requests $(REQUESTS) \
 		--delay 3 \
 		--pipeline mixed
+
+test_fast:
+	uv run --group test pytest \
+		tests/smoke \
+		tests/integration \
+		-v
+
+format:
+	uv run --group quality isort .
+	uv run --group quality black .
+
+
+format_check:
+	uv run --group quality isort --check-only .
+	uv run --group quality black --check .
+
+
+lint:
+	uv run --group quality pylint \
+		agent \
+		deployment \
+		ingestion \
+		monitoring \
+		rag \
+		retrieval \
+		scripts
+
+
+quality:
+	$(MAKE) format_check
+	$(MAKE) lint
+
+
+precommit:
+	uv run --group quality pre-commit run --all-files
