@@ -528,3 +528,6 @@ Because manually creating and validating a sufficiently challenging financial-an
 
 12. **I separated development and deployment dependencies and workflows to address disk-space constraints and keep deployment lean.**  
     After Docker builds exhausted the available disk space on my machine, I separated development dependencies, such as ingestion, notebooks, evaluation, and document processing, from the frontend and backend runtime dependencies. I also used a Makefile for local development and Docker Compose for fully containerized deployment. This reduces unnecessary deployment dependencies while improving maintainability and reproducibility.
+
+13. **I chose PostgreSQL over a document database to support both application data and monitoring.**  
+    Although a document database such as MongoDB can provide greater flexibility for storing semi-structured JSON which I used for my data-RAG pipeline, PostgreSQL better fits the application's combination of structured financial data, retrieval metadata, user interactions, feedback, latency, cost, and evaluation metrics, while still supporting semi-structured data through `JSONB`. PostgreSQL also integrates directly with Grafana, allowing monitoring metrics to be queried using SQL without introducing a separate database.

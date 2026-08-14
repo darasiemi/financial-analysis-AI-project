@@ -120,8 +120,7 @@ backend:
 		--reload-dir retrieval \
 		--reload-dir ingestion \
 		--reload-dir monitoring \
-		--env-file .env
-
+		
 
 frontend:
 	uv run --group frontend streamlit run deployment/frontend/app.py
@@ -139,3 +138,9 @@ app:
 
 stop_app:
 	docker compose down
+
+synthetic_test:
+	uv run python scripts/synthetic_traffic.py \
+		--requests 5 \
+		--delay 3 \
+		--pipeline mixed

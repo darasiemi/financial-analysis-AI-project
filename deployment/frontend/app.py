@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import os
 import json
 import random
 import uuid
@@ -159,7 +159,10 @@ st.html(
 # =============================================================
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(
+    ttl=300,
+    show_spinner="Starting up your financial analysis app...",
+)
 def load_filters() -> dict[str, Any]:
     """
     Load company and year filters from FastAPI.
@@ -217,7 +220,7 @@ def load_flashcards() -> list[dict[str, Any]]:
 
 def display_rotating_flashcards() -> None:
     """
-    Display flashcards that rotate every 3 seconds.
+    Display flashcards that rotate every 5 seconds.This is edited in env
 
     Rotation happens in browser CSS, so it continues
     while the backend is processing the request.
@@ -238,7 +241,12 @@ def display_rotating_flashcards() -> None:
         cards
     )
 
-    seconds_per_card = 3
+    seconds_per_card = float(
+    os.getenv(
+        "FLASHCARD_SECONDS_PER_CARD",
+        "5",
+    )
+   )
 
     animation_duration = (
         total_cards
@@ -1207,11 +1215,13 @@ st.html(
     </h1>
 
     <p>
-        Ask analytical questions across corporate annual reports.
-        Compare reported metrics, inspect retrieved evidence,
-        reason over structured financial tables, generate
-        presentation-ready analysis, and use an agentic workflow
-        when additional tools are required.
+        Ask questions and compare financial information across corporate annual reports for select Nigerian companies.
+        Use <strong>RAG</strong> for straightforward questions that can be answered directly
+        from the reports, or select <strong>Agent</strong> for more complex tasks that may
+        require calculations, comparisons or presentation generation. You can also choose a
+        company, report year, and retrieval strategy from the sidebar to narrow your analysis.
+        The app can show the evidence used to generate its answers and, where requested,
+        create presentation-ready outputs.
     </p>
 
 </div>

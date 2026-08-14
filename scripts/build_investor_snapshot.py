@@ -83,25 +83,18 @@ def calculate_growth(
     previous: float,
 ) -> float | None:
     """
-    Calculate ordinary year-on-year percentage change.
-
-    This should only be used where the previous
-    value provides a meaningful percentage base.
+    Calculate year-on-year percentage change
+    relative to the absolute previous value.
     """
 
     if previous == 0:
-
         return None
 
     return (
-        (
-            current
-            - previous
-        )
+        (current - previous)
         / abs(previous)
         * 100
     )
-
 
 def format_percentage_growth(
     growth: float | None,
@@ -129,23 +122,8 @@ def build_growth_display(
     str,
 ]:
     """
-    Determine how a change should be presented.
-
-    A loss-to-profit transition is labelled as a
-    turnaround rather than displayed as a conventional
-    percentage growth rate.
+    Calculate and format year-on-year change.
     """
-
-    if (
-        change_mode == "turnaround"
-        and previous < 0
-        and current > 0
-    ):
-
-        return (
-            None,
-            "Turnaround to profit",
-        )
 
     growth = calculate_growth(
         current=current,
@@ -159,7 +137,6 @@ def build_growth_display(
         ),
     )
 
-
 # =============================================================
 # Snapshot generation
 # =============================================================
@@ -167,7 +144,7 @@ def build_growth_display(
 
 def build_snapshot() -> dict[str, Any]:
     """
-    Generate the precomputed investor comparison.
+    Generate the precomputed investor growth comparison.
 
     Streamlit consumes the generated JSON directly,
     avoiding database, retrieval, and LLM work at
@@ -178,37 +155,27 @@ def build_snapshot() -> dict[str, Any]:
         "r",
         encoding="utf-8",
     ) as file:
-
-        source = json.load(
-            file
-        )
+        source = json.load(file)
 
     output: dict[str, Any] = {
         "title": source.get(
             "title",
             "Growth Comparison",
         ),
-
         "subtitle": source.get(
             "subtitle",
             "",
         ),
-
         "as_of_year": source[
             "as_of_year"
         ],
-
         "previous_year": source[
             "previous_year"
         ],
-
         "companies": {},
     }
 
-    for (
-        ticker,
-        company,
-    ) in source[
+    for ticker, company in source[
         "companies"
     ].items():
 
@@ -236,21 +203,29 @@ def build_snapshot() -> dict[str, Any]:
                 ]
             )
 
-            change_mode = str(
-                metric.get(
-                    "change_mode",
-                    "percentage",
+            # Calculate percentage change.
+            #
+            # abs(previous) allows a loss-to-profit
+            # transition, such as MTN Nigeria's PAT,
+            # to be represented numerically.
+            if previous == 0:
+                growth_percent = None
+            else:
+                growth_percent = (
+                    (
+                        current
+                        - previous
+                    )
+                    / abs(previous)
+                    * 100
                 )
-            )
 
-            (
-                growth_percent,
-                growth_display,
-            ) = build_growth_display(
-                current=current,
-                previous=previous,
-                change_mode=change_mode,
-            )
+            if growth_percent is None:
+                growth_display = "N/A"
+            else:
+                growth_display = (
+                    f"{growth_percent:+.1f}%"
+                )
 
             processed_metrics.append(
                 {
@@ -282,13 +257,11 @@ def build_snapshot() -> dict[str, Any]:
             "name": company[
                 "name"
             ],
-
             "metrics":
                 processed_metrics,
         }
 
     return output
-
 
 # =============================================================
 # Main

@@ -87,13 +87,13 @@
           "current": 1112.846,
           "previous": -400.435,
           "unit": "ngn_billion",
-          "change_mode": "turnaround",
+          "change_mode": "percentage",
           "source": "MTN Nigeria 2025 Annual Report",
           "source_page": 161,
           "display_value": "₦1.11tn",
           "previous_display_value": "₦-400.4bn",
-          "growth_percent": null,
-          "growth_display": "Turnaround to profit"
+          "growth_percent": 377.90927366488944,
+          "growth_display": "+377.9%"
         }
       ]
     }
