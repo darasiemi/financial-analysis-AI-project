@@ -2,7 +2,9 @@
 
 This project represents not only the application of those lessons, but also my continued effort to deepen my understanding by designing, implementing, debugging, evaluating, and documenting a complete AI system from end to end.
 
-![Demo](media/streamlit-app-video.gif)
+<!-- ![Demo](media/streamlit-app-video.webm) -->
+
+ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif
 
 ## Generative AI Use Declaration
 
