@@ -1,5 +1,10 @@
 # Nigeria Stock Financial Analysis Project
 
+An AI-powered financial analysis application for exploring and analysing
+Nigerian companies' annual reports using RAG and agentic workflows.
+
+![Financial Analysis AI Demo](media/streamlit-app-video.gif)
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -43,8 +48,6 @@ Yet, making informed investment decisions often requires reading lengthy annual 
 The initial implementation focuses on **MTN Nigeria, Guaranty Trust Holding Company (GTCO), and Zenith Bank** as a starting point. However, the underlying ingestion, retrieval, and analysis architecture is designed to be extensible to other companies listed on the **Nigerian Exchange (NGX)**.
 
 Ultimately, the goal is not to automate investment decisions, but to **improve financial literacy and support more informed, evidence-based investment analysis**.
-
-![Demo](media/streamlit-app-video.webm)
 
 <!-- ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif -->
 ## Documentation
