@@ -1,5 +1,14 @@
 # Nigeria Stock Financial Analysis Project
 
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Problem Statement](#problem-statement)
+3. [Documentation](#documentation)
+4. [Technology Stack](#technology-stack)
+5. [Generative AI Use Declaration](#generative-ai-use-declaration)
+6. [Acknowledgements](#acknowledgements)
+
 ## Introduction
 
 This project is my final project for the DataTalks.Club [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp), an online bootcamp focused on building applications with Large Language Models (LLMs).
