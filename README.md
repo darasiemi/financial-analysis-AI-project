@@ -26,6 +26,12 @@ This project is my final project for the DataTalks.Club [LLM Zoomcamp](https://g
 
 The LLM Zoomcamp is the **fourth DataTalks.Club Zoomcamp** I have taken, following the **Data Engineering Zoomcamp, Machine Learning Zoomcamp, and MLOps Zoomcamp**. Rather than treating the lessons from these programmes independently, I adapted relevant engineering practices from them to build this project as an end-to-end financial analysis LLM application.
 
+The Zoomcamp tutorials were originally developed using OpenAI models. I followed the course using **Gemini instead**, both to reduce API costs and to deepen my understanding by adapting the course material to a different LLM provider.
+
+If you would like to follow the LLM Zoomcamp using the **Gemini API**, you can find my adapted course materials here:
+
+[**Gemini LLM Zoomcamp Course Materials**](https://github.com/darasiemi/LLMzoomcamp)
+
 ## Problem Statement
 
 I started this project after recognising a gap in my own financial knowledge. I wanted to better understand how to evaluate companies, interpret financial reports, and make investment decisions based on analysis.
