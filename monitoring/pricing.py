@@ -18,6 +18,10 @@ MODEL_PRICING: dict[str, ModelPricing] = {
         input_per_million=0.10,
         output_per_million=0.40,
     ),
+    "gemini-3.1-flash-lite": ModelPricing(
+        input_per_million=0.25,
+        output_per_million=1.50,
+    ),
 }
 
 
