@@ -1,8 +1,26 @@
 # System Architecture
 
-This document describes the architecture of my Financial Analysis AI system, including data ingestion, retrieval, analysis pipelines, deployment, monitoring, and observability. 
+This document describes the architecture of my Financial Analysis AI system, including data ingestion, retrieval, analysis pipelines, deployment, monitoring, and observability.
 
 For installation and deployment instructions, see `SETUP.md`.
+
+---
+
+## Table of Contents
+
+1. [System Overview](#1-system-overview)
+2. [Data Ingestion and Processing](#2-data-ingestion-and-processing)
+3. [Retrieval Layer](#3-retrieval-layer)
+4. [RAG Pipeline](#4-rag-pipeline)
+5. [Agentic Financial Analysis](#5-agentic-financial-analysis)
+6. [Evaluation](#6-evaluation)
+7. [Application and Deployment Architecture](#7-application-and-deployment-architecture)
+8. [Monitoring and Observability](#8-monitoring-and-observability)
+9. [Grafana Monitoring Architecture](#9-grafana-monitoring-architecture)
+10. [Precomputed Investor Growth Comparison](#10-precomputed-investor-growth-comparison)
+11. [Security and Design Decisions](#11-security-and-design-decisions)
+12. [End-to-End Flow](#12-end-to-end-flow)
+13. [System Design Trade-offs](#13-system-design-trade-offs)
 
 ---
 

@@ -8,6 +8,25 @@ For system architecture, see `SYSTEM.md`.
 
 ---
 
+## Table of Contents
+
+1. [Prerequisites](#1-prerequisites)
+2. [Install Dependencies](#2-install-dependencies)
+3. [Configure Environment Variables](#3-configure-environment-variables)
+4. [Start the Local Database](#4-start-the-local-database)
+5. [Ingest and Index Annual Reports](#5-ingest-and-index-annual-reports)
+6. [Test Retrieval, RAG, and Agent Pipelines](#6-test-retrieval-rag-and-agent-pipelines)
+7. [Run the Application](#7-run-the-application)
+8. [Evaluation](#8-evaluation)
+9. [Testing and Code Quality](#9-testing-and-code-quality)
+10. [Local Monitoring](#10-local-monitoring)
+11. [Railway Deployment](#11-railway-deployment)
+12. [Sync Production Monitoring Data Locally](#12-sync-production-monitoring-data-locally)
+13. [Common Development Workflow](#13-common-development-workflow)
+14. [Makefile Command Reference](#14-makefile-command-reference)
+
+---
+
 ## 1. Prerequisites
 
 Install:
