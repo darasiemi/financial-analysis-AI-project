@@ -1,5 +1,11 @@
-db_start:
-	cd ingestion && docker compose --env-file ../.env up -d
+# Load local environment variables
+ifneq (,$(wildcard .env))
+include .env
+export
+endif
+
+# db_start:
+# 	cd ingestion && docker compose --env-file ../.env up -d
 
 db_stop:
 	cd ingestion && docker compose down
@@ -192,3 +198,85 @@ quality:
 
 precommit:
 	uv run --group quality pre-commit run --all-files
+
+# ---------------------------------------------------------------------
+# Database configuration
+# ---------------------------------------------------------------------
+
+RAILWAY_DB_SERVICE ?= Postgres
+RAILWAY_TUNNEL_PORT ?= 55432
+
+LOCAL_POSTGRES_HOST ?= $(POSTGRES_HOST)
+LOCAL_POSTGRES_PORT ?= $(POSTGRES_PORT)
+LOCAL_POSTGRES_DB ?= $(POSTGRES_DB)
+LOCAL_POSTGRES_USER ?= $(POSTGRES_USER)
+
+PG18_BIN := $(shell brew --prefix postgresql@18)/bin
+
+# ---------------------------------------------------------------------
+# Railway database
+# ---------------------------------------------------------------------
+
+
+.PHONY: railway-tunnel sync-monitoring-from-railway
+
+
+railway-tunnel:
+	@echo "Opening SSH tunnel to Railway PostgreSQL..."
+	railway connect $(RAILWAY_DB_SERVICE) \
+		--tunnel-only \
+		--port $(RAILWAY_TUNNEL_PORT)
+
+
+sync-monitoring-from-railway:
+	@if [ -z "$(RAILWAY_POSTGRES_PASSWORD)" ]; then \
+		echo "Error: RAILWAY_POSTGRES_PASSWORD is not set."; \
+		exit 1; \
+	fi
+
+	@if [ -z "$(POSTGRES_PASSWORD)" ]; then \
+		echo "Error: POSTGRES_PASSWORD is not set."; \
+		exit 1; \
+	fi
+
+	@echo "Dumping Railway monitoring data..."
+
+	@PGPASSWORD="$(RAILWAY_POSTGRES_PASSWORD)" \
+	$(PG18_BIN)/pg_dump \
+		-h 127.0.0.1 \
+		-p $(RAILWAY_TUNNEL_PORT) \
+		-U postgres \
+		-d railway \
+		--schema=monitoring \
+		--data-only \
+		--format=custom \
+		--no-owner \
+		--no-privileges \
+		--file=/tmp/railway_monitoring.dump
+
+	@echo "Clearing local monitoring data..."
+
+	@PGPASSWORD="$(POSTGRES_PASSWORD)" \
+	psql \
+		-h $(LOCAL_POSTGRES_HOST) \
+		-p $(LOCAL_POSTGRES_PORT) \
+		-U $(LOCAL_POSTGRES_USER) \
+		-d $(LOCAL_POSTGRES_DB) \
+		-c "TRUNCATE monitoring.feedback, monitoring.llm_calls, monitoring.interactions, monitoring.sessions RESTART IDENTITY CASCADE;"
+
+	@echo "Restoring Railway monitoring data locally..."
+
+	@PGPASSWORD="$(POSTGRES_PASSWORD)" \
+	$(PG18_BIN)/pg_restore \
+		-h $(LOCAL_POSTGRES_HOST) \
+		-p $(LOCAL_POSTGRES_PORT) \
+		-U $(LOCAL_POSTGRES_USER) \
+		-d $(LOCAL_POSTGRES_DB) \
+		--data-only \
+		--no-owner \
+		--no-privileges \
+		/tmp/railway_monitoring.dump
+
+	@rm -f /tmp/railway_monitoring.dump
+
+	@echo "Monitoring data synced successfully."

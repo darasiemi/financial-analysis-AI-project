@@ -1,125 +1,131 @@
 # System Architecture
 
-## Introduction
+This document describes the architecture of my Financial Analysis AI system, including data ingestion, retrieval, analysis pipelines, deployment, monitoring, and observability. 
 
-This is a final project for the Data Talks Club LLM [Zoomcamp](https://datatalks.club/docs/courses/llm-zoomcamp/) . In this project, I have implemented the end-to-end
+For installation and deployment instructions, see `SETUP.md`.
 
-## Data Ingestion
+---
 
-The ingestion pipeline automatically downloads annual reports from selected Nigerian listed companies, using **Requests** for direct downloads and **Playwright** for JavaScript-protected sources. Reports are validated for PDF integrity, reporting year, and duplicates, with **SHA-256 hashing** used for file identification and integrity checks. Validated reports and their metadata are then ingested into **PostgreSQL using dlt**, providing the source data for the downstream PDF processing, indexing, and retrieval pipelines.
+## 1. System Overview
 
-### PDF Processing Pipeline
+The system provides AI-assisted financial analysis over corporate annual reports using both Retrieval-Augmented Generation (RAG) and agentic workflows.
 
-The PDF processing pipeline transforms annual reports into structured, retrieval-ready narrative chunks and financial tables.
+```text
+Annual Reports
+      │
+      ▼
+Ingestion + PDF Processing
+      │
+      ▼
+PostgreSQL + pgvector
+      │
+      ▼
+Retrieval Index
+      │
+      ├───────────────┐
+      ▼               ▼
+     RAG            Agent
+      │               │
+      └───────┬───────┘
+              ▼
+            Gemini
+              │
+              ▼
+        FastAPI Backend
+              │
+              ▼
+      Streamlit Frontend
+```
 
-- **Layout-aware PDF extraction.**  
-  I used **PyMuPDF** to extract text blocks together with layout information such as bounding boxes, font size, and font style. The pipeline filters repeated headers and footers, contents pages, decorative elements, and other low-information artifacts before reconstructing the document text.
+The main components are:
 
-- **Reading-order and document reconstruction.**  
-  Extracted blocks are reordered to reconstruct coherent narrative content across both single- and two-column layouts. Paragraph boundaries and section headings are identified using layout, textual, and typographical features, producing cleaner document structure than the raw PDF extraction order.
+| Component | Responsibility |
+|---|---|
+| Streamlit | User interface |
+| FastAPI | API and pipeline orchestration |
+| PostgreSQL | Financial data, retrieval data, and monitoring telemetry |
+| pgvector | Vector similarity search |
+| Gemini | Answer generation, agent reasoning, and relevance judging |
+| Grafana | Local monitoring and observability |
+| Railway | Production hosting for FastAPI and PostgreSQL |
 
-- **Narrative chunk generation.**  
-  Reconstructed paragraphs are converted into overlapping, section-aware chunks with configurable size and overlap. Each chunk includes metadata such as the report ID, ticker, reporting year, page range, section title, word and token counts, and a content hash for traceability and deduplication.
+---
 
-- **Structured table extraction.**  
-  Tables are processed through a separate extraction path. Each table is represented as structured **JSON** and is also converted into RAG-friendly text for embedding and retrieval. Table metadata includes its report, page, title, dimensions, and content hash.
+## 2. Data Ingestion and Processing
 
-- **Data ingestion and indexing.**  
-  **dlt** loads the processed narrative chunks and tables into **PostgreSQL**. Embeddings are stored using **pgvector**, while PostgreSQL full-text indexing supports lexical search, providing the indexed knowledge base used by the downstream RAG and agent pipelines.
+The ingestion pipeline downloads annual reports from selected Nigerian listed companies using `requests` for direct downloads and Playwright for JavaScript-protected sources.
 
-The resulting flow is:
+Reports are validated for PDF integrity, reporting year, and duplicates. SHA-256 hashes are used for file identification and deduplication.
+
+Validated reports are processed into two retrieval-ready forms:
+
+- **Narrative chunks:** extracted with PyMuPDF, reordered using layout information, cleaned, reconstructed into paragraphs, and split into overlapping section-aware chunks.
+- **Financial tables:** extracted separately, stored as structured JSON, and converted to RAG-friendly text for retrieval.
+
+Processed data is loaded into PostgreSQL using `dlt`.
 
 ```text
 Annual Report PDFs
         │
         ▼
-   PyMuPDF Parsing
+    PyMuPDF
         │
-        ├──────────────────────┐
-        ▼                      ▼
-Narrative Processing      Table Extraction
-        │                      │
-Reading-Order             Structured JSON
-Reconstruction            + RAG Text
-        │                      │
-Paragraph Reconstruction       │
-        │                      │
-Chunking                       │
-        │                      │
-        └──────────┬───────────┘
-                   ▼
-             dlt Ingestion
-                   │
-                   ▼
-              PostgreSQL
-                   │
-          ┌────────┴────────┐
-          ▼                 ▼
-    Full-Text Index      pgvector
-          │                 │
-          └────────┬────────┘
-                   ▼
-             RAG / Agent
-
- ```             
-## Retrieval Index
-
-The retrieval pipeline creates a unified searchable index from both narrative text and financial tables. Each document retains metadata about its source, such as the company, reporting year, page, and content type, and is indexed for both **keyword and semantic search**. Dense embeddings are generated using a **SentenceTransformer** model and stored in PostgreSQL with **pgvector**, while full-text indexing supports lexical retrieval. The original structured representation of financial tables is preserved separately so that exact rows, columns, and values can be accessed when needed for financial analysis.
-
-## Search
-
-The project supports three retrieval strategies:
-
-- **Keyword Search:** Uses PostgreSQL Full-Text Search (FTS) to retrieve documents based on lexical similarity, making it effective for exact financial terms and values.
-- **Vector/Semantic Search:** Uses dense embeddings stored with `pgvector` to retrieve semantically similar documents, allowing relevant information to be found even when the query wording differs from the source text.
-- **Hybrid Search:** Combines keyword and vector retrieval using Reciprocal Rank Fusion (RRF), leveraging the strengths of both lexical and semantic search to improve overall retrieval quality.
-
- Narrative passages and financial tables are processed separately but combined into a **single retrieval index**. Tables are converted to a text representation so they can be searched and ranked alongside narrative chunks using keyword, semantic, or hybrid retrieval. The original tables are preserved as structured **JSON**, allowing the system to access their rows, columns, and values when detailed table reasoning is required.
-
- ```
-
-Narrative Pipeline                    Table Pipeline
-       │                                    │
-       ▼                                    ▼
-Narrative Chunks                   Structured Table JSON
-       │                                    │
-       │                              Table → RAG Text
-       │                                    │
-       └──────────────┬─────────────────────┘
-                      ▼
-              Unified Retrieval Index
-                      │
-             ┌────────┴────────┐
-             ▼                 ▼
-       Keyword Search      Vector Search
-             │                 │
-             └────────┬────────┘
-                      ▼
-                Hybrid Search
-                     (RRF)
+   ┌────┴─────┐
+   ▼          ▼
+Narrative   Tables
+Chunks      JSON + RAG Text
+   │          │
+   └────┬─────┘
+        ▼
+       dlt
+        │
+        ▼
+   PostgreSQL
 ```
-### RAG Pipeline
 
-The RAG pipeline retrieves relevant evidence from the indexed annual reports, constructs a grounded context, and uses **Gemini** to generate the final answer.
+Each retrieval document retains source metadata such as company, reporting year, page range, section title, and content type.
 
-- **Configurable retrieval.**  
-  The pipeline supports **keyword, semantic, and hybrid search**, with hybrid retrieval used by default. Queries can also be filtered by company and reporting year.
+---
 
-- **Context construction.**  
-  Retrieved narrative passages and table representations are assembled into a structured context with their source metadata, including content type, company, reporting year, page range, and section.
+## 3. Retrieval Layer
 
-- **Grounded answer generation.**  
-  The retrieved context and user question are passed to **Gemini**, which is instructed to answer only from the supplied evidence, preserve financial values, currencies, units, periods, and entity distinctions, and cite the supporting retrieved sources.
+Narrative chunks and table representations are combined into a unified retrieval index.
 
-- **Insufficient evidence handling.**  
-  If retrieval returns no relevant documents, the pipeline does not generate an unsupported answer and instead reports that no relevant evidence was retrieved.
+The system supports three retrieval strategies:
+
+- **Keyword search:** PostgreSQL Full-Text Search for lexical matching.
+- **Semantic search:** SentenceTransformer embeddings stored with pgvector.
+- **Hybrid search:** Reciprocal Rank Fusion (RRF) combining keyword and vector results.
+
+The original structured JSON representation of financial tables is preserved so exact rows, columns, and values remain accessible when required.
+
+```text
+Narrative Chunks ───────┐
+                        ├──► Unified Retrieval Index
+Table RAG Text ─────────┘
+                              │
+                      ┌───────┴────────┐
+                      ▼                ▼
+                 Keyword Search   Vector Search
+                      │                │
+                      └───────┬────────┘
+                              ▼
+                         Hybrid Search
+```
+
+---
+
+## 4. RAG Pipeline
+
+The RAG pipeline handles evidence-grounded financial question answering.
+
+Flow:
 
 ```text
 User Question
       │
       ▼
-Retrieval
-(Keyword / Semantic / Hybrid)
+Keyword / Semantic / Hybrid Retrieval
       │
       ▼
 Top-K Evidence
@@ -131,26 +137,41 @@ Context Construction
 Gemini
       │
       ▼
-Grounded Answer + Source Citations
+Grounded Answer + Sources
 ```
 
-## Agentic Financial Analysis
+Retrieval can be filtered by company and reporting year.
 
-The project includes a lightweight agentic AI layer built on top of the RAG pipeline. Instead of relying on a single retrieval step, Gemini can inspect retrieved evidence and autonomously select additional tools when needed.
+The generated context contains both the retrieved evidence and its metadata. Gemini is instructed to answer from the supplied evidence and preserve financial values, currencies, units, periods, and entity distinctions.
 
-### Architecture
+If no relevant evidence is retrieved, the pipeline returns an insufficient-evidence response rather than generating an unsupported answer.
 
-The agent follows a two-stage workflow:
+---
 
-1. **Initial Retrieval**
-   - Hybrid search is performed over the indexed annual reports.
-   - Retrieved narrative chunks and tables are supplied to Gemini as initial evidence.
-   - Local annual reports remain the primary source of financial information.
+## 5. Agentic Financial Analysis
 
-2. **Agent Reasoning and Tool Use**
-   - Gemini evaluates the initial evidence.
-   - If sufficient, it answers directly.
-   - Otherwise, it can perform additional retrieval, inspect structured tables, calculate values, search the web, or generate a PowerPoint presentation.
+The agent pipeline extends the RAG pipeline for more complex tasks.
+
+It begins with hybrid retrieval and allows Gemini to invoke additional tools when the initial evidence is insufficient.
+
+Available tools include:
+
+| Tool | Purpose |
+|---|---|
+| Keyword Search | Exact terms, metrics, names, and accounting terminology |
+| Semantic Search | Conceptually related passages and tables |
+| Hybrid Search | Combined lexical and semantic retrieval |
+| Table Lookup | Exact structured table data |
+| Calculator | Deterministic calculations |
+| Web Search | Current or external information |
+| PowerPoint Generation | Generates `.pptx` financial-analysis presentations |
+
+Source priority is:
+
+1. Local annual reports
+2. Structured extracted tables
+3. Deterministic calculations
+4. Public web information
 
 ```text
 User Question
@@ -159,14 +180,9 @@ User Question
 Initial Hybrid Retrieval
       │
       ▼
-Annual Report Context
-      │
-      ▼
 Gemini Agent
       │
-      ├── Keyword Search
-      ├── Semantic Search
-      ├── Hybrid Search
+      ├── Retrieval
       ├── Table Lookup
       ├── Calculator
       ├── Web Search
@@ -176,113 +192,31 @@ Gemini Agent
 Final Response / Presentation
 ```
 
-### Agent Tools
+Tool calls are retained for traceability and debugging.
 
-| Tool | Purpose |
-| --- | --- |
-| **Hybrid Search** | Combines lexical and semantic retrieval using Reciprocal Rank Fusion (RRF). |
-| **Keyword Search** | Retrieves exact names, financial metrics, executive titles, and accounting terminology. |
-| **Semantic Search** | Retrieves conceptually similar narrative chunks and tables using embeddings. |
-| **Table Lookup** | Retrieves the original structured JSON for an extracted table when exact values or row/column relationships are required. |
-| **Calculator** | Performs deterministic calculations such as percentage changes, ratios, margins, and differences. |
-| **Web Search** | Uses Gemini with Google Search grounding for current or external information. |
-| **PowerPoint Generation** | Creates designed `.pptx` presentations containing metrics, comparisons, charts, highlights, summaries, and sources. |
+---
 
-### Source Priority
+## 6. Evaluation
 
-The agent prioritizes evidence in the following order:
+The evaluation framework compares keyword, semantic, hybrid RAG, and agentic pipelines using a financially focused benchmark.
 
-1. Local annual reports
-2. Structured extracted tables
-3. Deterministic calculations
-4. Public web information
+The benchmark contains synthetic question-answer pairs generated from indexed annual reports and independently validated for grounding, financial relevance, difficulty, calculation validity, entity/period/unit consistency, and naturalness.
 
-Web search is primarily used when information is current, external, or unavailable in the indexed reports.
+Evaluation includes:
 
-### PowerPoint Generation
+- Precision@K
+- Recall@K
+- Hit Rate@K
+- MRR
+- nDCG@K
+- Token F1
+- LLM-based correctness
+- Faithfulness
+- Relevance
+- Latency
+- Agent tool traces
 
-When explicitly requested, the agent can gather evidence, perform calculations, and generate a designed PowerPoint presentation.
-
-Supported slide types include:
-
-- Bullet summaries
-- Financial metric cards
-- Year-on-year comparisons
-- Key figure highlights
-- Charts
-- Source/reference slides
-
-Presentations are saved to:
-
-```text
-outputs/
-```
-
-
-### Tool Traceability
-
-The CLI reports the initial retrieval query and the additional tools selected by Gemini, including their arguments and responses.
-
-```text
-Tool: search_keyword
-Arguments:
-  ticker: GTCO
-  report_year: 2023
-  query: Profit before tax
-
-Tool: calculate
-Arguments:
-  expression: ...
-
-Tool: create_powerpoint
-Arguments:
-  title: GTCO Profit Before Tax Analysis
-  ...
-
-Tool response:
-  Status: SUCCESS
-```
-
-This makes the agent workflow inspectable and helps evaluate how retrieval, tool selection, and query refinement contribute to the final result.
-
-
-## Evaluation
-
-The evaluation framework provides a consistent way to compare the **keyword, semantic, hybrid RAG, and agentic financial-analysis pipelines** using the same financially focused benchmark. Because no labelled ground-truth dataset was initially available, I generated and validated synthetic benchmark questions from the indexed annual reports, with stratified sampling across companies and reporting years and an emphasis on challenging tasks such as table reasoning, calculations, cross-report comparisons, and multi-hop analysis. While  **Hit Rate@K, MRR** were the metrics for evaluation in the Zoomcamp, I further assessed my pipeline using **Precision@K, Recall@K, and nDCG@K**, while answer quality is evaluated using **Token F1** and LLM-based measures of **correctness, faithfulness, and relevance**. Agent runs additionally retain tool-call traces and execution timing to support detailed analysis of retrieval, reasoning, and tool-use failures.
-
-**How synthetic benchmark validation was done***: Each synthetic question-answer pair is independently evaluated by an LLM validator for evidence grounding, financial relevance, difficulty, calculation validity, entity/period/unit consistency, and naturalness. Examples are retained only if they achieve a minimum **quality score of 0.90**, **difficulty score of 0.80**, and **financial relevance score of 0.90**. The current benchmark targets **75 accepted examples**, with `gemini-2.5-flash` used for both generation and validation. Accepted examples remain marked as synthetic and not human-verified until manually reviewed.
-
-```
-                    Benchmark
-                        │
-                        ▼
-                 Run RAG / Agent
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-      Retrieval      Generated     Retrieved
-       Sources        Answer        Context
-          │             │             │
-          ▼             ▼             │
-   Gold Source IDs  Reference Answer  │
-          │             │             │
-          ▼             └──────┬──────┘
- Deterministic Metrics         ▼
- Precision / Recall      Gemini LLM Judge
- Hit Rate / MRR / nDCG          │
-                               ├── Correctness
- Generated ↔ Reference          ├── Faithfulness
-          │                     └── Relevance
-          ▼
-       Token F1
-```
-
-[More on evaluation](evaluation/README.md)
-
-### Evaluation Results
-
-The hybrid Retrieval-Augmented Generation (RAG) pipeline was evaluated using a benchmark of **75 financial-analysis questions** covering tasks such as financial metric extraction, table reasoning, within-source comparisons, cross-report comparisons, financial interpretation, and multi-hop reasoning.
-
+Current hybrid RAG results:
 
 | Metric | Score |
 |---|---:|
@@ -290,145 +224,190 @@ The hybrid Retrieval-Augmented Generation (RAG) pipeline was evaluated using a b
 | Recall@8 | 0.446 |
 | Hit Rate@8 | 0.523 |
 | MRR | 0.380 |
-| NDCG@8 | 0.369 |
+| nDCG@8 | 0.369 |
 | Answer Token F1 | 0.474 |
 | Answer Correctness | 0.779 |
 | Faithfulness | **0.969** |
 | Answer Relevance | **0.904** |
 | Average Latency | 9.88 s |
-| Successfully Evaluated Questions | 65 / 75 |
-| Evaluation Completion Rate | 86.7% |
+| Successfully Evaluated | 65 / 75 |
 
-### Interpretation
+The main limitation is retrieval quality: generation is generally strong when the required evidence is successfully retrieved.
 
-The evaluation demonstrates strong answer quality when the required evidence is successfully retrieved. The pipeline achieved **96.9% faithfulness**, indicating that generated answers were highly grounded in the retrieved financial-report context, and **90.4% answer relevance**, showing that responses generally addressed the questions directly. Answer correctness was **77.9%**.
+More details are available in `evaluation/README.md`.
 
-Retrieval performance presents the main opportunity for improvement. **Recall@8 was 44.6%** and **Hit Rate@8 was 52.3%**, indicating that the expected supporting evidence was not consistently present among the top eight retrieved documents. The **Precision@8 of 7.9%** further indicates that only a relatively small proportion of the retrieved chunks matched the benchmark's expected relevant evidence.
+---
 
-Of the **75 benchmark questions, 65 were successfully evaluated (86.7%)**. The remaining **10 evaluations were not completed because the external Gemini API returned `429 RESOURCE_EXHAUSTED` errors after the available prepayment credits were exhausted during the evaluation run**. These cases therefore represent **external API/evaluation infrastructure failures rather than failures of the RAG pipeline itself** and should not be interpreted as incorrect answers produced by the system.
+## 7. Application and Deployment Architecture
 
-The successfully completed evaluations had an average end-to-end latency of **9.88 seconds**.
-
-Overall, the results suggest that **generation quality is strong when relevant evidence is available, while retrieval remains the primary area for improvement**. Future work should therefore focus on improving retrieval recall and ranking quality, particularly for complex table-based, cross-report, and multi-hop financial questions.
-
-## Deployment
-
-The application is deployed as a **three-layer architecture**, separating the **Streamlit frontend**, **FastAPI backend**, and **PostgreSQL/pgvector database**. The frontend provides the user interface, while the backend exposes an API that handles financial-analysis requests, RAG and agent execution, and database access.
-
-### Deployment Architecture
+The deployed application uses three layers:
 
 ```text
-                         User
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │ Streamlit Frontend  │
-                │      Port 8501      │
-                │                     │
-                │ • User interface    │
-                │ • Query controls    │
-                │ • Results & charts  │
-                └──────────┬──────────┘
-                           │
-                      HTTP / JSON
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │   FastAPI Backend   │
-                │      Port 8000      │
-                │                     │
-                │ • API endpoints     │
-                │ • RAG pipeline      │
-                │ • Agent pipeline    │
-                │ • Gemini calls      │
-                │ • Database access   │
-                └──────────┬──────────┘
-                           │
-                    PostgreSQL
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │ PostgreSQL/pgvector │
-                │                     │
-                │ • Report chunks     │
-                │ • Metadata          │
-                │ • Embeddings        │
-                └─────────────────────┘
+User
+ │
+ ▼
+Streamlit Frontend
+ │
+ │ HTTPS / JSON
+ ▼
+FastAPI Backend
+ │
+ ├── RAG
+ ├── Agent
+ ├── Gemini
+ └── Monitoring
+ │
+ ▼
+Railway PostgreSQL + pgvector
 ```
 
-### Frontend
+### Streamlit
 
-The **Streamlit frontend** is responsible only for presentation and user interaction. It collects financial-analysis questions and configuration options, sends requests to the FastAPI backend over HTTP, and presents the returned answers, evidence, agent traces, statistics, and visualizations.
+The frontend collects questions and configuration options, calls the FastAPI backend, and displays answers, evidence, charts, generated files, and feedback controls.
 
-### Backend
+### FastAPI
 
-The **FastAPI backend** provides the application API and contains the core financial-analysis orchestration. It receives requests from Streamlit and routes them through either the standard **RAG pipeline** or the **agentic pipeline**.
+The backend exposes the application API and orchestrates RAG, agent execution, database access, Gemini calls, and monitoring.
 
-The backend also handles retrieval, Gemini interactions, tool execution, and access to PostgreSQL/pgvector. This prevents the frontend from directly interacting with the database or analysis pipelines.
-
-The backend exposes:
+Main endpoints:
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/health` | Checks backend and database availability |
-| `GET` | `/api/v1/filters` | Returns available companies and reporting years |
-| `GET` | `/api/v1/stats` | Returns corpus statistics |
-| `POST` | `/api/v1/query` | Executes RAG or agent-based financial analysis |
+| `GET` | `/health` | Backend/database health |
+| `GET` | `/api/v1/filters` | Available companies and years |
+| `GET` | `/api/v1/stats` | Corpus statistics |
+| `POST` | `/api/v1/query` | Run RAG or Agent analysis |
+| `POST` | `/api/v1/feedback` | Save user feedback |
 
-### Database
+### PostgreSQL + pgvector
 
-**PostgreSQL with pgvector** provides the persistence and retrieval layer. It stores the processed annual-report content, associated metadata, and vector embeddings used by the retrieval pipelines.
+PostgreSQL stores both retrieval data and monitoring telemetry. pgvector provides vector similarity search.
 
-### Containerized Deployment
+FastAPI and PostgreSQL are deployed as separate Railway services and communicate through Railway's private network.
 
-For a fully containerized deployment, **Docker Compose** orchestrates the frontend, backend, and database as separate services:
+---
 
-```text
-Docker Compose
-│
-├── frontend
-│   └── Streamlit
-│
-├── backend
-│   └── FastAPI
-│       ├── RAG
-│       ├── Agent
-│       └── Gemini
-│
-└── postgres
-    └── PostgreSQL + pgvector
-```
+## 8. Monitoring and Observability
 
-Each application layer can therefore be developed, tested, and deployed independently while Docker Compose provides a reproducible environment for running the complete system.
+Monitoring is persisted in the `monitoring` schema.
 
-## Monitoring and Observability
-
-The application includes a monitoring and observability layer that tracks **user interactions, response latency, LLM usage and cost, user feedback, and answer relevance**. Each query and response is logged to PostgreSQL, while users can provide thumbs-up or thumbs-down feedback directly through the Streamlit interface. An asynchronous LLM-as-a-judge evaluates a sample of responses for question–answer relevance after the response has been returned to the user, with the judge's cost tracked separately from the application's LLM cost. Grafana connects directly to the monitoring data in PostgreSQL and provides dashboards for response volume, latency, application and evaluation costs, relevance scores, user feedback, and recent interactions. The Grafana datasource and dashboards are provisioned from version-controlled configuration files, allowing the complete monitoring environment to be reproduced automatically when the application is deployed.
-
-### Precomputed Investor Growth Comparison
-
-The Streamlit landing page includes a precomputed **Investor Growth Comparison** that provides a consistent comparison across GTCO, Zenith Bank, and MTN Nigeria. Rather than displaying different indicators for each company, the snapshot uses the same two Group-level financial measures for all three companies:
-
-- **Total Assets Growth**, representing the year-on-year change in the scale of the company's asset base.
-- **Profit After Tax Growth**, representing the year-on-year change in bottom-line profitability.
-
-The snapshot compares 2025 with 2024 and displays the percentage change as the primary value, with the underlying reported financial values shown as secondary context.
+Main tables:
 
 ```text
-                         2025 Growth Comparison
-
-        GTCO                 Zenith Bank             MTN Nigeria
-          │                       │                       │
-    Total Assets             Total Assets             Total Assets
-       +20.0%                   +5.0%                    +28.7%
-          │                       │                       │
- Profit After Tax        Profit After Tax          Profit After Tax
-       -14.9%                   +0.7%              Turnaround to profit
+monitoring.sessions
+monitoring.interactions
+monitoring.llm_calls
+monitoring.feedback
 ```
 
-MTN Nigeria's profit-after-tax comparison is treated differently because the company moved from a loss in 2024 to a profit in 2025. Rather than presenting the resulting percentage calculation as ordinary growth, the interface labels this change as a **turnaround to profit**, which provides a more meaningful interpretation of the underlying financial movement.
+The monitoring layer separates four types of signals:
 
-The comparison is intentionally **precomputed rather than generated through the RAG or agent pipeline at application startup**. Verified Group-level values from the annual reports are maintained in:
+- **System behaviour:** status, pipeline, latency
+- **Model usage:** tokens, model calls, estimated cost
+- **Automated quality:** relevance judge
+- **Human feedback:** thumbs up/down
+
+### Interaction Telemetry
+
+`monitoring.interactions` stores request-level information including:
+
+```text
+response_id
+pipeline
+question
+answer
+status
+created_at
+completed_at
+total_latency_seconds
+latencies
+application_*_tokens
+application_cost_usd
+judge_status
+relevance_score
+judge_latency_seconds
+judge_cost_usd
+```
+
+`monitoring.llm_calls` stores individual LLM-call telemetry, allowing one interaction to contain multiple application calls plus a judge call.
+
+### Relevance Judge
+
+An asynchronous Gemini judge evaluates question-answer relevance after the response has been returned.
+
+Possible states are:
+
+```text
+pending
+completed
+failed
+skipped
+```
+
+Judge sampling is controlled with `MONITORING_JUDGE_SAMPLE_RATE`, allowing evaluation coverage to be balanced against cost.
+
+### User Feedback
+
+Users can submit:
+
+```text
+1   thumbs up
+-1  thumbs down
+```
+
+Feedback is stored independently from automated relevance scores.
+
+---
+
+## 9. Grafana Monitoring Architecture
+
+Grafana is run locally rather than deployed.
+
+Railway PostgreSQL remains the production source of truth. Monitoring data is synchronized on demand to the local PostgreSQL instance over an SSH tunnel.
+
+```text
+Railway FastAPI
+      │
+      ▼
+Railway PostgreSQL
+      │
+      │ SSH tunnel + monitoring sync
+      ▼
+Local PostgreSQL
+      │
+      ▼
+Local Grafana
+```
+
+This avoids permanently exposing the production database and keeps Grafana outside the production deployment.
+
+The dashboard includes:
+
+- Total Responses
+- Average Latency
+- Application Cost
+- Judge Cost
+- Average Relevance
+- Thumbs-Up Rate
+- Response Volume Over Time
+- Latency Over Time
+- Application vs Judge Cost
+- Average Latency by Pipeline
+- User Feedback by Pipeline
+- Answer Relevance Over Time
+- Recent Interactions
+- Knowledge Base Statistics
+
+---
+
+## 10. Precomputed Investor Growth Comparison
+
+The Streamlit landing page includes a precomputed comparison across GTCO, Zenith Bank, and MTN Nigeria using two consistent Group-level measures:
+
+- Total Assets Growth
+- Profit After Tax Growth
+
+Verified source values are stored in:
 
 ```text
 data/frontend/investor_metrics_source.json
@@ -440,56 +419,73 @@ The preprocessing script:
 scripts/build_investor_snapshot.py
 ```
 
-calculates valid year-on-year percentage changes, handles special cases such as loss-to-profit transitions, normalises financial values into compact display units, and writes the resulting snapshot to:
+produces:
 
 ```text
 data/frontend/investor_metrics.json
 ```
 
-The processing flow is:
+This avoids database retrieval or LLM inference during page load and keeps the displayed headline metrics deterministic and auditable.
+
+---
+
+## 11. Security and Design Decisions
+
+The architecture follows several practical principles:
+
+- Railway PostgreSQL remains private.
+- FastAPI communicates with PostgreSQL through Railway's internal network.
+- Production database access from local development uses a temporary SSH tunnel.
+- Secrets are stored in `.env` or Railway environment variables and are not committed to source control.
+- Grafana remains local because it is currently used for development and monitoring rather than as a public production service.
+- Production monitoring data and local test telemetry are kept separate.
+
+---
+
+## 12. End-to-End Flow
 
 ```text
-Annual reports
+Annual Reports
       │
       ▼
-Verified Group-level financial metrics
+Ingestion + Processing
       │
       ▼
-investor_metrics_source.json
+PostgreSQL + pgvector
       │
       ▼
-build_investor_snapshot.py
+Retrieval Index
       │
-      ├── calculates YoY growth
-      ├── identifies loss-to-profit turnarounds
-      ├── normalises financial units
-      └── prepares display values
-      │
-      ▼
-investor_metrics.json
-      │
-      ▼
-Streamlit @st.cache_data
-      │
-      ▼
-Investor Growth Comparison
+      ├───────────┐
+      ▼           ▼
+     RAG        Agent
+      │           │
+      └─────┬─────┘
+            ▼
+          Gemini
+            │
+            ▼
+      FastAPI Backend
+            │
+            ▼
+     Streamlit Frontend
+            │
+            ├── User Feedback
+            │
+            ▼
+   Monitoring Telemetry
+            │
+            ▼
+   Railway PostgreSQL
+            │
+            ▼
+ Local PostgreSQL + Grafana
 ```
 
-The snapshot is regenerated automatically when the complete local application is started:
+This design keeps retrieval, reasoning, deployment, and observability modular while maintaining a single PostgreSQL-based data layer for financial content and production telemetry.
 
-```bash
-make app
-```
 
-It can also be regenerated independently with:
-
-```bash
-make investor_snapshot
-```
-
-The generated JSON is committed to the repository, allowing Streamlit to display the comparison without performing a database query, vector retrieval, or LLM request at page load. This reduces latency and inference cost while keeping the headline metrics deterministic, reproducible, and auditable.
-
-## Design Trade-offs
+## 13. System Design Trade-offs
 
 I made several design changes as the project evolved to balance extraction quality, retrieval accuracy, system complexity, and evaluation reliability.
 
@@ -531,3 +527,5 @@ Because manually creating and validating a sufficiently challenging financial-an
 
 13. **I chose PostgreSQL over a document database to support both application data and monitoring.**  
     Although a document database such as MongoDB can provide greater flexibility for storing semi-structured JSON which I used for my data-RAG pipeline, PostgreSQL better fits the application's combination of structured financial data, retrieval metadata, user interactions, feedback, latency, cost, and evaluation metrics, while still supporting semi-structured data through `JSONB`. PostgreSQL also integrates directly with Grafana, allowing monitoring metrics to be queried using SQL without introducing a separate database.
+
+
