@@ -9,31 +9,18 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 
 1. [Introduction](#introduction)
 2. [Problem Statement](#problem-statement)
-3. [Documentation](#documentation)
-4. [Technology Stack](#technology-stack)
-5. [Generative AI Use Declaration](#generative-ai-use-declaration)
-6. [Acknowledgements](#acknowledgements)
+3. [Features](#features)
+4. [Documentation](#documentation)
+5. [Technology Stack](#technology-stack)
+6. [LLMOps/Engineering Practices](#llmopsengineering-practices)
+7. [Generative AI Use Declaration](#generative-ai-use-declaration)
+8. [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
 This project is my final project for the DataTalks.Club [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp), an online bootcamp focused on building applications with Large Language Models (LLMs).
 
 The LLM Zoomcamp is the **fourth DataTalks.Club Zoomcamp** I have taken, following the **Data Engineering Zoomcamp, Machine Learning Zoomcamp, and MLOps Zoomcamp**. Rather than treating the lessons from these programmes independently, I adapted relevant engineering practices from them to build this project as an end-to-end financial analysis LLM application.
-
-The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. It also incorporates practices from the MLOps Zoomcamp and extends them to **LLMOps**, including:
-
-- **Data pipelines** for ingesting, validating, processing, chunking, and storing financial reports and tables.
-- **Retrieval infrastructure** combining keyword, semantic, and hybrid search with PostgreSQL and pgvector.
-- **RAG and agentic pipelines** for grounded financial question answering, tool use, and source citation.
-- **Evaluation pipelines** for generating benchmark datasets and evaluating retrieval and answer quality.
-- **LLM observability** for tracking interactions, model calls, token usage, latency, and application costs.
-- **Monitoring** with PostgreSQL and Grafana dashboards for application and LLM metrics.
-- **Deployment** of the FastAPI backend, Streamlit frontend, and PostgreSQL database using Docker and Railway.
-- **Testing and software quality** through smoke and integration tests, linting, formatting, pre-commit hooks, and reproducible Makefile commands.
-- **Reproducible development environments and dependency management** using `uv` and Docker.
-- **Production-to-local monitoring workflows** for analysing production telemetry locally in Grafana.
-
-The result is not only an LLM application, but an attempt to apply the **end-to-end engineering lifecycle to LLM systems**: from data ingestion and retrieval to evaluation, deployment, monitoring, and continuous code-quality practices.
 
 ## Problem Statement
 
@@ -48,6 +35,80 @@ Yet, making informed investment decisions often requires reading lengthy annual 
 The initial implementation focuses on **MTN Nigeria, Guaranty Trust Holding Company (GTCO), and Zenith Bank** as a starting point. However, the underlying ingestion, retrieval, and analysis architecture is designed to be extensible to other companies listed on the **Nigerian Exchange (NGX)**.
 
 Ultimately, the goal is not to automate investment decisions, but to **improve financial literacy and support more informed, evidence-based investment analysis**.
+
+## Features
+
+Financial Analysis AI is designed to help users explore company financial reports, understand financial performance, and carry out evidence-based analysis without manually searching through hundreds of pages of annual reports.
+
+### Ask Questions About Annual Reports
+
+Users can ask questions in natural language, such as:
+
+> What was GTCO's profit before tax in 2023?
+
+The application searches the available annual reports and generates an answer based on the information it finds.
+
+### Evidence-Grounded Answers
+
+Answers are supported by evidence retrieved from the underlying annual reports, allowing users to see where the information came from rather than relying solely on the AI's response.
+
+### Search by Company and Year
+
+Users can narrow their analysis to a particular company or reporting year. The initial collection includes:
+
+- MTN Nigeria
+- Guaranty Trust Holding Company (GTCO)
+- Zenith Bank
+
+### RAG and Agent Analysis
+
+Users can choose between two analysis approaches:
+
+- **RAG** — retrieves relevant information from annual reports and uses it to answer the question.
+- **Agent** — can decide which additional tools are needed to investigate more complex financial questions.
+
+### Agent Tools
+
+For more complex questions, the Agent can use several specialised tools:
+
+| Tool | What it does |
+|---|---|
+| **Keyword Search** | Finds information containing specific financial terms, names, or phrases in annual reports. |
+| **Semantic Search** | Finds relevant information based on meaning, even when the report uses different wording from the user's question. |
+| **Hybrid Search** | Combines keyword and meaning-based search to improve the chances of finding the right evidence. |
+| **Table Lookup** | Examines extracted financial tables to find specific figures, rows, columns, and values. |
+| **Calculator** | Performs calculations using retrieved financial figures rather than relying on the AI to calculate them mentally. |
+| **Web Search** | Searches the web when a question requires current or external information that is not available in the stored annual reports. |
+| **PowerPoint Generation** | Creates a PowerPoint presentation from the financial analysis when requested by the user. |
+
+The Agent can select and combine these tools depending on the question instead of requiring the user to decide which search method to use.
+
+### Compare Financial Information
+
+Users can ask questions that require comparing financial information across companies, metrics, or reporting periods, helping them explore changes in company performance over time.
+
+### Explore Financial Tables
+
+The system separately processes financial tables from annual reports, making it possible to retrieve information from structured financial statements as well as narrative sections of the reports.
+
+### Source Prioritisation
+
+When analysing a question, the Agent prioritises information in the following order:
+
+1. Company annual reports
+2. Extracted financial tables
+3. Deterministic calculations
+4. Public web information
+
+This keeps analysis grounded in company-reported information whenever possible.
+
+### Interactive Web Application
+
+The Streamlit interface provides a simple way to submit questions, select analysis options, review answers and supporting evidence, and interact with the financial analysis system without needing to write code.
+
+### User Feedback
+
+Users can provide **thumbs-up or thumbs-down feedback** on responses. This feedback is recorded separately from automated quality measurements and can be used to understand how useful users find the generated answers.
 
 <!-- ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif -->
 ## Documentation
@@ -87,6 +148,24 @@ The project combines data engineering, retrieval, LLM application development, d
 | **Development Automation** | GNU Make, pre-commit | Standardised development workflows and automated quality checks |
 | **Notebooks** | Jupyter Notebook | Exploration and development analysis |
 | **Version Control** | Git, GitHub | Source control and project hosting |
+
+## LLMOps/Engineering Practices
+
+The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. It also incorporates practices from the MLOps Zoomcamp and extends them to **LLMOps**, including:
+
+- **Data pipelines** for ingesting, validating, processing, chunking, and storing financial reports and tables.
+- **Retrieval infrastructure** combining keyword, semantic, and hybrid search with PostgreSQL and pgvector.
+- **RAG and agentic pipelines** for grounded financial question answering, tool use, and source citation.
+- **Evaluation pipelines** for generating benchmark datasets and evaluating retrieval and answer quality.
+- **LLM observability** for tracking interactions, model calls, token usage, latency, and application costs.
+- **Monitoring** with PostgreSQL and Grafana dashboards for application and LLM metrics.
+- **Deployment** of the FastAPI backend, Streamlit frontend, and PostgreSQL database using Docker and Railway.
+- **Testing and software quality** through smoke and integration tests, linting, formatting, pre-commit hooks, and reproducible Makefile commands.
+- **Reproducible development environments and dependency management** using `uv` and Docker.
+- **Production-to-local monitoring workflows** for analysing production telemetry locally in Grafana.
+
+The result is not only an LLM application, but an attempt to apply the **end-to-end engineering lifecycle to LLM systems**: from data ingestion and retrieval to evaluation, deployment, monitoring, and continuous code-quality practices.
+
 
 ## Generative AI Use Declaration
 
