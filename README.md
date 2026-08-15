@@ -177,15 +177,15 @@ The application includes an observability layer for monitoring how the system be
 
 The dashboards help monitor metrics such as response volume, latency, token usage, application and evaluation costs, answer relevance, pipeline performance, and user feedback.
 
-### Application Overview
+### Performance and Cost Monitoring
 
 ![Grafana Dashboard 1](media/grafana_dashboard_1.png)
 
-### Performance and Cost Monitoring
+### Interaction Monitoring
 
 ![Grafana Dashboard 2](media/grafana_dashboard_2.png)
 
-### Quality and User Feedback
+### Knowledge Base Statistics
 
 ![Grafana Dashboard 3](media/grafana_dashboard_3.png)
 
