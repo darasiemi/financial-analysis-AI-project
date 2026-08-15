@@ -10,9 +10,9 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 1. [Introduction](#introduction)
 2. [Problem Statement](#problem-statement)
 3. [Features](#features)
-4. [Documentation](#documentation)
+4. [System Architecture](#system-architecture)
 5. [Technology Stack](#technology-stack)
-6. [LLMOps/Engineering Practices](#llmopsengineering-practices)
+6. [LLMOps and Engineering Practices](#llmops-and-engineering-practices)
 7. [Generative AI Use Declaration](#generative-ai-use-declaration)
 8. [Acknowledgements](#acknowledgements)
 
@@ -111,12 +111,16 @@ The Streamlit interface provides a simple way to submit questions, select analys
 Users can provide **thumbs-up or thumbs-down feedback** on responses. This feedback is recorded separately from automated quality measurements and can be used to understand how useful users find the generated answers.
 
 <!-- ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif -->
-## Documentation
+## System Architecture
 
-For more details about the project, see:
+The system follows an end-to-end LLM application architecture, from annual report ingestion and processing to retrieval, RAG and agentic analysis, deployment, and monitoring. PostgreSQL with pgvector provides the central data layer, while FastAPI serves the backend, Streamlit provides the user interface, and Gemini powers the RAG and agent workflows.
 
+![System Architecture](media/system-architecture.png)
+
+For more details:
+
+- **[System Architecture](SYSTEM.md)** — Detailed documentation of the data ingestion, storage, retrieval, RAG and agent pipelines, deployment, monitoring, and system design decisions.
 - **[Setup Guide](SETUP.md)** — Instructions for installing dependencies, configuring the environment, ingesting data, running the application, testing, evaluation, and monitoring.
-- **[System Architecture](SYSTEM.md)** — A detailed description of the system architecture, including data ingestion, storage, retrieval, RAG and agent pipelines, deployment, and observability.
 
 ## Technology Stack
 
@@ -149,7 +153,7 @@ The project combines data engineering, retrieval, LLM application development, d
 | **Notebooks** | Jupyter Notebook | Exploration and development analysis |
 | **Version Control** | Git, GitHub | Source control and project hosting |
 
-## LLMOps/Engineering Practices
+## LLMOps and Engineering Practices
 
 The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. It also incorporates practices from the MLOps Zoomcamp and extends them to **LLMOps**, including:
 
