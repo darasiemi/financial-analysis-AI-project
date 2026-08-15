@@ -13,8 +13,9 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 4. [System Architecture](#system-architecture)
 5. [Technology Stack](#technology-stack)
 6. [LLMOps and Engineering Practices](#llmops-and-engineering-practices)
-7. [Generative AI Use Declaration](#generative-ai-use-declaration)
-8. [Acknowledgements](#acknowledgements)
+7. [Observability](#observability)
+8. [Generative AI Use Declaration](#generative-ai-use-declaration)
+9. [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -169,6 +170,26 @@ The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pi
 - **Production-to-local monitoring workflows** for analysing production telemetry locally in Grafana.
 
 The result is not only an LLM application, but an attempt to apply the **end-to-end engineering lifecycle to LLM systems**: from data ingestion and retrieval to evaluation, deployment, monitoring, and continuous code-quality practices.
+
+## Observability
+
+The application includes an observability layer for monitoring how the system behaves during use. Application telemetry is stored in PostgreSQL and visualised through Grafana, providing visibility into system usage, performance, LLM costs, response quality, and user feedback.
+
+The dashboards help monitor metrics such as response volume, latency, token usage, application and evaluation costs, answer relevance, pipeline performance, and user feedback.
+
+### Application Overview
+
+![Grafana Dashboard 1](media/grafana_dashboard_1.png)
+
+### Performance and Cost Monitoring
+
+![Grafana Dashboard 2](media/grafana_dashboard_2.png)
+
+### Quality and User Feedback
+
+![Grafana Dashboard 3](media/grafana_dashboard_3.png)
+
+> Grafana is currently run locally, while production telemetry is stored in Railway PostgreSQL and can be synchronised to the local PostgreSQL database for analysis.
 
 
 ## Generative AI Use Declaration
