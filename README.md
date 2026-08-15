@@ -156,7 +156,7 @@ The project combines data engineering, retrieval, LLM application development, d
 
 ## LLMOps and Engineering Practices
 
-The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. It also incorporates practices from the MLOps Zoomcamp and extends them to **LLMOps**, including:
+The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. I have extended the project beyond the core LLM Zoomcamp requirements by applying lessons and engineering practices I gained from my previous **Data Engineering, Machine Learning, and MLOps Zoomcamps**. In particular, I adapted MLOps principles to the LLM lifecycle, incorporating **LLMOps practices** including:
 
 - **Data pipelines** for ingesting, validating, processing, chunking, and storing financial reports and tables.
 - **Retrieval infrastructure** combining keyword, semantic, and hybrid search with PostgreSQL and pgvector.
@@ -165,6 +165,7 @@ The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pi
 - **LLM observability** for tracking interactions, model calls, token usage, latency, and application costs.
 - **Monitoring** with PostgreSQL and Grafana dashboards for application and LLM metrics.
 - **Deployment** of the FastAPI backend, Streamlit frontend, and PostgreSQL database using Docker and Railway.
+- **Security practices** including environment-based secret management, private production database access, and temporary SSH tunnelling for secure access to production monitoring data.
 - **Testing and software quality** through smoke and integration tests, linting, formatting, pre-commit hooks, and reproducible Makefile commands.
 - **Reproducible development environments and dependency management** using `uv` and Docker.
 - **Production-to-local monitoring workflows** for analysing production telemetry locally in Grafana.
