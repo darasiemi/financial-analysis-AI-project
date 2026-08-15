@@ -4,7 +4,7 @@ This document describes the architecture of my Financial Analysis AI system, inc
 
 For installation and deployment instructions, see `SETUP.md`.
 
-![System Architecture](images/system-architecture.png)
+![System Architecture](media/system-architecture.png)
 
 ---
 
