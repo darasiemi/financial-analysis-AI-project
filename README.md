@@ -13,9 +13,10 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 4. [System Architecture](#system-architecture)
 5. [Technology Stack](#technology-stack)
 6. [LLMOps and Engineering Practices](#llmops-and-engineering-practices)
-7. [Observability](#observability)
+7. [Monitoring and Observability](#monitoring-and-observability)
 8. [Generative AI Use Declaration](#generative-ai-use-declaration)
-9. [Acknowledgements](#acknowledgements)
+9. [Other Zoomcamp Projects](#other-zoomcamp-projects)
+10. [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -216,6 +217,33 @@ AI assistance was used for activities including:
 I remained responsible for integrating and executing the code, configuring the development and deployment environments, validating system behaviour, and making the final technical and architectural decisions.
 
 To support maintainability and code quality, I also established automated **formatting, linting, testing, and pre-commit checks** within the development workflow. These checks help identify formatting inconsistencies, code-quality issues.
+
+## Other Zoomcamp Projects
+
+This is my fourth DataTalks.Club Zoomcamp project. Each Zoomcamp has contributed to my understanding of a different part of the end-to-end data and machine learning engineering lifecycle, and lessons from these earlier projects have influenced the design and engineering practices used in this project.
+
+| Zoomcamp | Project | Focus |
+|---|---|---|
+| **Data Engineering Zoomcamp** | [View Project on Fraud Data and Analysis](https://github.com/darasiemi/data_engineering_credit_fraud_project) | Data ingestion, transformation, orchestration, data warehousing, and analytics engineering |
+| **Machine Learning Zoomcamp** | [View Project](<ML-ZOOMCAMP-PROJECT-URL>) | Machine learning, model development, evaluation, and deployment |
+| **MLOps Zoomcamp** | [View Project](<MLOPS-PROJECT-URL>) | Experiment tracking, orchestration, deployment, monitoring, testing, infrastructure, and reproducible ML workflows |
+| **LLM Zoomcamp** | **This Project** | RAG, agentic workflows, evaluation, LLMOps, deployment, monitoring, and observability |
+
+Together, these projects reflect my progression from **data engineering → machine learning → MLOps → LLM and AI engineering**, with each project building on engineering practices learned in the previous Zoomcamps.
+
+## Other Zoomcamp Projects
+
+This is my fourth DataTalks.Club Zoomcamp. Each Zoomcamp has contributed to a different part of my understanding of the end-to-end data, machine learning, and AI engineering lifecycle, and I have carried lessons and engineering practices from these earlier projects into this project.
+
+| Zoomcamp | Project | Focus |
+|---|---|---|
+| **Data Engineering Zoomcamp** | [Project on Fraud Data and Analysis](https://github.com/darasiemi/data_engineering_credit_fraud_project) | Data ingestion, transformation, orchestration, data warehousing, and analytics engineering |
+| **Machine Learning Zoomcamp** | [Project 1 on Food Preparation Time Prediction ](https://github.com/darasiemi/food-preparation-time-prediction-project) | Machine learning model development, evaluation, and deployment with AWS ELastic Beanstalk |
+| **Machine Learning Zoomcamp** | [Project 2 on Sleep Quality Prediction ](https://github.com/darasiemi/sleep-quality-prediction) | Machine learning model development with Kubernetes, evaluation, and deployment |
+| **MLOps Zoomcamp** | [Project on Stress Prediction using Multimodal Inputs](https://github.com/darasiemi/mental_health_mlops_project) | Experiment tracking, orchestration, deployment, monitoring, testing, infrastructure, and reproducible ML |
+| **LLM Zoomcamp** | **This Project** | RAG, agentic workflows, evaluation, LLMOps, deployment, monitoring, and observability |
+
+Together, these projects reflect my progression across **data engineering → machine learning → MLOps → LLM and AI engineering**, with each Zoomcamp allowing me to build on concepts and engineering practices learned in the previous ones.
 
 ## Acknowledgements
 
