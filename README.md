@@ -36,7 +36,9 @@ If you would like to follow the LLM Zoomcamp using the **Gemini API**, you can f
 
 I started this project after recognising a gap in my own financial knowledge. I wanted to better understand how to evaluate companies, interpret financial reports, and make investment decisions based on analysis.
 
-This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: research cited by the IMF found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning. The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities.
+This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: research cited by the IMF found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning. 
+
+This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: a nationwide survey cited in a 2023 IMF report found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly around financial planning. The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities.
 
 Yet, making informed investment decisions often requires reading lengthy annual reports, comparing financial performance across years, identifying relevant metrics, and understanding the wider context behind the numbers.
 
