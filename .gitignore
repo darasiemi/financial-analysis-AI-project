@@ -5,3 +5,4 @@ data/zenithbank
 **.env
 **__pycache__
 **.DS_Store
+financial_analysis.dump

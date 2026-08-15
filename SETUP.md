@@ -1017,6 +1017,20 @@ WHERE $__timeFilter(i.created_at)
 GROUP BY i.pipeline
 ORDER BY i.pipeline;
 ```
+In case the relevance scores are not computed, run the psql `make psql` and the run this SQL.
+```bash
+SELECT
+    created_at,
+    response_id,
+    pipeline,
+    relevance_score,
+    judge_status,
+    judge_model,
+    judge_latency_seconds
+FROM monitoring.interactions
+ORDER BY created_at DESC
+LIMIT 20;
+```
 
 ### Dashboard Provisioning
 
