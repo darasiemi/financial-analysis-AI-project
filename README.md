@@ -1,10 +1,49 @@
 # Nigeria Stock Financial Analysis Project
 
-This project represents not only the application of those lessons, but also my continued effort to deepen my understanding by designing, implementing, debugging, evaluating, and documenting a complete AI system from end to end.
+## Introduction
 
-<!-- ![Demo](media/streamlit-app-video.webm) -->
+This project is my final project for the DataTalks.Club [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp), an online bootcamp focused on building applications with Large Language Models (LLMs).
 
-ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif
+The LLM Zoomcamp is the **fourth DataTalks.Club Zoomcamp** I have taken, following the **Data Engineering Zoomcamp, Machine Learning Zoomcamp, and MLOps Zoomcamp**. Rather than treating the lessons from these programmes independently, I adapted relevant engineering practices from them to build this project as an end-to-end financial analysis LLM application.
+
+The project applies concepts from the LLM Zoomcamp to build **RAG and agentic pipelines for analysing Nigerian companies' annual reports**. It also incorporates practices from the MLOps Zoomcamp and extends them to **LLMOps**, including:
+
+- **Data pipelines** for ingesting, validating, processing, chunking, and storing financial reports and tables.
+- **Retrieval infrastructure** combining keyword, semantic, and hybrid search with PostgreSQL and pgvector.
+- **RAG and agentic pipelines** for grounded financial question answering, tool use, and source citation.
+- **Evaluation pipelines** for generating benchmark datasets and evaluating retrieval and answer quality.
+- **LLM observability** for tracking interactions, model calls, token usage, latency, and application costs.
+- **Monitoring** with PostgreSQL and Grafana dashboards for application and LLM metrics.
+- **Deployment** of the FastAPI backend, Streamlit frontend, and PostgreSQL database using Docker and Railway.
+- **Testing and software quality** through smoke and integration tests, linting, formatting, pre-commit hooks, and reproducible Makefile commands.
+- **Reproducible development environments and dependency management** using `uv` and Docker.
+- **Production-to-local monitoring workflows** for analysing production telemetry locally in Grafana.
+
+The result is not only an LLM application, but an attempt to apply the **end-to-end engineering lifecycle to LLM systems**: from data ingestion and retrieval to evaluation, deployment, monitoring, and continuous code-quality practices.
+
+## Problem Statement
+
+I started this project after recognising a gap in my own financial knowledge. I wanted to better understand how to evaluate companies, interpret financial reports, and make investment decisions based on analysis.
+
+This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: research cited by the IMF found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning. The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities.
+
+Yet, making informed investment decisions often requires reading lengthy annual reports, comparing financial performance across years, identifying relevant metrics, and understanding the wider context behind the numbers.
+
+**Financial Analysis AI** was built to make this process more accessible. It uses retrieval-augmented generation (RAG) and agentic workflows to analyse company annual reports, answer financial questions with supporting evidence, explore financial tables, and compare company performance.
+
+The initial implementation focuses on **MTN Nigeria, Guaranty Trust Holding Company (GTCO), and Zenith Bank** as a starting point. However, the underlying ingestion, retrieval, and analysis architecture is designed to be extensible to other companies listed on the **Nigerian Exchange (NGX)**.
+
+Ultimately, the goal is not to automate investment decisions, but to **improve financial literacy and support more informed, evidence-based investment analysis**.
+
+![Demo](media/streamlit-app-video.webm)
+
+<!-- ffmpeg -i media/streamlit-app-video.webm media/streamlit-app-video.gif -->
+## Documentation
+
+For more details about the project, see:
+
+- **[Setup Guide](SETUP.md)** — Instructions for installing dependencies, configuring the environment, ingesting data, running the application, testing, evaluation, and monitoring.
+- **[System Architecture](SYSTEM.md)** — A detailed description of the system architecture, including data ingestion, storage, retrieval, RAG and agent pipelines, deployment, and observability.
 
 ## Generative AI Use Declaration
 
