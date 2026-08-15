@@ -45,6 +45,37 @@ For more details about the project, see:
 - **[Setup Guide](SETUP.md)** — Instructions for installing dependencies, configuring the environment, ingesting data, running the application, testing, evaluation, and monitoring.
 - **[System Architecture](SYSTEM.md)** — A detailed description of the system architecture, including data ingestion, storage, retrieval, RAG and agent pipelines, deployment, and observability.
 
+## Technology Stack
+
+The project combines data engineering, retrieval, LLM application development, deployment, evaluation, and observability technologies.
+
+| Area | Technologies | Purpose |
+|---|---|---|
+| **Programming Language** | Python | Core application, ingestion, retrieval, RAG, agent, evaluation, and monitoring logic |
+| **Dependency Management** | `uv` | Python dependency and environment management |
+| **Data Ingestion** | `requests`, Playwright | Downloading company annual reports |
+| **PDF Processing** | PyMuPDF | Extracting and processing narrative content from annual reports |
+| **Data Loading** | `dlt` | Loading processed financial-report data into PostgreSQL |
+| **Database** | PostgreSQL | Storing report content, metadata, structured tables, and monitoring telemetry |
+| **Vector Database** | pgvector | Storing embeddings and performing vector similarity search within PostgreSQL |
+| **Embeddings** | SentenceTransformers | Generating embeddings for semantic retrieval |
+| **Keyword Retrieval** | PostgreSQL Full-Text Search | Lexical search over financial-report content |
+| **Hybrid Retrieval** | Reciprocal Rank Fusion (RRF) | Combining keyword and semantic search results |
+| **LLM** | Gemini API | RAG answer generation, agent reasoning, and LLM-based evaluation |
+| **RAG** | Custom Python pipeline | Evidence-grounded question answering over annual reports |
+| **Agentic AI** | Gemini tool calling + custom tools | Financial analysis using retrieval, table lookup, calculation, web search, and presentation generation |
+| **Backend** | FastAPI, Uvicorn | API layer and orchestration of RAG and agent pipelines |
+| **Frontend** | Streamlit | Interactive financial analysis interface |
+| **Evaluation** | Custom evaluation pipeline | Benchmark generation and retrieval/answer quality evaluation |
+| **Monitoring & Observability** | Grafana, PostgreSQL | Monitoring latency, costs, token usage, relevance, feedback, and application behaviour |
+| **Containerisation** | Docker, Docker Compose | Reproducible local database and monitoring services |
+| **Deployment** | Railway | Production hosting for the FastAPI backend and PostgreSQL |
+| **Testing** | pytest | Smoke and integration testing |
+| **Code Quality** | Black, isort, Pylint | Formatting, import ordering, and static code analysis |
+| **Development Automation** | GNU Make, pre-commit | Standardised development workflows and automated quality checks |
+| **Notebooks** | Jupyter Notebook | Exploration and development analysis |
+| **Version Control** | Git, GitHub | Source control and project hosting |
+
 ## Generative AI Use Declaration
 
 Generative AI was used as a **development and learning aid** during the implementation of this project. I primarily interacted with AI through conversational chat interfaces to discuss implementation approaches, troubleshoot problems, clarify technical concepts, and generate or refine portions of code.
