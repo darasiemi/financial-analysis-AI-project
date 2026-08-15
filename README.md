@@ -5,7 +5,7 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 
 ![Financial Analysis AI Demo](media/streamlit-app-video.gif)
 
-![App link](https://dara-fin.streamlit.app/)
+[🚀 Launch the App](https://dara-fin.streamlit.app/)
 
 ## Table of Contents
 
