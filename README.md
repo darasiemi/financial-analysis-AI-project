@@ -5,6 +5,8 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 
 ![Financial Analysis AI Demo](media/streamlit-app-video.gif)
 
+![App link](https://dara-fin.streamlit.app/)
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -217,19 +219,6 @@ AI assistance was used for activities including:
 I remained responsible for integrating and executing the code, configuring the development and deployment environments, validating system behaviour, and making the final technical and architectural decisions.
 
 To support maintainability and code quality, I also established automated **formatting, linting, testing, and pre-commit checks** within the development workflow. These checks help identify formatting inconsistencies, code-quality issues.
-
-## Other Zoomcamp Projects
-
-This is my fourth DataTalks.Club Zoomcamp project. Each Zoomcamp has contributed to my understanding of a different part of the end-to-end data and machine learning engineering lifecycle, and lessons from these earlier projects have influenced the design and engineering practices used in this project.
-
-| Zoomcamp | Project | Focus |
-|---|---|---|
-| **Data Engineering Zoomcamp** | [View Project on Fraud Data and Analysis](https://github.com/darasiemi/data_engineering_credit_fraud_project) | Data ingestion, transformation, orchestration, data warehousing, and analytics engineering |
-| **Machine Learning Zoomcamp** | [View Project](<ML-ZOOMCAMP-PROJECT-URL>) | Machine learning, model development, evaluation, and deployment |
-| **MLOps Zoomcamp** | [View Project](<MLOPS-PROJECT-URL>) | Experiment tracking, orchestration, deployment, monitoring, testing, infrastructure, and reproducible ML workflows |
-| **LLM Zoomcamp** | **This Project** | RAG, agentic workflows, evaluation, LLMOps, deployment, monitoring, and observability |
-
-Together, these projects reflect my progression from **data engineering → machine learning → MLOps → LLM and AI engineering**, with each project building on engineering practices learned in the previous Zoomcamps.
 
 ## Other Zoomcamp Projects
 
