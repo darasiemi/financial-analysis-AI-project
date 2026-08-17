@@ -49,11 +49,13 @@ Ultimately, the goal is not to automate investment decisions, but to **improve f
 
 ## Features
 
-Financial Analysis AI is designed to help users explore company financial reports, understand financial performance, and carry out evidence-based analysis without manually searching through hundreds of pages of annual reports.
+Financial Analysis AI is designed to help users explore company financial reports, understand financial performance, and conduct evidence-based analysis with **page-level source citations**, reducing the need to manually search through hundreds of pages of annual reports.
+
+With the application, users can:
 
 ### Ask Questions About Annual Reports
 
-Users can ask questions in natural language, such as:
+You can ask questions in natural language, such as:
 
 > What was GTCO's profit before tax in 2023?
 
@@ -76,7 +78,7 @@ Users can narrow their analysis to a particular company or reporting year. The i
 Users can choose between two analysis approaches:
 
 - **RAG** — retrieves relevant information from annual reports and uses it to answer the question.
-- **Agent** — can decide which additional tools are needed to investigate more complex financial questions.
+- **Agent** — dynamically selects the appropriate tools for complex financial questions, uses a calculator for deterministic calculations, and extends beyond the knowledge base through web search when needed.
 
 ### Agent Tools
 
