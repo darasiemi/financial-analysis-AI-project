@@ -188,7 +188,7 @@ The result is not only an LLM application, but an attempt to apply the **end-to-
 
 The application includes an observability layer for monitoring how the system behaves during use. Application telemetry is stored in PostgreSQL and visualised through Grafana, providing visibility into system usage, performance, LLM costs, response quality, and user feedback.
 
-The dashboards help monitor metrics such as response volume, latency, token usage, application and evaluation costs, answer relevance, pipeline performance, and user feedback.
+The dashboards help monitor metrics such as response volume, latency, application and evaluation costs, answer relevance, and user feedback.
 
 ### Performance and Cost Monitoring
 
@@ -202,7 +202,8 @@ The dashboards help monitor metrics such as response volume, latency, token usag
 
 ![Grafana Dashboard 3](media/grafana_dashboard_3.png)
 
-> Grafana is currently run locally, while production telemetry is stored in Railway PostgreSQL and can be synchronised to the local PostgreSQL database for analysis.
+> Grafana is currently run locally, while production telemetry is stored in Railway PostgreSQL and can be synchronised to the local PostgreSQL database for analysis. Also, token usage is logged for each LLM call in the database, although it is not currently visualised in a dedicated Grafana panel.
+
 
 
 ## Generative AI Use Declaration
@@ -223,11 +224,12 @@ AI assistance was used for activities including:
 - developing and refining database, retrieval, RAG, agentic, evaluation, deployment, and monitoring components;
 - improving technical documentation and code readability; and
 - assisting with test design and interpretation of results.
-- Generating and refining the system architecture diagram
+- generating and refining the system architecture diagram
+- refining the markdown such as `README.md`, `SETUP.md`, `SYSTEM.md`.
 
 I remained responsible for integrating and executing the code, configuring the development and deployment environments, validating system behaviour, and making the final technical and architectural decisions.
 
-To support maintainability and code quality, I also established automated **formatting, linting, testing, and pre-commit checks** within the development workflow. These checks help identify formatting inconsistencies, code-quality issues.
+To support maintainability and code quality, I also established automated **formatting, linting, testing, and pre-commit checks** (concepts I learnt from the MLOps Zoomcamo) within the development workflow. These checks help identify formatting inconsistencies, code-quality issues.
 
 ## Other Zoomcamp Projects
 
@@ -237,7 +239,7 @@ This is my fourth DataTalks.Club Zoomcamp. Each Zoomcamp has contributed to a di
 |---|---|---|
 | **Data Engineering Zoomcamp** | [Project on Fraud Data and Analysis](https://github.com/darasiemi/data_engineering_credit_fraud_project) | Data ingestion, transformation, orchestration, data warehousing, and analytics engineering |
 | **Machine Learning Zoomcamp** | [Project 1 on Food Preparation Time Prediction ](https://github.com/darasiemi/food-preparation-time-prediction-project) | Machine learning model development, evaluation, and deployment with AWS ELastic Beanstalk |
-| **Machine Learning Zoomcamp** | [Project 2 on Sleep Quality Prediction ](https://github.com/darasiemi/sleep-quality-prediction) | Machine learning model development with Kubernetes, evaluation, and deployment |
+| **Machine Learning Zoomcamp** | [Project 2 on Sleep Quality Prediction ](https://github.com/darasiemi/sleep-quality-prediction) | Machine learning model development, evaluation, and deployment with Kubernetes|
 | **MLOps Zoomcamp** | [Project on Stress Prediction using Multimodal Inputs](https://github.com/darasiemi/mental_health_mlops_project) | Experiment tracking, orchestration, deployment, monitoring, testing, infrastructure, and reproducible ML |
 | **LLM Zoomcamp** | **This Project** | RAG, agentic workflows, evaluation, LLMOps, deployment, monitoring, and observability |
 
@@ -245,7 +247,8 @@ Together, these projects reflect my progression across **data engineering → ma
 
 ## Acknowledgements
 
-I would like to thank [DataTalks.Club](https://datatalks.club/) and its community for the excellent open learning resources they provide. Their courses have played an important role in developing my practical understanding of machine learning engineering and the end-to-end process of building production-oriented AI systems.
+I would like to thank [DataTalks.Club](https://datatalks.club/) and its community for the excellent open learning resources they provide. Their courses have played an important role in developing my practical understanding of machine learning engineering and the end-to-end process of building production-oriented AI systems, providing valuable insights into the potential real-world implementation and deployment of my PhD research.
+
 
 In particular, the hands-on and project-focused nature of the courses helped me connect concepts across data engineering, machine learning, LLM applications, deployment, testing, monitoring, and MLOps. Many of the engineering practices I applied while building this project were strengthened by what I learned through DataTalks.Club.
 
