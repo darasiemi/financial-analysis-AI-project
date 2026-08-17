@@ -232,3 +232,5 @@ The workbooks contain aggregate and per-question results, including benchmark qu
 | Agent behaviour | Tool-call trace |
 
 The framework provides a consistent basis for comparing **keyword RAG, semantic RAG, hybrid RAG, and the agentic financial-analysis pipeline** using the same financially focused benchmark.
+
+[⬆ Back to Top](#evaluation)

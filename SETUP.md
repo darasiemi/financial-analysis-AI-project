@@ -730,3 +730,5 @@ Refresh local Grafana
 | `make precommit` | Run all pre-commit hooks |
 | `make railway-tunnel` | Open Railway PostgreSQL tunnel |
 | `make sync-monitoring-from-railway` | Copy Railway monitoring data locally |
+
+[⬆ Back to Top](#setup-guide)
