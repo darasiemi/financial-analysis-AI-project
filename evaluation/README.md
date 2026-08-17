@@ -144,6 +144,7 @@ I initially strugged with understanding the difference between **Precision@K** a
 - **High Recall@k** — a high proportion of all relevant evidence is retrieved within the top `k` results, reducing the likelihood of missing information needed to answer the question.
 
 There is typically a trade-off when increasing `k`: retrieving more results can **improve recall** by capturing more relevant evidence, but may **reduce precision** by introducing additional irrelevant context.
+
 ---
 
 ### Answer Evaluation
