@@ -120,6 +120,8 @@ Answer Generation               ▼
 
 This provides a common basis for comparing conventional RAG with the additional retrieval and tool-use capabilities of the agent.
 
+> **Note:** PowerPoint generation is excluded from the benchmark evaluation because it is an optional presentation tool rather than part of the core question-answering pipeline. Unlike retrieval, table lookup, calculator, and web search, it does not provide additional evidence or calculations used to answer benchmark questions. Its usefulness and presentation quality are therefore assessed through **user feedback** rather than the automated question-answering benchmark.
+
 ---
 
 ### Retrieval Evaluation
