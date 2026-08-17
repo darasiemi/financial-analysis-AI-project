@@ -78,7 +78,7 @@ Users can narrow their analysis to a particular company or reporting year. The i
 Users can choose between two analysis approaches:
 
 - **RAG** — retrieves relevant information from annual reports and uses it to answer the question.
-- **Agent** — dynamically selects the appropriate tools for complex financial questions, uses a calculator for deterministic calculations, and extends beyond the knowledge base through web search when needed.
+- **Agent** — dynamically selects the appropriate tools for complex financial questions.
 
 ### Agent Tools
 
@@ -90,8 +90,8 @@ For more complex questions, the Agent can use several specialised tools:
 | **Semantic Search** | Finds relevant information based on meaning, even when the report uses different wording from the user's question. |
 | **Hybrid Search** | Combines keyword and meaning-based search to improve the chances of finding the right evidence. |
 | **Table Lookup** | Examines extracted financial tables to find specific figures, rows, columns, and values. |
-| **Calculator** | Performs calculations using retrieved financial figures rather than relying on the AI to calculate them mentally. |
-| **Web Search** | Searches the web when a question requires current or external information that is not available in the stored annual reports. |
+| **Calculator** | Performs deterministic calculations on financial figures, avoiding reliance on the LLM for arithmetic. |
+| **Web Search** | Searches the web when a question requires current or external information that is not available in the knowledge base. |
 | **PowerPoint Generation** | Creates a PowerPoint presentation from the financial analysis when requested by the user. |
 
 The Agent can select and combine these tools depending on the question instead of requiring the user to decide which search method to use.
