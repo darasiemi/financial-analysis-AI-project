@@ -134,6 +134,8 @@ For more details:
 
 - **[System Architecture](SYSTEM.md)** — Detailed documentation of the data ingestion, storage, retrieval, RAG and agent pipelines, deployment, monitoring, and system design decisions.
 - **[Setup Guide](SETUP.md)** — Instructions for installing dependencies, configuring the environment, ingesting data, running the application, testing, evaluation, and monitoring.
+- **[Evaluation](evaluation/README.md)** — Details on benchmark generation and the evaluation of retrieval and answer quality for the RAG and agent pipelines.
+
 
 ## Technology Stack
 
@@ -257,20 +259,5 @@ In particular, the hands-on and project-focused nature of the courses helped me 
 1. International Monetary Fund (2023). [*Nigeria—Fostering Financial Inclusion Through Digital Financial Services*](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com). *IMF Selected Issues Papers*, 2023(020).
 
 2. Central Bank of Nigeria. [*Financial Literacy*](https://www.cbn.gov.ng/FinInc/FinLit/).
-
-<!-- ## References
-
-<a id="ref-1"></a>
-1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020). [View source](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
-
-<a id="ref-2"></a>
-2. Central Bank of Nigeria. *Financial Literacy*. [View source](https://www.cbn.gov.ng/FinInc/FinLit/)
-### References -->
-
-<!-- 1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020).  
-   [IMF Report](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
-
-2. Central Bank of Nigeria. *Financial Literacy*.  
-   [CBN Financial Literacy](https://www.cbn.gov.ng/FinInc/FinLit/) -->
 
 
