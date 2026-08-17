@@ -565,6 +565,10 @@ After deployment, generate a public domain for the FastAPI service and configure
 
 The PostgreSQL service does not need permanent public networking.
 
+> **Tip:** Enable **Serverless** for the Railway backend to reduce unnecessary resource usage and costs during periods of inactivity. I initially left my backend running continuously, even when it was receiving no traffic, which resulted in avoidable memory costs. Learn from my mistake!
+>
+> To enable it in Railway, open your **backend service → Settings → Deploy → Serverless**, then enable the **Serverless** option. This allows Railway to scale the service down when inactive and automatically wake it when new requests arrive. Note that the first request after a period of inactivity may be slower due to a **cold start**.
+
 ---
 
 ## 12. Sync Production Monitoring Data Locally
