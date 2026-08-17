@@ -259,7 +259,7 @@ In particular, the hands-on and project-focused nature of the courses helped me 
 I would also like to acknowledge **Chip Huyen** for her book *AI Engineering: Building Applications with Foundation Models*. Having completed about three-quarters of the book, it has helped me deepen my understanding of AI engineering and reinforce many of the concepts and engineering practices introduced throughout the Zoomcamps. The book has been particularly valuable in connecting these lessons to the broader principles and challenges involved in building production-ready AI systems.
 
 <p align="center">
-  <img src="media/ai.engineering.png" alt="AI Engineering by Chip Huyen" width="350">
+  <img src="media/ai_engineering.png" alt="AI Engineering by Chip Huyen" width="350">
 </p>
 
 <p align="center">
