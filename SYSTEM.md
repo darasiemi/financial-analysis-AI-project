@@ -2,7 +2,7 @@
 
 This document describes the architecture of my Financial Analysis AI system, including data ingestion, retrieval, analysis pipelines, deployment, monitoring, and observability.
 
-For installation and deployment instructions, see `SETUP.md`.
+For installation and deployment instructions, see **[Setup Guide](SETUP.md)**.
 
 ![System Architecture](media/system-architecture.png)
 

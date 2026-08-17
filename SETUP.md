@@ -2,7 +2,7 @@
 
 This guide explains how to install, configure, run, test, evaluate, and monitor the Financial Analysis AI project.
 
-For system architecture, see `SYSTEM.md`.
+For architectural details, see **[System Architecture](SYSTEM.md)**.
 
 > Run all `make` commands from the project root unless stated otherwise.
 
