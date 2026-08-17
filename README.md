@@ -254,6 +254,20 @@ I would like to thank [DataTalks.Club](https://datatalks.club/) and its communit
 
 In particular, the hands-on and project-focused nature of the courses helped me connect concepts across data engineering, machine learning, LLM applications, deployment, testing, monitoring, and MLOps. Many of the engineering practices I applied while building this project were strengthened by what I learned through DataTalks.Club.
 
+### AI Engineering
+
+I would also like to acknowledge **Chip Huyen** for her book *AI Engineering: Building Applications with Foundation Models*. Having completed about three-quarters of the book, it has helped me deepen my understanding of AI engineering and reinforce many of the concepts and engineering practices introduced throughout the Zoomcamps. The book has been particularly valuable in connecting these lessons to the broader principles and challenges involved in building production-ready AI systems.
+
+<p align="center">
+  <img src="media/ai.engineering.png" alt="AI Engineering by Chip Huyen" width="350">
+</p>
+
+<p align="center">
+  <em>AI Engineering: Building Applications with Foundation Models — Chip Huyen</em>
+</p>
+
+
+
 ## References
 
 1. International Monetary Fund (2023). [*Nigeria—Fostering Financial Inclusion Through Digital Financial Services*](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com). *IMF Selected Issues Papers*, 2023(020).
