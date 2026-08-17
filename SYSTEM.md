@@ -254,7 +254,9 @@ Current hybrid RAG results:
 
 The main limitation is retrieval quality: generation is generally strong when the required evidence is successfully retrieved.
 
-More details are available in `evaluation/README.md`.
+To limit the scope of the project, I did not perform extensive hyperparameter and configuration tuning. **Optimising retrieval parameters, RAG and agent configurations, model settings, and evaluation thresholds** is left for future work.
+
+More details are available in [evaluation explanation](evaluation/README.md).
 
 ---
 
