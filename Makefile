@@ -4,8 +4,8 @@ include .env
 export
 endif
 
-# db_start:
-# 	cd ingestion && docker compose --env-file ../.env up -d
+db_start:
+	cd ingestion && docker compose --env-file ../.env up -d
 
 db_stop:
 	cd ingestion && docker compose down
