@@ -61,21 +61,24 @@ Multi-Hop                     15%
 Financial Interpretation       5%
 ```
 
-This places greater emphasis on financial reasoning, comparison, calculation, and multi-source retrieval than on simple factual lookup.
+This places greater emphasis on financial reasoning, comparison, calculation, and multi-source retrieval than on simple factual lookup. I intentionally made the benchmark challenging to reduce the risk of overly optimistic evaluation results and provide a more realistic assessment of the system's performance.
+
 
 #### Benchmark Validation
 
-Each generated question-answer pair is automatically checked for:
+Each generated question-answer pair is automatically screened using static quality checks and LLM-based validation for:
 
 - grounding in the source evidence;
-- financial relevance and difficulty;
-- currency, unit, period, and entity accuracy;
-- valid financial comparisons and calculations;
-- genuine multi-source requirements where applicable;
-- absence of extraction or parser artifacts;
+- financial relevance and question difficulty;
+- currency and unit accuracy;
+- reporting-period accuracy;
+- correct company, Group, subsidiary, segment, and geographic distinctions;
+- validity of financial calculations and comparisons;
+- genuine multi-source requirements, where applicable;
+- absence of extraction or parser artifacts; and
 - naturalness of the question.
 
-Examples receive validation metadata such as:
+Each example receives validation metadata, including quality, difficulty, financial relevance, and human-verification status:
 
 ```json
 {
@@ -85,8 +88,6 @@ Examples receive validation metadata such as:
   "human_verified": false
 }
 ```
-
-Examples that do not satisfy the configured thresholds are rejected. Synthetic examples remain marked as `human_verified = false` until manually reviewed.
 
 ---
 
@@ -111,8 +112,7 @@ Answer Generation               ▼
                                 ├── Additional Retrieval
                                 ├── Table Lookup
                                 ├── Calculator
-                                ├── Web Search
-                                └── Other Tools
+                                └── Web Search
                                 │
                                 ▼
                            Final Answer
@@ -123,6 +123,8 @@ This provides a common basis for comparing conventional RAG with the additional 
 ---
 
 ### Retrieval Evaluation
+
+The Zoomcamp course material evaluated retrieval primarily using **Hit Rate and Mean Reciprocal Rank (MRR)**. I extended the evaluation with additional metrics to provide a **more comprehensive assessment of retrieval performance across different dimensions**.
 
 Retrieval performance is evaluated against the benchmark's gold source IDs.
 
@@ -136,6 +138,12 @@ Retrieval performance is evaluated against the benchmark's gold source IDs.
 
 For the agent pipeline, the initial hybrid retrieval is evaluated directly, while subsequent retrieval and tool calls are retained in the execution trace for analysis.
 
+I initially strugged with understanding the difference between **Precision@K** and **Recall@K**. I found this description useful:
+
+- **High Precision@k** — a high proportion of the top `k` retrieved results are relevant, reducing irrelevant context passed to the LLM.
+- **High Recall@k** — a high proportion of all relevant evidence is retrieved within the top `k` results, reducing the likelihood of missing information needed to answer the question.
+
+There is typically a trade-off when increasing `k`: retrieving more results can **improve recall** by capturing more relevant evidence, but may **reduce precision** by introducing additional irrelevant context.
 ---
 
 ### Answer Evaluation
