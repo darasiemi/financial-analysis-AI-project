@@ -412,7 +412,7 @@ The dashboard includes:
 - Average Relevance
 - Thumbs-Up Rate
 - Response Volume Over Time
-- Latency Over Time
+- Average Latency Over Time
 - Application vs Judge Cost
 - Average Latency by Pipeline
 - User Feedback by Pipeline
@@ -455,10 +455,10 @@ This avoids database retrieval or LLM inference during page load and keeps the d
 
 The architecture follows several practical principles:
 
-- Railway PostgreSQL remains private.
+- Railway PostgreSQL remains private. 
 - FastAPI communicates with PostgreSQL through Railway's internal network.
 - Production database access from local development uses a temporary SSH tunnel.
-- Secrets are stored in `.env` or Railway environment variables and are not committed to source control.
+- Secrets are stored in `.env` or Railway environment variables and are not committed to source control. A future work is to add pre-commit hooks to enforce inadvertently commiting secrets.
 - Grafana remains local because it is currently used for development and monitoring rather than as a public production service.
 - Production monitoring data and local test telemetry are kept separate.
 
@@ -506,8 +506,50 @@ Retrieval Index
 
 This design keeps retrieval, reasoning, deployment, and observability modular while maintaining a single PostgreSQL-based data layer for financial content and production telemetry.
 
-
 ## 13. System Design Trade-offs
+
+I made several design changes as the project evolved to balance extraction quality, retrieval accuracy, system complexity, and evaluation reliability.
+
+1. **I separated narrative and table processing.**  
+   Annual-report prose and financial tables require different processing to preserve their meaning, so I used separate pipelines for them. Narrative content was reconstructed and chunked for retrieval, while tables were extracted independently. Detected table regions were excluded from narrative chunks to reduce duplication. Two-column page layouts were still treated as narrative content rather than tables, with their reading order reconstructed before chunking.
+
+2. **I switched table storage from relational normalization to JSON.**  
+   I initially attempted to represent extracted tables relationally, but annual-report tables vary considerably in structure and were not being preserved reliably. I therefore stored each table as structured JSON, retaining its rows, columns, labels, and values without forcing different tables into a common schema. I also maintained a textual representation of each table for retrieval and embeddings.
+
+3. **I used layout-aware chunking rather than splitting raw PDF text.**  
+   I reconstructed narrative content from the PDF layout and used paragraph- and section-aware chunking with controlled chunk sizes and overlap. This required more preprocessing than fixed character splitting but produced more coherent retrieval units and better preserved the context of financial-report narratives.
+
+4. **I kept lexical and vector retrieval in PostgreSQL using pgvector.**  
+   I containerized the PostgreSQL database using Docker to make the database environment reproducible, portable, and easier to set up consistently across development environments. I used the `pgvector` PostgreSQL image so that report metadata, extracted content, full-text search, and vector embeddings could remain within the same database rather than introducing a separate vector store. I combined lexical and semantic retrieval through hybrid search: keyword search handles exact financial terminology well, while vector search helps when questions and reports use different wording.
+
+5. **I kept the agent lightweight and grounded it in RAG first.**  
+   The agent starts with hybrid retrieval over the annual-report corpus and invokes additional tools—such as keyword or semantic search, structured table lookup, deterministic calculation, web search, and report generation—only when needed. This provides more flexibility than a fixed RAG pipeline while avoiding the orchestration complexity of a multi-agent system.
+
+6. **I redesigned the benchmark when the initial synthetic evaluation was too easy.**  
+   The initial generator often produced simple lookup questions, governance facts, and even questions influenced by extraction artifacts such as generic table columns. I shifted generation toward harder tasks such as table reasoning, calculations, within-source and cross-report comparisons, multi-hop retrieval, and financial interpretation. I also introduced stratified sampling across companies and reporting years and validation for grounding, financial relevance, difficulty, and data consistency.
+
+7. **I added validation and stratified sampling because synthetic benchmarks can otherwise be misleading.**  
+   The benchmark is now sampled across ticker and report year rather than whichever documents happen to appear first in the database. Generated questions are also checked for financial relevance, difficulty, grounding, unit consistency, calculation validity, and semantic compatibility. This improves benchmark quality, although I still mark synthetic examples as not human-verified because LLM-generated ground truth can contain errors.
+
+8. **I designed the repository for modularity and reproducibility.**  
+   I separated ingestion, processing, indexing, retrieval, RAG, agent tools, and evaluation into modular components that can be run and tested independently. I use `Docker` for a consistent PostgreSQL environment, `uv` for dependency management, environment-based configuration, and a `Makefile` to standardize common workflows. Benchmark generation also supports a configurable random seed, although database-level random sampling means generation is not fully deterministic.
+
+9. **I used LLM validation for scalability but retained human verification for the final gold benchmark.**  
+   Because manually creating and validating a sufficiently challenging financial-analysis benchmark is time-consuming, I used an **LLM validator** to automatically screen synthetic question-answer pairs. However, LLM validation can still accept subtle factual errors, unsupported interpretations, or artificially difficult questions. I therefore keep accepted examples marked as synthetic and require **human verification before treating the benchmark as gold-standard ground truth**. This is left as future work, considering the time constraints for delivering my Zoomcamp project.
+
+10. **I configured CPU-only PyTorch to reduce deployment overhead.**  
+    `sentence-transformers` depends on PyTorch, whose default resolution pulled in large CUDA/NVIDIA packages that were unnecessary for the current CPU-based deployment and caused Docker builds to exceed available disk space. I therefore used CPU-only PyTorch, trading GPU acceleration for a substantially lighter deployment.
+
+11. **I separated the frontend, backend, and database, which were initially coupled within the Streamlit application.**  
+    Initially, Streamlit handled the user interface while also directly invoking the RAG/agent logic and accessing PostgreSQL. I separated these responsibilities by using Streamlit solely as the frontend, introducing FastAPI as the backend for RAG, agent orchestration, and database access, and keeping PostgreSQL/pgvector as the independent data layer. This separation adds API and service-orchestration complexity but provides a clearer separation of concerns, improves maintainability and testability, enables the frontend and backend to scale or evolve independently, and makes it easier to support additional clients beyond Streamlit in the future.
+
+12. **I separated development and deployment dependencies and workflows to address disk-space constraints and keep deployment lean.**  
+    After Docker builds exhausted the available disk space on my machine, I separated development dependencies, such as ingestion, notebooks, evaluation, and document processing, from the frontend and backend runtime dependencies. I also used a Makefile for local development and Docker Compose for fully containerized deployment. This reduces unnecessary deployment dependencies while improving maintainability and reproducibility.
+
+13. **I chose PostgreSQL over a document database to support both application data and monitoring.**  
+    Although a document database such as MongoDB can provide greater flexibility for storing semi-structured JSON, which I used for my data-RAG pipeline, PostgreSQL better fits the application's combination of structured financial data, retrieval metadata, user interactions, feedback, latency, cost, and evaluation metrics while still supporting semi-structured data through `JSONB`. PostgreSQL also integrates directly with Grafana, allowing monitoring metrics to be queried using SQL without introducing a separate database.
+
+<!-- ## 13. System Design Trade-offs
 
 I made several design changes as the project evolved to balance extraction quality, retrieval accuracy, system complexity, and evaluation reliability.
 
@@ -548,7 +590,7 @@ Because manually creating and validating a sufficiently challenging financial-an
     After Docker builds exhausted the available disk space on my machine, I separated development dependencies, such as ingestion, notebooks, evaluation, and document processing, from the frontend and backend runtime dependencies. I also used a Makefile for local development and Docker Compose for fully containerized deployment. This reduces unnecessary deployment dependencies while improving maintainability and reproducibility.
 
 13. **I chose PostgreSQL over a document database to support both application data and monitoring.**  
-    Although a document database such as MongoDB can provide greater flexibility for storing semi-structured JSON which I used for my data-RAG pipeline, PostgreSQL better fits the application's combination of structured financial data, retrieval metadata, user interactions, feedback, latency, cost, and evaluation metrics, while still supporting semi-structured data through `JSONB`. PostgreSQL also integrates directly with Grafana, allowing monitoring metrics to be queried using SQL without introducing a separate database.
+    Although a document database such as MongoDB can provide greater flexibility for storing semi-structured JSON which I used for my data-RAG pipeline, PostgreSQL better fits the application's combination of structured financial data, retrieval metadata, user interactions, feedback, latency, cost, and evaluation metrics, while still supporting semi-structured data through `JSONB`. PostgreSQL also integrates directly with Grafana, allowing monitoring metrics to be queried using SQL without introducing a separate database. -->
 
 [⬆ Back to Top](#system-architecture)
 
