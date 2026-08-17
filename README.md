@@ -37,7 +37,7 @@ If you would like to follow the LLM Zoomcamp using the **Gemini API**, you can f
 
 I started this project after recognising a gap in my own financial knowledge. I wanted to better understand how to evaluate companies, interpret financial reports, and make investment decisions based on analysis.
 
-This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: an EFInA survey cited by the International Monetary Fund (IMF) found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning [[1]](#ref-1). The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities [[2]](#ref-2).
+This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: an EFInA survey cited by the International Monetary Fund (IMF) found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning [[1]](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com). The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities [[2]](https://www.cbn.gov.ng/FinInc/FinLit/).
 
 Yet, making informed investment decisions often requires reading lengthy annual reports, comparing financial performance across years, identifying relevant metrics, and understanding the wider context behind the numbers.
 
@@ -249,12 +249,18 @@ In particular, the hands-on and project-focused nature of the courses helped me 
 
 ## References
 
+1. International Monetary Fund (2023). [*Nigeria—Fostering Financial Inclusion Through Digital Financial Services*](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com). *IMF Selected Issues Papers*, 2023(020).
+
+2. Central Bank of Nigeria. [*Financial Literacy*](https://www.cbn.gov.ng/FinInc/FinLit/).
+
+<!-- ## References
+
 <a id="ref-1"></a>
 1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020). [View source](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
 
 <a id="ref-2"></a>
 2. Central Bank of Nigeria. *Financial Literacy*. [View source](https://www.cbn.gov.ng/FinInc/FinLit/)
-### References
+### References -->
 
 <!-- 1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020).  
    [IMF Report](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
