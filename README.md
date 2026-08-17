@@ -19,6 +19,7 @@ Nigerian companies' annual reports using RAG and agentic workflows.
 8. [Generative AI Use Declaration](#generative-ai-use-declaration)
 9. [Other Zoomcamp Projects](#other-zoomcamp-projects)
 10. [Acknowledgements](#acknowledgements)
+11. [References](#references)
 
 ## Introduction
 
@@ -36,9 +37,7 @@ If you would like to follow the LLM Zoomcamp using the **Gemini API**, you can f
 
 I started this project after recognising a gap in my own financial knowledge. I wanted to better understand how to evaluate companies, interpret financial reports, and make investment decisions based on analysis.
 
-This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: research cited by the IMF found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning. 
-
-This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: a nationwide survey cited in a 2023 IMF report found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly around financial planning. The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities.
+This is not an isolated challenge. Financial literacy remains a significant issue in Nigeria: an EFInA survey cited by the International Monetary Fund (IMF) found that **more than half of Nigerian adults have limited financial literacy and capability**, particularly in financial planning [[1]](#ref-1). The Central Bank of Nigeria similarly recognises that many Nigerians lack the skills required to effectively manage their finances and take advantage of financial products and opportunities [[2]](#ref-2).
 
 Yet, making informed investment decisions often requires reading lengthy annual reports, comparing financial performance across years, identifying relevant metrics, and understanding the wider context behind the numbers.
 
@@ -247,5 +246,20 @@ Together, these projects reflect my progression across **data engineering → ma
 I would like to thank [DataTalks.Club](https://datatalks.club/) and its community for the excellent open learning resources they provide. Their courses have played an important role in developing my practical understanding of machine learning engineering and the end-to-end process of building production-oriented AI systems.
 
 In particular, the hands-on and project-focused nature of the courses helped me connect concepts across data engineering, machine learning, LLM applications, deployment, testing, monitoring, and MLOps. Many of the engineering practices I applied while building this project were strengthened by what I learned through DataTalks.Club.
+
+## References
+
+<a id="ref-1"></a>
+1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020). [View source](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
+
+<a id="ref-2"></a>
+2. Central Bank of Nigeria. *Financial Literacy*. [View source](https://www.cbn.gov.ng/FinInc/FinLit/)
+### References
+
+<!-- 1. International Monetary Fund (2023). *Nigeria—Fostering Financial Inclusion Through Digital Financial Services*. IMF Selected Issues Papers, 2023(020).  
+   [IMF Report](https://www.elibrary.imf.org/view/journals/002/2023/094/article-A003-en.xml?utm_source=chatgpt.com)
+
+2. Central Bank of Nigeria. *Financial Literacy*.  
+   [CBN Financial Literacy](https://www.cbn.gov.ng/FinInc/FinLit/) -->
 
 
