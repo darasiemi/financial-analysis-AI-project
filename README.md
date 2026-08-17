@@ -276,8 +276,8 @@ I would also like to acknowledge **Chip Huyen** for her book *AI Engineering: Bu
 
 [⬆ Back to Top](#nigeria-stock-financial-analysis-project)
 
----
 
+---
 **Project Version:** August 2026
 
 
