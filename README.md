@@ -1,7 +1,16 @@
 # Nigerian Companies Financial Analysis Project
 
-An AI-powered financial analysis application for exploring and analysing
-Nigerian companies' annual reports using RAG and agentic workflows.
+An AI-powered financial analysis application for exploring and analysing Nigerian companies' annual reports using RAG and agentic workflows.
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat&logo=railway&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat&logo=googlegemini&logoColor=white)
+
+---
 
 ![Financial Analysis AI Demo](media/streamlit-app-video.gif)
 
