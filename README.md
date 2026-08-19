@@ -1,4 +1,4 @@
-# Nigeria Stock Financial Analysis Project
+# Nigerian Companies Financial Analysis Project
 
 An AI-powered financial analysis application for exploring and analysing
 Nigerian companies' annual reports using RAG and agentic workflows.
