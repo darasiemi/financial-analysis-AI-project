@@ -16,6 +16,8 @@ An AI-powered financial analysis application for exploring and analysing Nigeria
 
 [🚀 Launch the App](https://dara-fin.streamlit.app/)
 
+Please be patient as it takes sometime for app to wake up :)
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
