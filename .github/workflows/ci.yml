@@ -4,11 +4,9 @@ on:
   push:
   pull_request:
 
-
 jobs:
   quality:
     name: Code quality
-
     runs-on: ubuntu-latest
 
     env:
@@ -57,10 +55,8 @@ jobs:
             retrieval \
             scripts
 
-
   integration:
     name: Fast integration tests
-
     runs-on: ubuntu-latest
 
     services:
@@ -134,7 +130,8 @@ jobs:
             if curl \
               --fail \
               --silent \
-              http://localhost:8000/health
+              http://localhost:8000/health \
+              > /dev/null
             then
               echo "FastAPI started successfully."
               exit 0
@@ -144,9 +141,7 @@ jobs:
           done
 
           echo "FastAPI failed to start."
-
           cat /tmp/backend.log
-
           exit 1
 
       - name: Start Streamlit and verify startup
@@ -158,3 +153,29 @@ jobs:
         if: failure()
         run: |
           cat /tmp/backend.log || true
+          cat /tmp/streamlit.log || true
+
+      - name: Stop background services
+        if: always()
+        run: |
+          if [ -f /tmp/backend.pid ]; then
+            BACKEND_PID=$(cat /tmp/backend.pid)
+
+            echo "Stopping FastAPI process: $BACKEND_PID"
+
+            pkill -TERM -P "$BACKEND_PID" 2>/dev/null || true
+            kill "$BACKEND_PID" 2>/dev/null || true
+
+            sleep 2
+
+            pkill -KILL -P "$BACKEND_PID" 2>/dev/null || true
+            kill -KILL "$BACKEND_PID" 2>/dev/null || true
+          fi
+
+          pkill -f "uvicorn deployment.backend.main:app" \
+            2>/dev/null || true
+
+          pkill -f "streamlit run deployment/frontend/app.py" \
+            2>/dev/null || true
+
+          echo "Background service cleanup completed."

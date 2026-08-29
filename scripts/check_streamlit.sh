@@ -11,7 +11,15 @@ uv run --group frontend streamlit run \
 STREAMLIT_PID=$!
 
 cleanup() {
+    echo "Stopping Streamlit process: $STREAMLIT_PID"
+
+    pkill -TERM -P "$STREAMLIT_PID" 2>/dev/null || true
     kill "$STREAMLIT_PID" 2>/dev/null || true
+
+    sleep 1
+
+    pkill -KILL -P "$STREAMLIT_PID" 2>/dev/null || true
+    kill -KILL "$STREAMLIT_PID" 2>/dev/null || true
 }
 
 trap cleanup EXIT
