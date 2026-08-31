@@ -11,19 +11,20 @@ For architectural details, see **[System Architecture](SYSTEM.md)**.
 ## Table of Contents
 
 1. [Prerequisites](#1-prerequisites)
-2. [Install Dependencies](#2-install-dependencies)
-3. [Configure Environment Variables](#3-configure-environment-variables)
-4. [Start the Local Database](#4-start-the-local-database)
-5. [Ingest and Index Annual Reports](#5-ingest-and-index-annual-reports)
-6. [Test Retrieval, RAG, and Agent Pipelines](#6-test-retrieval-rag-and-agent-pipelines)
-7. [Run the Application](#7-run-the-application)
-8. [Evaluation](#8-evaluation)
-9. [Testing and Code Quality](#9-testing-and-code-quality)
-10. [Local Monitoring](#10-local-monitoring)
-11. [Railway Deployment](#11-railway-deployment)
-12. [Sync Production Monitoring Data Locally](#12-sync-production-monitoring-data-locally)
-13. [Common Development Workflow](#13-common-development-workflow)
-14. [Makefile Command Reference](#14-makefile-command-reference)
+2. [Clone the Repository](#2-clone-the-repository)
+3. [Install Dependencies](#3-install-dependencies)
+4. [Configure Environment Variables](#4-configure-environment-variables)
+5. [Start the Local Database](#5-start-the-local-database)
+6. [Ingest and Index Annual Reports](#6-ingest-and-index-annual-reports)
+7. [Test Retrieval, RAG, and Agent Pipelines](#7-test-retrieval-rag-and-agent-pipelines)
+8. [Run the Application](#8-run-the-application)
+9. [Evaluation](#9-evaluation)
+10. [Testing and Code Quality](#10-testing-and-code-quality)
+11. [Local Monitoring](#11-local-monitoring)
+12. [Railway Deployment](#12-railway-deployment)
+13. [Sync Production Monitoring Data Locally](#13-sync-production-monitoring-data-locally)
+14. [Common Development Workflow](#14-common-development-workflow)
+15. [Makefile Command Reference](#15-makefile-command-reference)
 
 ---
 
@@ -51,11 +52,25 @@ uv --version
 docker --version
 docker compose version
 make --version
+git --version
 ```
 
 ---
 
-## 2. Install Dependencies
+## 2. Clone the Repository
+
+Clone the project and move into the repository:
+
+```bash
+git clone https://github.com/darasiemi/financial-analysis-AI-project.git
+cd financial-analysis-AI-project
+```
+
+All subsequent commands should be run from the project root unless stated otherwise.
+
+---
+
+## 3. Install Dependencies
 
 Install the dependencies defined in `pyproject.toml` and `uv.lock`:
 
@@ -89,7 +104,7 @@ Do not install project packages individually with `uv add` during normal setup; 
 
 ---
 
-## 3. Configure Environment Variables
+## 4. Configure Environment Variables
 
 Create a `.env` file in the project root with the database, Gemini, and other credentials required by the application.
 
@@ -115,7 +130,7 @@ git check-ignore .env
 
 ---
 
-## 4. Start the Local Database
+## 5. Start the Local Database
 
 There are two PostgreSQL targets because the repository uses Docker Compose in different contexts.
 
@@ -125,23 +140,11 @@ For the main local application stack:
 make postgres
 ```
 
-<!-- For ingestion-specific database startup using `ingestion/docker-compose.yml`:
-
-```bash
-make db_start
-``` -->
-
 Open the ingestion PostgreSQL shell with:
 
 ```bash
 make psql
 ```
-<!-- 
-Stop the ingestion stack with:
-
-```bash
-make db_stop
-``` -->
 
 For the main root Docker Compose stack, use:
 
@@ -153,9 +156,9 @@ make stop_app
 
 ---
 
-## 5. Ingest and Index Annual Reports
+## 6. Ingest and Index Annual Reports
 
-### 5.1 Download reports
+### 6.1 Download Reports
 
 ```bash
 make scrape
@@ -169,7 +172,7 @@ ingestion.pipelines.ingest_reports
 
 Use it when adding or refreshing annual reports.
 
-### 5.2 Process reports
+### 6.2 Process Reports
 
 Generate narrative chunks and structured tables together:
 
@@ -197,7 +200,7 @@ Inspect an extracted table with:
 make check_json_table
 ```
 
-### 5.3 Build the retrieval index
+### 6.3 Build the Retrieval Index
 
 After ingestion:
 
@@ -207,15 +210,15 @@ make build_index
 
 This builds the keyword and vector retrieval structures used by the application.
 
-The expected setup sequence is therefore:
+The expected setup sequence is:
 
 ```text
 make db_start
-      ↓
+    ↓
 make scrape
-      ↓
+    ↓
 make ingest
-      ↓
+    ↓
 make build_index
 ```
 
@@ -223,7 +226,7 @@ If the reports are already downloaded, `make scrape` does not need to be repeate
 
 ---
 
-## 6. Test Retrieval, RAG, and Agent Pipelines
+## 7. Test Retrieval, RAG, and Agent Pipelines
 
 ### Retrieval
 
@@ -259,9 +262,9 @@ make test_rag \
 Defaults:
 
 ```text
-QUERY  = Who is the Group Chief Executive Officer?
-MODE   = hybrid
-TOP_K  = 20
+QUERY = Who is the Group Chief Executive Officer?
+MODE  = hybrid
+TOP_K = 20
 ```
 
 The RAG target always prints the retrieved context.
@@ -301,7 +304,7 @@ make test_agent \
 
 ---
 
-## 7. Run the Application
+## 8. Run the Application
 
 The local application consists of:
 
@@ -311,7 +314,7 @@ Streamlit → FastAPI → PostgreSQL + pgvector
 
 Grafana runs alongside these services for local monitoring.
 
-### Start everything
+### Start Everything
 
 ```bash
 make app
@@ -340,7 +343,7 @@ Press `Ctrl+C` to stop the locally spawned FastAPI and Streamlit processes. Then
 make stop_app
 ```
 
-### Run services independently
+### Run Services Independently
 
 Useful for development and troubleshooting:
 
@@ -356,7 +359,7 @@ make frontend
 
 `make frontend` starts Streamlit using the `frontend` dependency group.
 
-### Test the backend API
+### Test the Backend API
 
 With FastAPI running:
 
@@ -372,9 +375,9 @@ POST /api/v1/query
 
 ---
 
-## 8. Evaluation
+## 9. Evaluation
 
-### Generate a benchmark
+### Generate a Benchmark
 
 ```bash
 make generate_eval
@@ -414,7 +417,7 @@ make eval_rag MODE=vector
 make eval_rag MODE=hybrid LIMIT=10
 ```
 
-### Evaluate the agent
+### Evaluate the Agent
 
 ```bash
 make eval_agent
@@ -428,9 +431,9 @@ make eval_agent LIMIT=10
 
 ---
 
-## 9. Testing and Code Quality
+## 10. Testing and Code Quality
 
-### Fast test suite
+### Fast Test Suite
 
 ```bash
 make test_fast
@@ -443,7 +446,7 @@ tests/smoke
 tests/integration
 ```
 
-### Formatting and linting
+### Formatting and Linting
 
 Format code:
 
@@ -486,7 +489,7 @@ make precommit
 
 ---
 
-## 10. Local Monitoring
+## 11. Local Monitoring
 
 Start PostgreSQL and Grafana:
 
@@ -529,7 +532,7 @@ monitoring.feedback
 
 ---
 
-## 11. Railway Deployment
+## 12. Railway Deployment
 
 The production architecture uses separate Railway services for FastAPI and PostgreSQL.
 
@@ -571,7 +574,7 @@ The PostgreSQL service does not need permanent public networking.
 
 ---
 
-## 12. Sync Production Monitoring Data Locally
+## 13. Sync Production Monitoring Data Locally
 
 Grafana remains local. Production telemetry can be copied from Railway PostgreSQL into the local `monitoring` schema.
 
@@ -603,7 +606,7 @@ RAILWAY_POSTGRES_PASSWORD=<railway-password>
 
 The local `POSTGRES_PASSWORD` must also be configured.
 
-### Synchronize monitoring data
+### Synchronize Monitoring Data
 
 Terminal 1:
 
@@ -626,13 +629,13 @@ The synchronization process:
 ```text
 Railway monitoring schema
           ↓
-      pg_dump
+       pg_dump
           ↓
 truncate local monitoring tables
           ↓
-     pg_restore
+      pg_restore
           ↓
-    Local Grafana
+     Local Grafana
 ```
 
 Only data from the `monitoring` schema is copied. The local financial-report and retrieval data are not replaced.
@@ -641,7 +644,7 @@ Only data from the `monitoring` schema is copied. The local financial-report and
 
 ---
 
-## 13. Common Development Workflow
+## 14. Common Development Workflow
 
 For normal application development:
 
@@ -695,7 +698,7 @@ Refresh local Grafana
 
 ---
 
-## 14. Makefile Command Reference
+## 15. Makefile Command Reference
 
 | Command | Purpose |
 |---|---|

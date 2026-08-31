@@ -6,5 +6,5 @@ data/zenithbank
 **__pycache__
 **.DS_Store
 financial_analysis.dump
-**OLD.md
+**OLD**
 media/streamlit-app-video.mp4
