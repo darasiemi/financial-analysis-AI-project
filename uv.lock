@@ -779,6 +779,7 @@ dependencies = [
 [package.dev-dependencies]
 backend = [
     { name = "fastapi" },
+    { name = "psycopg2-binary" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 dev = [
@@ -819,6 +820,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 backend = [
     { name = "fastapi", specifier = ">=0.116.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0" },
 ]
 dev = [
